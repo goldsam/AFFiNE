@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { mock } from 'node:test';
 
 import test from 'ava';
 
@@ -13,15 +14,22 @@ import {
   readNotification,
   TestingApp,
 } from '../../../__tests__/utils';
+import { JobQueue } from '../../../base';
 import { DocMode, Models, NotificationType } from '../../../models';
 import { MentionNotificationBodyType, NotificationObjectType } from '../types';
 
 let app: TestingApp;
 let models: Models;
+let queue: JobQueue;
 
 test.before(async () => {
   app = await createTestingApp();
   models = app.get(Models);
+  queue = app.get(JobQueue);
+});
+
+test.afterEach.always(() => {
+  mock.reset();
 });
 
 test.after.always(async () => {
@@ -38,7 +46,9 @@ test('should mention user in a doc', async t => {
     name: 'test-workspace-name',
     avatarKey: 'test-avatar-key',
   });
+  mock.method(queue, 'add', () => Promise.resolve());
   const inviteId = await inviteUser(app, workspace.id, member.email);
+  mock.reset();
   await app.switchUser(member);
   await acceptInviteById(app, workspace.id, inviteId);
 
@@ -133,31 +143,17 @@ test('should mention doc mode support string value', async t => {
     },
   });
   t.truthy(mentionId);
-
-  await app.switchUser(member);
-  const result = await listNotifications(app, {
-    first: 10,
-    offset: 0,
-  });
-  t.is(result.totalCount, 1);
-  const notifications = result.edges.map(edge => edge.node);
-  t.is(notifications.length, 1);
-
-  const notification = notifications[0] as NotificationObjectType;
-  t.is(notification.read, false);
-  t.truthy(notification.createdAt);
-  t.truthy(notification.updatedAt);
-  const body = notification.body as MentionNotificationBodyType;
-  t.is(body.workspace!.id, workspace.id);
+  const mention = (await models.notification.get(
+    mentionId
+  )) as NotificationObjectType;
+  t.is(mention.read, false);
+  t.truthy(mention.createdAt);
+  t.truthy(mention.updatedAt);
+  const body = mention.body as MentionNotificationBodyType;
   t.is(body.doc.id, 'doc-id-1');
   t.is(body.doc.title, 'doc-title-1');
   t.is(body.doc.blockId, 'block-id-1');
   t.is(body.doc.mode, DocMode.page);
-  t.is(body.createdByUser!.id, owner.id);
-  t.is(body.createdByUser!.name, owner.name);
-  t.is(body.workspace!.id, workspace.id);
-  t.is(body.workspace!.name, 'test-workspace-name');
-  t.truthy(body.workspace!.avatarUrl);
 });
 
 test('should throw error when mention user has no Doc.Read role', async t => {
@@ -235,7 +231,10 @@ test('should mark notification as read', async t => {
 
   await app.switchUser(owner);
   const workspace = await createWorkspace(app);
+  // ignore send invitation notification
+  mock.method(queue, 'add', () => Promise.resolve());
   const inviteId = await inviteUser(app, workspace.id, member.email);
+  mock.reset();
   await app.switchUser(member);
   await acceptInviteById(app, workspace.id, inviteId);
 
@@ -260,16 +259,19 @@ test('should mark notification as read', async t => {
   t.is(result.totalCount, 1);
 
   const notifications = result.edges.map(edge => edge.node);
-  const notification = notifications[0] as NotificationObjectType;
-  t.is(notification.read, false);
-
-  await readNotification(app, notification.id);
+  for (const notification of notifications) {
+    t.is(notification.read, false);
+    await readNotification(app, notification.id);
+  }
 
   const count = await getNotificationCount(app);
   t.is(count, 0);
 
   // read again should work
-  await readNotification(app, notification.id);
+  for (const notification of notifications) {
+    t.is(notification.read, false);
+    await readNotification(app, notification.id);
+  }
 });
 
 test('should throw error when read the other user notification', async t => {
@@ -319,12 +321,12 @@ test('should throw error when mention call with invalid params', async t => {
   await app.switchUser(owner);
   await t.throwsAsync(
     mentionUser(app, {
-      userId: '',
-      workspaceId: '',
+      userId: '1',
+      workspaceId: '1',
       doc: {
-        id: '',
+        id: '1',
         title: 'doc-title-1'.repeat(100),
-        blockId: '',
+        blockId: '1',
         mode: DocMode.page,
       },
     }),
@@ -376,6 +378,7 @@ test('should list and count notifications', async t => {
     name: 'test-workspace-name1',
     avatarKey: 'test-avatar-key1',
   });
+  mock.method(queue, 'add', () => Promise.resolve());
   const inviteId = await inviteUser(app, workspace.id, member.email);
   const workspace2 = await createWorkspace(app);
   await models.workspace.update(workspace2.id, {
@@ -383,6 +386,7 @@ test('should list and count notifications', async t => {
     avatarKey: 'test-avatar-key2',
   });
   const inviteId2 = await inviteUser(app, workspace2.id, member.email);
+  mock.reset();
   await app.switchUser(member);
   await acceptInviteById(app, workspace.id, inviteId);
   await acceptInviteById(app, workspace2.id, inviteId2);

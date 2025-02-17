@@ -3,14 +3,14 @@ import { getStreamAsBuffer } from 'get-stream';
 
 import {
   Cache,
-  Config,
+  JobQueue,
   MailService,
   NotFound,
   OnEvent,
   URLHelper,
   UserNotFound,
 } from '../../../base';
-import { Models } from '../../../models';
+import { defaultWorkspaceName, Models } from '../../../models';
 import { DocReader } from '../../doc';
 import { WorkspaceRole } from '../../permission';
 import { WorkspaceBlobStorage } from '../../storage';
@@ -35,7 +35,7 @@ export class WorkspaceService {
     private readonly mailer: MailService,
     private readonly models: Models,
     private readonly url: URLHelper,
-    private readonly config: Config
+    private readonly queue: JobQueue
   ) {}
 
   async getInviteInfo(inviteId: string): Promise<InviteInfo> {
@@ -77,7 +77,7 @@ export class WorkspaceService {
     return {
       avatar,
       id: workspaceId,
-      name: workspaceContent?.name ?? 'Untitled Workspace',
+      name: workspaceContent?.name ?? defaultWorkspaceName,
     };
   }
 
@@ -97,6 +97,7 @@ export class WorkspaceService {
     }
 
     return {
+      inviteeUserId,
       email: invitee.email,
       workspace,
     };
@@ -127,24 +128,10 @@ export class WorkspaceService {
     return true;
   }
 
-  async sendInviteEmail(inviteId: string) {
-    const target = await this.getInviteeEmailTarget(inviteId);
-
-    if (!target) {
-      return;
-    }
-
-    const owner = await this.models.workspaceUser.getOwner(target.workspace.id);
-
-    const inviteUrl = this.url.link(`/invite/${inviteId}`);
-    if (this.config.node.dev) {
-      // make it easier to test in dev mode
-      this.logger.debug(`Invite link: ${inviteUrl}`);
-    }
-    await this.mailer.sendMemberInviteMail(target.email, {
-      workspace: target.workspace,
-      user: owner,
-      url: inviteUrl,
+  async sendInvitationNotification(inviterId: string, inviteId: string) {
+    await this.queue.add('notification.sendInvitation', {
+      inviterId,
+      inviteId,
     });
   }
 

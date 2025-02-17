@@ -867,8 +867,8 @@ type Mutation {
 
   """import users"""
   importUsers(input: ImportUsersInput!): [UserImportResultType!]!
-  invite(email: String!, permission: Permission @deprecated(reason: "never used"), sendInviteMail: Boolean, workspaceId: String!): String!
-  inviteBatch(emails: [String!]!, sendInviteMail: Boolean, workspaceId: String!): [InviteResult!]!
+  invite(email: String!, permission: Permission @deprecated(reason: "never used"), sendInviteMail: Boolean @deprecated(reason: "never used"), workspaceId: String!): String!
+  inviteBatch(emails: [String!]!, sendInviteMail: Boolean @deprecated(reason: "never used"), workspaceId: String!): [InviteResult!]!
   leaveWorkspace(sendLeaveMail: Boolean, workspaceId: String!, workspaceName: String @deprecated(reason: "no longer used")): Boolean!
 
   """mention user in a doc"""

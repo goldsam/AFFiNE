@@ -2,18 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 import {
+  Config,
   MailService,
   NotificationNotFound,
   PaginationInput,
   URLHelper,
 } from '../../base';
 import {
+  defaultWorkspaceName,
   InvitationNotificationCreate,
   MentionNotification,
   MentionNotificationCreate,
   Models,
   NotificationType,
   UnionNotificationBody,
+  Workspace,
 } from '../../models';
 import { DocReader } from '../doc';
 import { WorkspaceBlobStorage } from '../storage';
@@ -28,7 +31,8 @@ export class NotificationService {
     private readonly docReader: DocReader,
     private readonly workspaceBlobStorage: WorkspaceBlobStorage,
     private readonly mailer: MailService,
-    private readonly url: URLHelper
+    private readonly url: URLHelper,
+    private readonly config: Config
   ) {}
 
   async cleanExpiredNotifications() {
@@ -96,10 +100,48 @@ export class NotificationService {
       return;
     }
     await this.ensureWorkspaceContentExists(input.body.workspaceId);
-    return await this.models.notification.createInvitation(
+    const notification = await this.models.notification.createInvitation(
       input,
       NotificationType.Invitation
     );
+    this.sendInvitationEmail(input).catch(err => {
+      this.logger.error(
+        `Failed to send invitation email to user ${input.userId}`,
+        err
+      );
+    });
+    return notification;
+  }
+
+  private async sendInvitationEmail(input: InvitationNotificationCreate) {
+    const userSetting = await this.models.userSetting.get(input.userId);
+    if (!userSetting.receiveInvitationEmail) {
+      return;
+    }
+    const receiver = await this.models.user.getWorkspaceUser(input.userId);
+    if (!receiver) {
+      return;
+    }
+    const user = await this.models.user.getWorkspaceUser(
+      input.body.createdByUserId
+    );
+    if (!user) {
+      return;
+    }
+    const workspace = await this.models.workspace.get(input.body.workspaceId);
+    if (!workspace) {
+      return;
+    }
+    const inviteUrl = this.url.link(`/invite/${input.body.inviteId}`);
+    if (this.config.node.dev) {
+      // make it easier to test in dev mode
+      this.logger.debug(`Invite link: ${inviteUrl}`);
+    }
+    await this.mailer.sendMemberInviteMail(receiver.email, {
+      user,
+      workspace: this.formatWorkspaceInfo(workspace),
+      url: inviteUrl,
+    });
   }
 
   async createInvitationAccepted(input: InvitationNotificationCreate) {
@@ -176,16 +218,7 @@ export class NotificationService {
       Array.from(workspaceIds)
     );
     const workspaceInfos = new Map(
-      workspaces.map(w => [
-        w.id,
-        {
-          id: w.id,
-          name: w.name ?? '',
-          avatarUrl: w.avatarKey
-            ? this.workspaceBlobStorage.getAvatarUrl(w.id, w.avatarKey)
-            : undefined,
-        },
-      ])
+      workspaces.map(w => [w.id, this.formatWorkspaceInfo(w)])
     );
 
     // fill latest doc title
@@ -220,5 +253,17 @@ export class NotificationService {
 
   async countByUserId(userId: string) {
     return await this.models.notification.countByUserId(userId);
+  }
+
+  private formatWorkspaceInfo(workspace: Workspace) {
+    return {
+      id: workspace.id,
+      name: workspace.name ?? defaultWorkspaceName,
+      avatarUrl: this.workspaceBlobStorage.getAvatarUrl(
+        workspace.id,
+        workspace.avatarKey
+      ),
+      url: this.url.link(`/workspace/${workspace.id}`),
+    };
   }
 }
