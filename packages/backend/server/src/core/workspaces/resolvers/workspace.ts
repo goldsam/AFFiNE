@@ -594,7 +594,11 @@ export class WorkspaceResolver {
     @CurrentUser() user: CurrentUser | undefined,
     @Args('workspaceId') workspaceId: string,
     @Args('inviteId') inviteId: string,
-    @Args('sendAcceptMail', { nullable: true }) sendAcceptMail: boolean
+    @Args('sendAcceptMail', {
+      nullable: true,
+      deprecationReason: 'never used',
+    })
+    _sendAcceptMail: boolean
   ) {
     const lockFlag = `invite:${workspaceId}`;
     await using lock = await this.mutex.acquire(lockFlag);
@@ -654,12 +658,8 @@ export class WorkspaceResolver {
       }
     }
 
-    if (sendAcceptMail) {
-      const success = await this.workspaceService.sendAcceptedEmail(inviteId);
-      if (!success) throw new UserNotFound();
-    }
-
     await this.models.workspaceUser.accept(inviteId);
+    await this.workspaceService.sendInvitationAcceptedNotification(inviteId);
     return true;
   }
 

@@ -103,10 +103,9 @@ export class WorkspaceService {
     };
   }
 
-  async sendAcceptedEmail(inviteId: string) {
+  async sendInvitationAcceptedNotification(inviteId: string) {
     const { workspaceId, inviterUserId, inviteeUserId } =
       await this.getInviteInfo(inviteId);
-    const workspace = await this.getWorkspaceInfo(workspaceId);
     const invitee = inviteeUserId
       ? await this.models.user.getWorkspaceUser(inviteeUserId)
       : null;
@@ -118,14 +117,13 @@ export class WorkspaceService {
       this.logger.error(
         `Inviter or invitee user not found for inviteId: ${inviteId}`
       );
-      return false;
+      throw new UserNotFound();
     }
 
-    await this.mailer.sendMemberAcceptedEmail(inviter.email, {
-      user: invitee,
-      workspace,
+    await this.queue.add('notification.sendInvitationAccepted', {
+      inviterId: inviter.id,
+      inviteId,
     });
-    return true;
   }
 
   async sendInvitationNotification(inviterId: string, inviteId: string) {

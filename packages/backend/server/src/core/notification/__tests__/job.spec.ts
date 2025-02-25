@@ -85,3 +85,32 @@ test('should create invitation notification', async t => {
   t.is(spy.firstCall.args[0].body.workspaceId, workspace.id);
   t.is(spy.firstCall.args[0].body.createdByUserId, owner.id);
 });
+
+test('should create invitation accepted notification when user accepts the invitation', async t => {
+  const { notificationJob, notificationService, models } = t.context;
+  const invite = await models.workspaceUser.set(
+    workspace.id,
+    member.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Accepted
+  );
+  const spy = Sinon.spy(notificationService, 'createInvitationAccepted');
+  await notificationJob.sendInvitationAccepted({
+    inviterId: owner.id,
+    inviteId: invite.id,
+  });
+  t.is(spy.callCount, 1);
+  t.is(spy.firstCall.args[0].userId, owner.id);
+  t.is(spy.firstCall.args[0].body.workspaceId, workspace.id);
+  t.is(spy.firstCall.args[0].body.createdByUserId, member.id);
+});
+
+test('should ignore send invitation accepted notification when inviteId not exists', async t => {
+  const { notificationJob, notificationService } = t.context;
+  const spy = Sinon.spy(notificationService, 'createInvitationAccepted');
+  await notificationJob.sendInvitationAccepted({
+    inviterId: owner.id,
+    inviteId: `not-exists-${randomUUID()}`,
+  });
+  t.is(spy.callCount, 0);
+});
