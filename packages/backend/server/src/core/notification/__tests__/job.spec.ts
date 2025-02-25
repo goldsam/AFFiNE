@@ -114,3 +114,83 @@ test('should ignore send invitation accepted notification when inviteId not exis
   });
   t.is(spy.callCount, 0);
 });
+
+test('should create invitation review requested notification', async t => {
+  const { notificationJob, notificationService, models } = t.context;
+  const invite = await models.workspaceUser.set(
+    workspace.id,
+    member.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Pending
+  );
+  const spy = Sinon.spy(notificationService, 'createInvitationReviewRequested');
+  await notificationJob.sendInvitationReviewRequested({
+    reviewerId: owner.id,
+    inviteId: invite.id,
+  });
+  t.is(spy.callCount, 1);
+  t.is(spy.firstCall.args[0].userId, owner.id);
+  t.is(spy.firstCall.args[0].body.workspaceId, workspace.id);
+  t.is(spy.firstCall.args[0].body.createdByUserId, member.id);
+  t.is(spy.firstCall.args[0].body.inviteId, invite.id);
+});
+
+test('should ignore send invitation review requested notification when inviteId not exists', async t => {
+  const { notificationJob, notificationService } = t.context;
+  const spy = Sinon.spy(notificationService, 'createInvitationReviewRequested');
+  await notificationJob.sendInvitationReviewRequested({
+    reviewerId: owner.id,
+    inviteId: `not-exists-${randomUUID()}`,
+  });
+  t.is(spy.callCount, 0);
+});
+
+test('should create invitation review approved notification', async t => {
+  const { notificationJob, notificationService, models } = t.context;
+  const invite = await models.workspaceUser.set(
+    workspace.id,
+    member.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Pending
+  );
+  const spy = Sinon.spy(notificationService, 'createInvitationReviewApproved');
+  await notificationJob.sendInvitationReviewApproved({
+    reviewerId: owner.id,
+    inviteId: invite.id,
+  });
+  t.is(spy.callCount, 1);
+  t.is(spy.firstCall.args[0].userId, member.id);
+  t.is(spy.firstCall.args[0].body.workspaceId, workspace.id);
+  t.is(spy.firstCall.args[0].body.createdByUserId, owner.id);
+  t.is(spy.firstCall.args[0].body.inviteId, invite.id);
+});
+
+test('should ignore send invitation review approved notification when inviteId not exists', async t => {
+  const { notificationJob, notificationService } = t.context;
+  const spy = Sinon.spy(notificationService, 'createInvitationReviewApproved');
+  await notificationJob.sendInvitationReviewApproved({
+    reviewerId: owner.id,
+    inviteId: `not-exists-${randomUUID()}`,
+  });
+  t.is(spy.callCount, 0);
+});
+
+test('should create invitation review declined notification', async t => {
+  const { notificationJob, notificationService, models } = t.context;
+  await models.workspaceUser.set(
+    workspace.id,
+    member.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Pending
+  );
+  const spy = Sinon.spy(notificationService, 'createInvitationReviewDeclined');
+  await notificationJob.sendInvitationReviewDeclined({
+    reviewerId: owner.id,
+    userId: member.id,
+    workspaceId: workspace.id,
+  });
+  t.is(spy.callCount, 1);
+  t.is(spy.firstCall.args[0].userId, member.id);
+  t.is(spy.firstCall.args[0].body.workspaceId, workspace.id);
+  t.is(spy.firstCall.args[0].body.createdByUserId, owner.id);
+});

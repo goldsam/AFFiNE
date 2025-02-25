@@ -81,28 +81,6 @@ export class WorkspaceService {
     };
   }
 
-  private async getInviteeEmailTarget(inviteId: string) {
-    const { workspaceId, inviteeUserId } = await this.getInviteInfo(inviteId);
-    if (!inviteeUserId) {
-      this.logger.error(`Invitee user not found for inviteId: ${inviteId}`);
-      return;
-    }
-    const workspace = await this.getWorkspaceInfo(workspaceId);
-    const invitee = await this.models.user.getWorkspaceUser(inviteeUserId);
-    if (!invitee) {
-      this.logger.error(
-        `Invitee user not found in workspace: ${workspaceId}, userId: ${inviteeUserId}`
-      );
-      return;
-    }
-
-    return {
-      inviteeUserId,
-      email: invitee.email,
-      workspace,
-    };
-  }
-
   async sendInvitationAcceptedNotification(inviteId: string) {
     const { workspaceId, inviterUserId, inviteeUserId } =
       await this.getInviteInfo(inviteId);
@@ -158,7 +136,7 @@ export class WorkspaceService {
     }
   }
 
-  async sendReviewRequestedEmail(inviteId: string) {
+  async sendReviewRequestedNotification(inviteId: string) {
     const { workspaceId, inviteeUserId } = await this.getInviteInfo(inviteId);
     if (!inviteeUserId) {
       this.logger.error(`Invitee user not found for inviteId: ${inviteId}`);
@@ -173,38 +151,33 @@ export class WorkspaceService {
       return;
     }
 
-    const workspace = await this.getWorkspaceInfo(workspaceId);
     const owner = await this.models.workspaceUser.getOwner(workspaceId);
-    const admin = await this.models.workspaceUser.getAdmins(workspaceId);
+    const admins = await this.models.workspaceUser.getAdmins(workspaceId);
 
-    for (const user of [owner, ...admin]) {
-      await this.mailer.sendLinkInvitationReviewRequestMail(user.email, {
-        workspace,
-        user: invitee,
-        url: this.url.link(`/workspace/${workspace.id}`),
+    for (const user of [owner, ...admins]) {
+      await this.queue.add('notification.sendInvitationReviewRequested', {
+        reviewerId: user.id,
+        inviteId,
       });
     }
   }
 
-  async sendReviewApproveEmail(inviteId: string) {
-    const target = await this.getInviteeEmailTarget(inviteId);
-    if (!target) return;
-
-    await this.mailer.sendLinkInvitationApproveMail(target.email, {
-      workspace: target.workspace,
-      url: this.url.link(`/workspace/${target.workspace.id}`),
+  async sendReviewApprovedNotification(inviteId: string, reviewerId: string) {
+    await this.queue.add('notification.sendInvitationReviewApproved', {
+      reviewerId,
+      inviteId,
     });
   }
 
-  async sendReviewDeclinedEmail(
-    email: string | undefined,
-    workspaceId: string
+  async sendReviewDeclinedNotification(
+    userId: string,
+    workspaceId: string,
+    reviewerId: string
   ) {
-    if (!email) return;
-
-    const workspace = await this.getWorkspaceInfo(workspaceId);
-    await this.mailer.sendLinkInvitationDeclineMail(email, {
-      workspace,
+    await this.queue.add('notification.sendInvitationReviewDeclined', {
+      reviewerId,
+      userId,
+      workspaceId,
     });
   }
 

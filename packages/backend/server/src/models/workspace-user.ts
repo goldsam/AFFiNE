@@ -31,10 +31,12 @@ declare global {
     };
     'workspace.members.requestApproved': {
       inviteId: string;
+      reviewerId: string;
     };
     'workspace.members.requestDeclined': {
       userId: string;
       workspaceId: string;
+      reviewerId: string;
     };
     'workspace.members.removed': {
       userId: string;

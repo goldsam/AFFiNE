@@ -721,7 +721,7 @@ export interface InvitationAcceptedNotificationBodyType {
   __typename?: 'InvitationAcceptedNotificationBodyType';
   /** The user who created the notification, maybe null when user is deleted or sent by system */
   createdByUser: Maybe<PublicUserType>;
-  inviteId: Scalars['String']['output'];
+  inviteId: Scalars['ID']['output'];
   /** The type of the notification */
   type: NotificationType;
   workspace: Maybe<NotificationWorkspaceType>;
@@ -731,7 +731,7 @@ export interface InvitationBlockedNotificationBodyType {
   __typename?: 'InvitationBlockedNotificationBodyType';
   /** The user who created the notification, maybe null when user is deleted or sent by system */
   createdByUser: Maybe<PublicUserType>;
-  inviteId: Scalars['String']['output'];
+  inviteId: Scalars['ID']['output'];
   /** The type of the notification */
   type: NotificationType;
   workspace: Maybe<NotificationWorkspaceType>;
@@ -739,6 +739,35 @@ export interface InvitationBlockedNotificationBodyType {
 
 export interface InvitationNotificationBodyType {
   __typename?: 'InvitationNotificationBodyType';
+  /** The user who created the notification, maybe null when user is deleted or sent by system */
+  createdByUser: Maybe<PublicUserType>;
+  inviteId: Scalars['ID']['output'];
+  /** The type of the notification */
+  type: NotificationType;
+  workspace: Maybe<NotificationWorkspaceType>;
+}
+
+export interface InvitationReviewApprovedNotificationBodyType {
+  __typename?: 'InvitationReviewApprovedNotificationBodyType';
+  /** The user who created the notification, maybe null when user is deleted or sent by system */
+  createdByUser: Maybe<PublicUserType>;
+  inviteId: Scalars['ID']['output'];
+  /** The type of the notification */
+  type: NotificationType;
+  workspace: Maybe<NotificationWorkspaceType>;
+}
+
+export interface InvitationReviewDeclinedNotificationBodyType {
+  __typename?: 'InvitationReviewDeclinedNotificationBodyType';
+  /** The user who created the notification, maybe null when user is deleted or sent by system */
+  createdByUser: Maybe<PublicUserType>;
+  /** The type of the notification */
+  type: NotificationType;
+  workspace: Maybe<NotificationWorkspaceType>;
+}
+
+export interface InvitationReviewRequestedNotificationBodyType {
+  __typename?: 'InvitationReviewRequestedNotificationBodyType';
   /** The user who created the notification, maybe null when user is deleted or sent by system */
   createdByUser: Maybe<PublicUserType>;
   inviteId: Scalars['ID']['output'];
@@ -1422,6 +1451,9 @@ export enum NotificationType {
   InvitationAccepted = 'InvitationAccepted',
   InvitationBlocked = 'InvitationBlocked',
   InvitationRejected = 'InvitationRejected',
+  InvitationReviewApproved = 'InvitationReviewApproved',
+  InvitationReviewDeclined = 'InvitationReviewDeclined',
+  InvitationReviewRequested = 'InvitationReviewRequested',
   Mention = 'Mention',
 }
 
@@ -1836,6 +1868,9 @@ export type UnionNotificationBodyType =
   | InvitationAcceptedNotificationBodyType
   | InvitationBlockedNotificationBodyType
   | InvitationNotificationBodyType
+  | InvitationReviewApprovedNotificationBodyType
+  | InvitationReviewDeclinedNotificationBodyType
+  | InvitationReviewRequestedNotificationBodyType
   | MentionNotificationBodyType;
 
 export interface UnknownOauthProviderDataType {

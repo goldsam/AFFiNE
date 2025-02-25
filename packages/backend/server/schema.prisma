@@ -678,6 +678,9 @@ enum NotificationType {
   InvitationAccepted
   InvitationBlocked
   InvitationRejected
+  InvitationReviewRequested
+  InvitationReviewApproved
+  InvitationReviewDeclined
 }
 
 enum NotificationLevel {

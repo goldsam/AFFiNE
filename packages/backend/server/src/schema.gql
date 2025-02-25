@@ -574,7 +574,7 @@ type InvitationAcceptedNotificationBodyType {
   The user who created the notification, maybe null when user is deleted or sent by system
   """
   createdByUser: PublicUserType
-  inviteId: String!
+  inviteId: ID!
 
   """The type of the notification"""
   type: NotificationType!
@@ -586,7 +586,7 @@ type InvitationBlockedNotificationBodyType {
   The user who created the notification, maybe null when user is deleted or sent by system
   """
   createdByUser: PublicUserType
-  inviteId: String!
+  inviteId: ID!
 
   """The type of the notification"""
   type: NotificationType!
@@ -594,6 +594,41 @@ type InvitationBlockedNotificationBodyType {
 }
 
 type InvitationNotificationBodyType {
+  """
+  The user who created the notification, maybe null when user is deleted or sent by system
+  """
+  createdByUser: PublicUserType
+  inviteId: ID!
+
+  """The type of the notification"""
+  type: NotificationType!
+  workspace: NotificationWorkspaceType
+}
+
+type InvitationReviewApprovedNotificationBodyType {
+  """
+  The user who created the notification, maybe null when user is deleted or sent by system
+  """
+  createdByUser: PublicUserType
+  inviteId: ID!
+
+  """The type of the notification"""
+  type: NotificationType!
+  workspace: NotificationWorkspaceType
+}
+
+type InvitationReviewDeclinedNotificationBodyType {
+  """
+  The user who created the notification, maybe null when user is deleted or sent by system
+  """
+  createdByUser: PublicUserType
+
+  """The type of the notification"""
+  type: NotificationType!
+  workspace: NotificationWorkspaceType
+}
+
+type InvitationReviewRequestedNotificationBodyType {
   """
   The user who created the notification, maybe null when user is deleted or sent by system
   """
@@ -989,6 +1024,9 @@ enum NotificationType {
   InvitationAccepted
   InvitationBlocked
   InvitationRejected
+  InvitationReviewApproved
+  InvitationReviewDeclined
+  InvitationReviewRequested
   Mention
 }
 
@@ -1349,7 +1387,7 @@ enum SubscriptionVariant {
   Onetime
 }
 
-union UnionNotificationBodyType = InvitationAcceptedNotificationBodyType | InvitationBlockedNotificationBodyType | InvitationNotificationBodyType | MentionNotificationBodyType
+union UnionNotificationBodyType = InvitationAcceptedNotificationBodyType | InvitationBlockedNotificationBodyType | InvitationNotificationBodyType | InvitationReviewApprovedNotificationBodyType | InvitationReviewDeclinedNotificationBodyType | InvitationReviewRequestedNotificationBodyType | MentionNotificationBodyType
 
 type UnknownOauthProviderDataType {
   name: String!

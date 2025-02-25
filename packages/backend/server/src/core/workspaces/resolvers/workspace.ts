@@ -541,11 +541,11 @@ export class WorkspaceResolver {
 
   @Mutation(() => Boolean)
   async revoke(
-    @CurrentUser() user: CurrentUser,
+    @CurrentUser() me: CurrentUser,
     @Args('workspaceId') workspaceId: string,
     @Args('userId') userId: string
   ) {
-    if (userId === user.id) {
+    if (userId === me.id) {
       throw new CanNotRevokeYourself();
     }
 
@@ -556,7 +556,7 @@ export class WorkspaceResolver {
     }
 
     await this.ac
-      .user(user.id)
+      .user(me.id)
       .workspace(workspaceId)
       .assert(
         role.type === WorkspaceRole.Admin
@@ -577,6 +577,7 @@ export class WorkspaceResolver {
       this.event.emit('workspace.members.requestDeclined', {
         userId,
         workspaceId,
+        reviewerId: me.id,
       });
     } else {
       this.event.emit('workspace.members.removed', {

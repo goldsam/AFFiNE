@@ -475,7 +475,7 @@ test('should be able to manage invite link', async t => {
 });
 
 test('should be able to approve team member', async t => {
-  const { app } = t.context;
+  const { app, event } = t.context;
   const { teamWorkspace: tws, owner, admin, write, read } = await init(app, 6);
 
   {
@@ -495,6 +495,15 @@ test('should be able to approve team member', async t => {
     t.is(memberInvite.status, 'UnderReview', 'should be under review');
 
     t.true(await approveMember(app, tws.id, member.id));
+    t.truthy(event.emit.lastCall);
+    t.deepEqual(
+      event.emit.lastCall.args,
+      [
+        'workspace.members.requestApproved',
+        { inviteId: memberInvite.inviteId, reviewerId: owner.id },
+      ],
+      'should emit request approved event'
+    );
   }
 
   {
@@ -669,7 +678,7 @@ test('should be able to emit events', async t => {
       event.emit.lastCall.args,
       [
         'workspace.members.requestDeclined',
-        { userId: user.id, workspaceId: tws.id },
+        { userId: user.id, workspaceId: tws.id, reviewerId: owner.id },
       ],
       'should emit review requested event'
     );

@@ -15,28 +15,33 @@ export class WorkspaceEvents {
   async onReviewRequested({
     inviteId,
   }: Events['workspace.members.reviewRequested']) {
-    // send review request mail to owner and admin
-    await this.workspaceService.sendReviewRequestedEmail(inviteId);
+    // send review request notification and mail to owner and admin
+    await this.workspaceService.sendReviewRequestedNotification(inviteId);
   }
 
   @OnEvent('workspace.members.requestApproved')
   async onApproveRequest({
     inviteId,
+    reviewerId,
   }: Events['workspace.members.requestApproved']) {
-    // send approve mail
-    await this.workspaceService.sendReviewApproveEmail(inviteId);
+    // send approve notification and mail to invitee
+    await this.workspaceService.sendReviewApprovedNotification(
+      inviteId,
+      reviewerId
+    );
   }
 
   @OnEvent('workspace.members.requestDeclined')
   async onDeclineRequest({
     userId,
     workspaceId,
+    reviewerId,
   }: Events['workspace.members.requestDeclined']) {
-    const user = await this.models.user.getWorkspaceUser(userId);
-    // send decline mail
-    await this.workspaceService.sendReviewDeclinedEmail(
-      user?.email,
-      workspaceId
+    // send decline notification and mail to invitee
+    await this.workspaceService.sendReviewDeclinedNotification(
+      userId,
+      workspaceId,
+      reviewerId
     );
   }
 
