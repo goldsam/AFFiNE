@@ -7,15 +7,14 @@ import {
   type ToolbarAction,
   type ToolbarActions,
   type ToolbarContext,
-  type ToolbarModuleConfig,
 } from '@blocksuite/affine-shared/services';
-import { BlockSelection } from '@blocksuite/block-std';
 import { nextTick } from '@blocksuite/global/utils';
 import { MoreVerticalIcon } from '@blocksuite/icons/lit';
 import type {
   AutoUpdateOptions,
   Placement,
   ReferenceElement,
+  SideObject,
 } from '@floating-ui/dom';
 import {
   autoUpdate,
@@ -38,54 +37,83 @@ import orderBy from 'lodash-es/orderBy';
 import partition from 'lodash-es/partition';
 import toPairs from 'lodash-es/toPairs';
 
+export const sideMap = new Map([
+  // includes frame element
+  ['affine:surface:frame', { top: 28 }],
+  // includes group element
+  ['affine:surface:group', { top: 20 }],
+  // only one shape element
+  ['affine:surface:shape', { top: 26, bottom: -26 }],
+]);
+
 export function autoUpdatePosition(
-  referenceElement: ReferenceElement,
+  signal: AbortSignal,
   toolbar: EditorToolbar,
-  placement: Placement = 'top-start',
-  options: AutoUpdateOptions = { elementResize: false, animationFrame: true }
+  referenceElement: ReferenceElement,
+  flavour: string,
+  placement: Placement,
+  sideOptions: Partial<SideObject> | null,
+  options: AutoUpdateOptions = { animationFrame: true }
 ) {
-  const abortController = new AbortController();
-  const signal = abortController.signal;
+  const isInline = flavour === 'affine:note';
+  const hasSurfaceScope = flavour.includes('surface');
+  const offsetTop = sideOptions?.top ?? 0;
+  const offsetBottom = sideOptions?.bottom ?? 0;
+  const offsetY = offsetTop + (hasSurfaceScope ? 2 : 0);
+  const config = {
+    placement,
+    middleware: [
+      offset(10 + offsetY),
+      isInline ? inline() : undefined,
+      shift(state => ({
+        padding: {
+          top: 10,
+          right: 10,
+          bottom: 150,
+          left: 10,
+        },
+        crossAxis: state.placement.includes('bottom'),
+        limiter: limitShift(),
+      })),
+      flip({ padding: 10 }),
+      hide(),
+    ],
+  };
   const update = async () => {
     await Promise.race([
       new Promise(resolve => {
-        const listener = () => resolve(signal.reason);
-        signal.addEventListener('abort', listener, { once: true });
+        signal.addEventListener('abort', () => resolve(signal.reason), {
+          once: true,
+        });
 
         if (signal.aborted) return;
 
-        signal.removeEventListener('abort', listener);
         resolve(null);
       }),
-      toolbar.updateComplete.then(nextTick),
+      isInline ? toolbar.updateComplete.then(nextTick) : toolbar.updateComplete,
     ]);
 
     if (signal.aborted) return;
 
-    const { x, y } = await computePosition(referenceElement, toolbar, {
-      placement,
-      middleware: [
-        offset(10),
-        inline(),
-        shift(state => ({
-          padding: {
-            top: 10,
-            right: 10,
-            bottom: 150,
-            left: 10,
-          },
-          crossAxis: state.placement.includes('bottom'),
-          limiter: limitShift(),
-        })),
-        flip({ padding: 10 }),
-        hide(),
-      ],
-    });
+    const result = await computePosition(referenceElement, toolbar, config);
+
+    const { x, middlewareData, placement: currentPlacement } = result;
+    const y =
+      result.y -
+      (currentPlacement.includes('top') ? 0 : offsetTop + offsetBottom);
 
     toolbar.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+
+    if (toolbar.dataset.open) {
+      if (middlewareData.hide?.referenceHidden) {
+        delete toolbar.dataset.open;
+      }
+    } else {
+      toolbar.dataset.open = 'true';
+    }
   };
 
-  const cleanup = autoUpdate(
+  return autoUpdate(
     referenceElement,
     toolbar,
     () => {
@@ -93,15 +121,37 @@ export function autoUpdatePosition(
     },
     options
   );
-
-  return () => {
-    cleanup();
-    if (signal.aborted) return;
-    abortController.abort();
-  };
 }
 
-function group(actions: ToolbarAction[]) {
+export function combine(actions: ToolbarActions, context: ToolbarContext) {
+  const grouped = group(actions);
+
+  const generated = grouped.map(action => {
+    const newAction = {
+      ...action,
+      placement: action.placement ?? ActionPlacement.Normal,
+    };
+
+    if ('generate' in action && typeof action.generate === 'function') {
+      // TODO(@fundon): should delete `generate` fn
+      return {
+        ...newAction,
+        ...action.generate(context),
+      };
+    }
+
+    return newAction;
+  });
+
+  const filtered = generated.filter(action => {
+    if (typeof action.when === 'function') return action.when(context);
+    return action.when ?? true;
+  });
+
+  return filtered;
+}
+
+function group(actions: ToolbarAction[]): ToolbarAction[] {
   const grouped = groupBy(actions, a => a.id);
 
   const paired = toPairs(grouped).map(([_, items]) => {
@@ -112,28 +162,6 @@ function group(actions: ToolbarAction[]) {
   });
 
   return paired;
-}
-
-export function combine(actions: ToolbarActions, context: ToolbarContext) {
-  const grouped = group(actions);
-
-  const generated = grouped.map(action => {
-    if ('generate' in action && action.generate) {
-      // TODO(@fundon): should delete `generate` fn
-      return {
-        ...action,
-        ...action.generate(context),
-      };
-    }
-    return action;
-  });
-
-  const filtered = generated.filter(action => {
-    if (typeof action.when === 'function') return action.when(context);
-    return action.when ?? true;
-  });
-
-  return filtered;
 }
 
 const merge = (a: any, b: any) =>
@@ -155,27 +183,23 @@ export function renderToolbar(
   context: ToolbarContext,
   flavour: string
 ) {
+  const hasSurfaceScope = flavour.includes('surface');
   const toolbarRegistry = context.toolbarRegistry;
-  const module = toolbarRegistry.modules.get(flavour);
-  if (!module) return;
-  const customModule = toolbarRegistry.modules.get(`custom:${flavour}`);
-  const customWildcardModule = toolbarRegistry.modules.get(`custom:affine:*`);
-  const config = module.config satisfies ToolbarModuleConfig;
-  const customConfig = (customModule?.config ?? {
-    actions: [],
-  }) satisfies ToolbarModuleConfig;
-  const customWildcardConfig = (customWildcardModule?.config ?? {
-    actions: [],
-  }) satisfies ToolbarModuleConfig;
 
-  const combined = combine(
-    [
-      ...config.actions,
-      ...customConfig.actions,
-      ...customWildcardConfig.actions,
-    ],
-    context
-  );
+  const actions = [
+    flavour,
+    `custom:${flavour}`,
+    hasSurfaceScope ? ['affine:surface:*', 'custom:affine:surface:*'] : [],
+    'affine:*',
+    'custom:affine:*',
+  ]
+    .flat()
+    .map(key => toolbarRegistry.modules.get(key))
+    .filter(module => !!module)
+    .map<ToolbarActions>(module => module.config.actions)
+    .flat();
+
+  const combined = combine(actions, context);
 
   const ordered = orderBy(
     combined,
@@ -194,40 +218,36 @@ export function renderToolbar(
       context,
       renderMenuActionItem
     );
-    if (moreMenuItems.length) {
-      // TODO(@fundon): edgeless case needs to be considered
-      const key = `${flavour}:${context.getCurrentModelBy(BlockSelection)?.id}`;
+    // if (moreMenuItems.length) {
+    // TODO(@fundon): edgeless case needs to be considered
+    const key = `${context.getCurrentModel()?.id ?? context.getCurrentElement()?.id}`;
 
-      primaryActionGroup.push({
-        id: 'more',
-        content: html`${keyed(
-          key,
-          html`
-            <editor-menu-button
-              class="more-menu"
-              .contentPadding="${'8px'}"
-              .button=${html`
-                <editor-icon-button aria-label="More" .tooltip="${'More'}">
-                  ${MoreVerticalIcon()}
-                </editor-icon-button>
-              `}
-            >
-              <div data-size="large" data-orientation="vertical">
-                ${join(moreMenuItems, () =>
-                  renderToolbarSeparator('horizontal')
-                )}
-              </div>
-            </editor-menu-button>
-          `
-        )}`,
-      });
-    }
+    primaryActionGroup.push({
+      id: 'more',
+      content: html`${keyed(
+        `${flavour}:${key}`,
+        html`
+          <editor-menu-button
+            class="more-menu"
+            .contentPadding="${'8px'}"
+            .button=${html`
+              <editor-icon-button aria-label="More" .tooltip="${'More'}">
+                ${MoreVerticalIcon()}
+              </editor-icon-button>
+            `}
+          >
+            <div data-size="large" data-orientation="vertical">
+              ${join(moreMenuItems, renderToolbarSeparator('horizontal'))}
+            </div>
+          </editor-menu-button>
+        `
+      )}`,
+    });
+    // }
   }
 
   render(
-    join(renderActions(primaryActionGroup, context), () =>
-      renderToolbarSeparator()
-    ),
+    join(renderActions(primaryActionGroup, context), renderToolbarSeparator()),
     toolbar
   );
 }

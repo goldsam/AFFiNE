@@ -4,6 +4,7 @@ import type { ToolbarContext } from './context';
 
 export enum ActionPlacement {
   Start = 0,
+  Normal = 1 << 0,
   End = 1 << 1,
   More = 1 << 2,
 }

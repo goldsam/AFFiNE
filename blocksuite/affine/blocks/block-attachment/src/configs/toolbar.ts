@@ -136,7 +136,6 @@ export const builtinToolbarConfig = {
       id: 'a.rename',
       content(cx) {
         const component = cx.getCurrentBlockComponentBy(
-          BlockSelection,
           AttachmentBlockComponent
         );
         if (!component) return null;
@@ -178,7 +177,6 @@ export const builtinToolbarConfig = {
       icon: DownloadIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           AttachmentBlockComponent
         );
         component?.download();
@@ -190,7 +188,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           AttachmentBlockComponent
         );
         component?.captionEditor?.show();
@@ -212,7 +209,6 @@ export const builtinToolbarConfig = {
           run(ctx) {
             // TODO(@fundon): unify `clone` method
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               AttachmentBlockComponent
             );
             component?.copy();
@@ -224,7 +220,6 @@ export const builtinToolbarConfig = {
           icon: DuplicateIcon(),
           run(ctx) {
             const model = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               AttachmentBlockComponent
             )?.model;
             if (!model) return;
@@ -247,7 +242,6 @@ export const builtinToolbarConfig = {
       icon: ResetIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           AttachmentBlockComponent
         );
         component?.refreshData();
@@ -260,7 +254,7 @@ export const builtinToolbarConfig = {
       icon: DeleteIcon(),
       variant: 'destructive',
       run(ctx) {
-        const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+        const model = ctx.getCurrentModel();
         if (!model) return;
 
         ctx.store.deleteBlock(model);

@@ -27,9 +27,6 @@ import * as Y from 'yjs';
 import { EmbedIframeBlockComponent } from '../embed-iframe-block';
 
 const trackBaseProps = {
-  segment: 'doc',
-  page: 'doc editor',
-  module: 'toolbar',
   category: 'bookmark',
   type: 'card view',
 };
@@ -154,7 +151,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedIframeBlockComponent
         );
         component?.captionEditor?.show();
@@ -208,7 +204,6 @@ export const builtinToolbarConfig = {
       icon: ResetIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedIframeBlockComponent
         );
         component?.refreshData().catch(console.error);

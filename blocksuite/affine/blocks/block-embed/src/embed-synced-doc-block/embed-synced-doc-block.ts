@@ -281,7 +281,6 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
   convertToCard = (aliasInfo?: AliasInfo) => {
     const { doc, caption } = this.model;
-
     const parent = doc.getParent(this.model);
     if (!parent) {
       console.error(

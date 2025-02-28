@@ -38,7 +38,6 @@ export const builtinToolbarConfig = {
       id: 'a.doc-title',
       content(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedLinkedDocBlockComponent
         );
         if (!component) return null;
@@ -63,7 +62,6 @@ export const builtinToolbarConfig = {
           label: 'Inline view',
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedLinkedDocBlockComponent
             );
             component?.covertToInline();
@@ -89,7 +87,6 @@ export const builtinToolbarConfig = {
           label: 'Embed view',
           disabled(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedLinkedDocBlockComponent
             );
             if (!component) return true;
@@ -108,7 +105,6 @@ export const builtinToolbarConfig = {
           },
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedLinkedDocBlockComponent
             );
             component?.convertToEmbed();
@@ -208,7 +204,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedLinkedDocBlockComponent
         );
         component?.captionEditor?.show();

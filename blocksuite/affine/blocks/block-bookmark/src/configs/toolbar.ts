@@ -243,7 +243,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           BookmarkBlockComponent
         );
         component?.captionEditor?.show();
@@ -263,7 +262,7 @@ export const builtinToolbarConfig = {
           label: 'Copy',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+            const model = ctx.getCurrentModel();
             if (!model) return;
 
             const slice = Slice.fromModels(ctx.store, [model]);
@@ -278,7 +277,7 @@ export const builtinToolbarConfig = {
           label: 'Duplicate',
           icon: DuplicateIcon(),
           run(ctx) {
-            const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+            const model = ctx.getCurrentModel();
             if (!model) return;
 
             const { flavour, parent } = model;
@@ -297,7 +296,6 @@ export const builtinToolbarConfig = {
       icon: ResetIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           BookmarkBlockComponent
         );
         component?.refreshData();
@@ -310,7 +308,7 @@ export const builtinToolbarConfig = {
       icon: DeleteIcon(),
       variant: 'destructive',
       run(ctx) {
-        const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+        const model = ctx.getCurrentModel();
         if (!model) return;
 
         ctx.store.deleteBlock(model);

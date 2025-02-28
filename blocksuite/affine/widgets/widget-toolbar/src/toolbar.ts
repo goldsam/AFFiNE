@@ -8,30 +8,38 @@ import {
   ParagraphBlockModel,
 } from '@blocksuite/affine-model';
 import {
-  getBlockSelectionsCommand,
-  getSelectedBlocksCommand,
-} from '@blocksuite/affine-shared/commands';
-import {
   ToolbarContext,
   ToolbarFlag as Flag,
   ToolbarRegistryIdentifier,
 } from '@blocksuite/affine-shared/services';
 import { matchModels } from '@blocksuite/affine-shared/utils';
 import {
+  type BlockComponent,
   BlockSelection,
   SurfaceSelection,
   TextSelection,
   WidgetComponent,
 } from '@blocksuite/block-std';
-import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
-import { Bound, getCommonBound } from '@blocksuite/global/gfx';
+import {
+  GfxBlockElementModel,
+  type GfxController,
+  type GfxModel,
+  GfxPrimitiveElementModel,
+} from '@blocksuite/block-std/gfx';
+import {
+  Bound,
+  getCommonBound,
+  getCommonBoundWithRotation,
+} from '@blocksuite/global/gfx';
 import { nextTick } from '@blocksuite/global/utils';
-import type { Placement, ReferenceElement } from '@floating-ui/dom';
+import type { Placement, ReferenceElement, SideObject } from '@floating-ui/dom';
 import { batch, effect, signal } from '@preact/signals-core';
 import { css } from 'lit';
+import groupBy from 'lodash-es/groupBy';
 import throttle from 'lodash-es/throttle';
+import toPairs from 'lodash-es/toPairs';
 
-import { autoUpdatePosition, renderToolbar } from './utils';
+import { autoUpdatePosition, renderToolbar, sideMap } from './utils';
 
 export const AFFINE_TOOLBAR_WIDGET = 'affine-toolbar-widget';
 
@@ -47,7 +55,7 @@ export class AffineToolbarWidget extends WidgetComponent {
       backface-visibility: hidden;
       z-index: var(--affine-z-index-popover);
 
-      will-change: opacity, transform;
+      will-change: opacity, overlay, display, transform;
       transition-property: opacity, overlay, display;
       transition-duration: 120ms;
       transition-timing-function: ease-out;
@@ -65,9 +73,62 @@ export class AffineToolbarWidget extends WidgetComponent {
     }
   `;
 
-  range$ = signal<Range | null>(null);
-
   flavour$ = signal('affine:note');
+
+  placement$ = signal<Placement>('top');
+
+  sideOptions$ = signal<Partial<SideObject> | null>(null);
+
+  referenceElement$ = signal<(() => ReferenceElement | null) | null>(null);
+
+  setReferenceElementWithRange(range: Range | null) {
+    this.referenceElement$.value = range
+      ? () => ({
+          getBoundingClientRect: () => range.getBoundingClientRect(),
+          getClientRects: () =>
+            Array.from(range.getClientRects()).filter(rect =>
+              Math.round(rect.width)
+            ),
+        })
+      : null;
+  }
+
+  setReferenceElementWithHtmlElement(element: Element | null) {
+    this.referenceElement$.value = element ? () => element : null;
+  }
+
+  setReferenceElementWithBlocks(blocks: BlockComponent[]) {
+    const getClientRects = () => blocks.map(e => e.getBoundingClientRect());
+
+    this.referenceElement$.value = blocks.length
+      ? () => ({
+          getBoundingClientRect: () => {
+            const rects = getClientRects();
+            const bounds = getCommonBound(rects.map(Bound.fromDOMRect));
+            if (!bounds) return rects[0];
+            return new DOMRect(bounds.x, bounds.y, bounds.w, bounds.h);
+          },
+          getClientRects,
+        })
+      : null;
+  }
+
+  setReferenceElementWithElements(gfx: GfxController, elements: GfxModel[]) {
+    const getBoundingClientRect = () => {
+      const bounds = getCommonBoundWithRotation(elements);
+      const { x: offsetX, y: offsetY } = this.getBoundingClientRect();
+      const [x, y, w, h] = gfx.viewport.toViewBound(bounds).toXYWH();
+      const rect = new DOMRect(x + offsetX, y + offsetY, w, h);
+      return rect;
+    };
+
+    this.referenceElement$.value = elements.length
+      ? () => ({
+          getBoundingClientRect,
+          getClientRects: () => [getBoundingClientRect()],
+        })
+      : null;
+  }
 
   toolbar = new EditorToolbar();
 
@@ -80,7 +141,9 @@ export class AffineToolbarWidget extends WidgetComponent {
 
     const {
       flavour$,
-      range$,
+      placement$,
+      sideOptions$,
+      referenceElement$,
       disposables,
       toolbar,
       toolbarRegistry,
@@ -98,22 +161,25 @@ export class AffineToolbarWidget extends WidgetComponent {
     // Selects text in note.
     disposables.add(
       std.selection.find$(TextSelection).subscribe(result => {
-        const activated =
+        const range = std.range.value ?? null;
+        const activated = Boolean(
           context.activated &&
-          Boolean(
+            range &&
             result &&
-              !result.isCollapsed() &&
-              result.from.length + (result.to?.length ?? 0)
-          );
+            !result.isCollapsed() &&
+            result.from.length + (result.to?.length ?? 0)
+        );
 
         batch(() => {
           flags.toggle(Flag.Text, activated);
 
           if (!activated) return;
 
-          const range = std.range.value ?? null;
-          range$.value = activated ? range : null;
+          this.setReferenceElementWithRange(range);
 
+          sideOptions$.value = null;
+          flavour$.value = 'affine:note';
+          placement$.value = 'top';
           flags.refresh(Flag.Text);
         });
       })
@@ -124,54 +190,65 @@ export class AffineToolbarWidget extends WidgetComponent {
     disposables.addFromEvent(document, 'selectionchange', () => {
       const range = std.range.value ?? null;
       let activated = context.activated && Boolean(range && !range.collapsed);
+      let isNative = false;
 
       if (activated) {
         const result = std.selection.find(DatabaseSelection);
         const viewSelection = result?.viewSelection;
-
-        activated = Boolean(
-          viewSelection &&
-            ((viewSelection.selectionType === 'area' &&
+        if (viewSelection) {
+          isNative = true;
+          activated =
+            (viewSelection.selectionType === 'area' &&
               viewSelection.isEditing) ||
-              (viewSelection.selectionType === 'cell' &&
-                viewSelection.isEditing))
-        );
+            (viewSelection.selectionType === 'cell' && viewSelection.isEditing);
+        }
 
-        if (!activated) {
+        if (!isNative) {
           const result = std.selection.find(TableSelection);
           const viewSelection = result?.data;
-          activated = Boolean(viewSelection && viewSelection.type === 'area');
+          if (viewSelection) {
+            isNative = true;
+            activated = viewSelection.type === 'area';
+          }
         }
       }
 
       batch(() => {
+        if (!isNative && !activated && flags.check(Flag.Text)) {
+          flags.toggle(Flag.Text, activated);
+        }
+
+        activated &&= isNative;
         flags.toggle(Flag.Native, activated);
 
         if (!activated) return;
 
-        range$.value = activated ? range : null;
-        flavour$.value = 'affine:note';
+        this.setReferenceElementWithRange(range);
 
+        sideOptions$.value = null;
+        flavour$.value = 'affine:note';
+        placement$.value = 'top';
         flags.refresh(Flag.Native);
       });
     });
 
     // Selects blocks in note.
     disposables.add(
-      std.selection.filter$(BlockSelection).subscribe(result => {
-        const count = result.length;
+      std.selection.filter$(BlockSelection).subscribe(selections => {
+        const blockIds = selections.map(s => s.blockId);
+        const count = blockIds.length;
         let flavour = 'affine:note';
         let activated = context.activated && Boolean(count);
 
         if (activated) {
           // Handles a signal block.
-          const block = count === 1 && std.store.getBlock(result[0].blockId);
+          const block = count === 1 && std.store.getBlock(blockIds[0]);
 
           // Chencks if block's config exists.
           if (block) {
             const modelFlavour = block.model.flavour;
             const existed =
-              toolbarRegistry.modules.has(modelFlavour) ||
+              toolbarRegistry.modules.has(modelFlavour) ??
               toolbarRegistry.modules.has(`custom:${modelFlavour}`);
             if (existed) {
               flavour = modelFlavour;
@@ -187,12 +264,19 @@ export class AffineToolbarWidget extends WidgetComponent {
         }
 
         batch(() => {
-          flavour$.value = flavour;
-
           flags.toggle(Flag.Block, activated);
 
           if (!activated) return;
 
+          this.setReferenceElementWithBlocks(
+            blockIds
+              .map(id => std.view.getBlock(id))
+              .filter(block => block !== null)
+          );
+
+          sideOptions$.value = null;
+          flavour$.value = flavour;
+          placement$.value = flavour === 'affine:note' ? 'top' : 'top-start';
           flags.refresh(Flag.Block);
         });
       })
@@ -201,12 +285,75 @@ export class AffineToolbarWidget extends WidgetComponent {
     // Selects elements in edgeless.
     // Triggered only when not in editing state.
     disposables.add(
-      std.selection.filter$(SurfaceSelection).subscribe(result => {
+      std.selection.filter$(SurfaceSelection).subscribe(selections => {
+        const elementIds = selections
+          .map(s => (s.editing || s.inoperable ? [] : s.elements))
+          .flat();
+        const count = elementIds.length;
+        const gfx = context.gfx;
+        const surface = gfx.surface;
         const activated =
-          context.activated &&
-          Boolean(result.length) &&
-          !result.some(e => e.editing);
-        flags.toggle(Flag.Surface, activated);
+          context.activated && Boolean(surface) && Boolean(count);
+        let flavour = 'affine:surface';
+        let elements: GfxModel[] = [];
+        let hasLocked = false;
+        let sideOptions = null;
+
+        if (activated && surface) {
+          elements = elementIds
+            .map(id => gfx.getElementById(id))
+            .filter(model => model !== null) as GfxModel[];
+
+          hasLocked = elements.some(e => e.isLocked());
+
+          const grouped = groupBy(
+            elements.map(model => {
+              let flavour = surface.flavour;
+
+              if (model instanceof GfxBlockElementModel) {
+                flavour += `:${model.flavour.split(':').pop()}`;
+              } else if (model instanceof GfxPrimitiveElementModel) {
+                flavour += `:${model.type}`;
+              }
+
+              return { model, flavour };
+            }),
+            e => e.flavour
+          );
+
+          const paired = toPairs(grouped);
+
+          if (paired.length === 1) {
+            flavour = paired[0][0];
+            if (
+              flavour === 'affine:surface:shape' &&
+              paired[0][1].length === 1
+            ) {
+              sideOptions = sideMap.get(flavour) ?? null;
+            }
+          }
+          if (!sideOptions) {
+            const flavours = new Set(paired.map(([f]) => f));
+            if (flavours.has('affine:surface:frame')) {
+              sideOptions = sideMap.get('affine:surface:frame') ?? null;
+            } else if (flavours.has('affine:surface:group')) {
+              sideOptions = sideMap.get('affine:surface:group') ?? null;
+            }
+          }
+        }
+
+        batch(() => {
+          flags.toggle(Flag.Surface, activated);
+
+          if (!activated || !flavour) return;
+
+          this.setReferenceElementWithElements(gfx, elements);
+
+          sideOptions$.value = sideOptions;
+          flavour$.value = flavour;
+          placement$.value = hasLocked ? 'top' : 'top-start';
+          flags.refresh(Flag.Surface);
+        });
       })
     );
 
@@ -223,7 +370,8 @@ export class AffineToolbarWidget extends WidgetComponent {
         if (!hasTextSelection) return;
 
         const range = std.range.value ?? null;
-        range$.value = range && !range.collapsed ? range : null;
+
+        this.setReferenceElementWithRange(range);
 
         // TODO(@fundon): maybe here can be further optimized
         // 1. Prevents flickering effects.
@@ -236,21 +384,27 @@ export class AffineToolbarWidget extends WidgetComponent {
     );
 
     // TODO(@fundon): improve these cases
-    // When switch the view mode, wait until the view is created
+    // Waits until the view is created when switching the view mode.
     // `card view` or `embed view`
     disposables.add(
       std.view.viewUpdated.subscribe(record => {
-        if (
-          record.type === 'block' &&
-          flags.isBlock() &&
-          std.selection
-            .filter$(BlockSelection)
-            .peek()
-            .find(s => s.blockId === record.id)
-        ) {
-          if (record.method === 'add') {
+        if (record.type !== 'block') return;
+        if (!flags.isBlock()) return;
+
+        const blockIds = std.selection
+          .filter$(BlockSelection)
+          .peek()
+          .map(s => s.blockId);
+
+        if (record.method === 'add' && blockIds.includes(record.id)) {
+          batch(() => {
+            this.setReferenceElementWithBlocks(
+              blockIds
+                .map(id => std.view.getBlock(id))
+                .filter(block => block !== null)
+            );
             flags.refresh(Flag.Block);
-          }
+          });
           return;
         }
       })
@@ -302,9 +456,9 @@ export class AffineToolbarWidget extends WidgetComponent {
       eventOptions
     );
 
-    // Handles hover elements
+    // Handles element when hovering
     disposables.add(
-      toolbarRegistry.message$.subscribe(data => {
+      message$.subscribe(data => {
         if (
           !context.activated ||
           flags.contains(Flag.Text | Flag.Native | Flag.Block)
@@ -324,130 +478,85 @@ export class AffineToolbarWidget extends WidgetComponent {
 
           setFloating(toolbar);
 
-          flavour$.value = flavour;
+          this.setReferenceElementWithHtmlElement(data.element);
 
+          sideOptions$.value = null;
+          flavour$.value = flavour;
+          placement$.value = 'top';
           flags.refresh(Flag.Hovering);
         });
-      })
-    );
-
-    // Should update position of notes' toolbar in edgeless
-    disposables.add(
-      this.std
-        .get(GfxControllerIdentifier)
-        .viewport.viewportUpdated.subscribe(() => {
-          if (!context.activated) return;
-
-          if (flags.value === Flag.None || flags.check(Flag.Hiding)) {
-            return;
-          }
-
-          if (flags.isText()) {
-            flags.refresh(Flag.Text);
-            return;
-          }
-
-          if (flags.isNative()) {
-            flags.refresh(Flag.Native);
-            return;
-          }
-
-          if (flags.isBlock()) {
-            flags.refresh(Flag.Block);
-            return;
-          }
-        })
-    );
-
-    disposables.add(
-      flags.value$.subscribe(value => {
-        // Hides toolbar
-        if (value === Flag.None || flags.check(Flag.Hiding, value)) {
-          delete toolbar.dataset.open;
-          return;
-        }
-
-        // Shows toolbar
-        // 1. `Flag.Text`: formatting in note
-        // 2. `Flag.Native`: formating in database
-        // 3. `Flag.Block`: blocks in note
-        // 4. `Flag.Hovering`: inline links in note/database
-        if (
-          flags.contains(
-            Flag.Hovering | Flag.Text | Flag.Native | Flag.Block,
-            value
-          )
-        ) {
-          renderToolbar(toolbar, context, flavour$.peek());
-          toolbar.dataset.open = 'true';
-          return;
-        }
-
-        // Shows toolbar in edgeles
-        // TODO(@fundon): handles edgeless toolbar
       })
     );
 
     disposables.add(
       effect(() => {
         const value = flags.value$.value;
+
+        // Hides toolbar
+        if (value === Flag.None || flags.check(Flag.Hiding, value)) {
+          if (toolbar.dataset.open) delete toolbar.dataset.open;
+          return;
+        }
+
         const flavour = flavour$.value;
-        if (!context.activated || flags.contains(Flag.Hiding, value)) return;
+
+        // Shows toolbar
+        // 1. `Flag.Text`: formatting in note
+        // 2. `Flag.Native`: formating in database/table
+        // 3. `Flag.Block`: blocks in note
+        // 4. `Flag.Hovering`: inline links in note/database/table
+        // 5. `Flag.Surface`: elements in edgeless
+        renderToolbar(toolbar, context, flavour);
+        if (toolbar.dataset.open) return;
+        toolbar.dataset.open = 'true';
+      })
+    );
+
+    let abortController = new AbortController();
+
+    disposables.add(
+      effect(() => {
+        if (!abortController.signal.aborted) {
+          abortController.abort();
+        }
+
+        const value = flags.value$.value;
+
         if (
-          !flags.contains(
-            Flag.Hovering | Flag.Text | Flag.Native | Flag.Block,
-            value
-          )
+          !context.activated ||
+          Flag.None === value ||
+          flags.contains(Flag.Hiding, value)
         )
           return;
 
-        // TODO(@fundon): improves here
-        const isNote = flavour === 'affine:note';
-        let placement = isNote ? ('top' as Placement) : undefined;
-        let virtualEl: ReferenceElement | null = null;
+        const build = referenceElement$.value;
+        const referenceElement = build?.();
+        if (!referenceElement) return;
 
-        if (flags.check(Flag.Hovering, value)) {
-          const message = message$.value;
-          if (!message) return;
+        const flavour = flavour$.value;
+        const placement = placement$.value;
+        const sideOptions = sideOptions$.value;
 
-          const { element } = message;
-
-          virtualEl = element;
-          placement = 'top';
-        } else if (flags.check(Flag.Block, value)) {
-          const [ok, { selectedBlocks }] = context.chain
-            .pipe(getBlockSelectionsCommand)
-            .pipe(getSelectedBlocksCommand, { types: ['block'] })
-            .run();
-
-          if (!ok || !selectedBlocks?.length) return;
-
-          virtualEl = {
-            getBoundingClientRect: () => {
-              const rects = selectedBlocks.map(e => e.getBoundingClientRect());
-              const bounds = getCommonBound(rects.map(Bound.fromDOMRect));
-              if (!bounds) return rects[0];
-              return new DOMRect(bounds.x, bounds.y, bounds.w, bounds.h);
-            },
-            getClientRects: () =>
-              selectedBlocks.map(e => e.getBoundingClientRect()),
-          };
-        } else {
-          const range = range$.value;
-          if (!range) return;
-
-          virtualEl = {
-            getBoundingClientRect: () => range.getBoundingClientRect(),
-            getClientRects: () =>
-              Array.from(range.getClientRects()).filter(rect =>
-                Math.round(rect.width)
-              ),
-          };
+        if (abortController.signal.aborted) {
+          abortController = new AbortController();
         }
+        const signal = abortController.signal;
 
-        if (!virtualEl) return;
+        const cleanup = autoUpdatePosition(
+          signal,
+          toolbar,
+          referenceElement,
+          flavour,
+          placement,
+          sideOptions
+        );
 
-        return autoUpdatePosition(virtualEl, toolbar, placement);
+        signal.addEventListener('abort', cleanup, { once: true });
+
+        return () => {
+          if (signal.aborted) return;
+          abortController.abort();
+        };
       })
     );
   }

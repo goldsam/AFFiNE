@@ -2,6 +2,7 @@ import {
   type BlockComponent,
   BlockSelection,
   type BlockStdScope,
+  SurfaceSelection,
 } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
 import { nextTick } from '@blocksuite/global/utils';
@@ -61,7 +62,13 @@ abstract class ToolbarContextBase {
     if (this.flags.accept()) return true;
     if (this.host.event.active) return true;
     // Selects `embed-synced-doc-block`
-    return this.host.contains(document.activeElement);
+    if (this.host.contains(document.activeElement)) return true;
+    // Focuses `doc-title`
+    return (
+      this.host
+        .closest('[data-affine-editor-container]')
+        ?.contains(document.activeElement) ?? false
+    );
   }
 
   get readonly() {
@@ -108,6 +115,26 @@ abstract class ToolbarContextBase {
     return this.toolbarRegistry.message$;
   }
 
+  getCurrentElement() {
+    const selection = this.selection.find(SurfaceSelection);
+    return selection?.elements.length
+      ? this.gfx.getElementById(selection.elements[0])
+      : null;
+  }
+
+  getCurrentBlock(): Block | null {
+    return this.getCurrentBlockBy();
+  }
+
+  getCurrentBlockComponent(): BlockComponent | null {
+    const block = this.getCurrentBlock();
+    return block && this.view.getBlock(block.id);
+  }
+
+  getCurrentModel() {
+    return this.getCurrentBlock()?.model ?? null;
+  }
+
   getCurrentBlockBy<T extends SelectionConstructor>(type?: T): Block | null {
     const selection = this.selection.find(type ?? BlockSelection);
     return (selection && this.store.getBlock(selection.blockId)) ?? null;
@@ -125,11 +152,10 @@ abstract class ToolbarContextBase {
     return matchModels(model, [klass]) ? model : null;
   }
 
-  getCurrentBlockComponentBy<
-    T extends SelectionConstructor,
-    K extends abstract new (...args: any) => any,
-  >(type: T, klass: K): InstanceType<K> | null {
-    const block = this.getCurrentBlockBy<T>(type);
+  getCurrentBlockComponentBy<K extends abstract new (...args: any) => any>(
+    klass: K
+  ): InstanceType<K> | null {
+    const block = this.getCurrentBlockBy();
     const component = block && this.view.getBlock(block.id);
     return this.blockComponentIs(component, klass) ? component : null;
   }

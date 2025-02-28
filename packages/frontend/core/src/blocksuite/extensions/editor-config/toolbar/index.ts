@@ -217,14 +217,18 @@ function createToolbarMoreMenuConfigV2(baseUrl?: string) {
             id: 'copy-as-image',
             label: 'Copy as Image',
             icon: CopyAsImgaeIcon(),
-            when: ({ isEdgelessMode, gfx }) =>
-              isEdgelessMode && gfx.selection.selectedElements.length > 0,
+            when: ({ isEdgelessMode, gfx, flags }) =>
+              !flags.isHovering() &&
+              isEdgelessMode &&
+              gfx.selection.selectedElements.length > 0,
           },
           {
             id: 'copy-link-to-block',
             label: 'Copy link to block',
             icon: LinkIcon(),
-            when: ({ isPageMode, selection, gfx }) => {
+            when: ({ isPageMode, selection, gfx, flags }) => {
+              if (flags.isHovering()) return false;
+
               const items = selection
                 .getGroup('note')
                 .filter(item =>
@@ -387,7 +391,7 @@ function createToolbarMoreMenuConfigV2(baseUrl?: string) {
 }
 
 function createExternalLinkableToolbarConfig(
-  kclass:
+  klass:
     | typeof BookmarkBlockComponent
     | typeof EmbedFigmaBlockComponent
     | typeof EmbedGithubBlockComponent
@@ -404,10 +408,7 @@ function createExternalLinkableToolbarConfig(
             tooltip: 'Copy link',
             icon: CopyIcon(),
             run(ctx) {
-              const model = ctx.getCurrentBlockComponentBy(
-                BlockSelection,
-                kclass
-              )?.model;
+              const model = ctx.getCurrentBlockComponentBy(klass)?.model;
               if (!model) return;
 
               const { url } = model;
@@ -432,10 +433,7 @@ function createExternalLinkableToolbarConfig(
             tooltip: 'Edit',
             icon: EditIcon(),
             run(ctx) {
-              const component = ctx.getCurrentBlockComponentBy(
-                BlockSelection,
-                kclass
-              );
+              const component = ctx.getCurrentBlockComponentBy(klass);
               if (!component) return;
 
               ctx.hide();
@@ -509,7 +507,7 @@ function createOpenDocActionGroup(
     id: 'A.open-doc',
     actions: openDocActions,
     content(ctx) {
-      const component = ctx.getCurrentBlockComponentBy(BlockSelection, klass);
+      const component = ctx.getCurrentBlockComponentBy(klass);
       if (!component) return null;
 
       const actions = this.actions
@@ -617,7 +615,6 @@ const embedLinkedDocToolbarConfig = {
           icon: EditIcon(),
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedLinkedDocBlockComponent
             );
             if (!component) return;
@@ -710,7 +707,6 @@ const embedSyncedDocToolbarConfig = {
           icon: EditIcon(),
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedSyncedDocBlockComponent
             );
             if (!component) return;
@@ -915,7 +911,6 @@ const embedIframeToolbarConfig = {
           icon: CopyIcon(),
           run(ctx) {
             const model = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedIframeBlockComponent
             )?.model;
             if (!model) return;
@@ -943,7 +938,6 @@ const embedIframeToolbarConfig = {
           icon: EditIcon(),
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedIframeBlockComponent
             );
             if (!component) return;

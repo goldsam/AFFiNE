@@ -7,6 +7,7 @@ import { ConnectionOverlay } from '@blocksuite/affine-block-surface';
 import { TextTool } from '@blocksuite/affine-gfx-text';
 import type { ExtensionType } from '@blocksuite/store';
 
+import { EdgelessElementToolbarExtension } from './configs/toolbar';
 import { EdgelessRootBlockSpec } from './edgeless-root-spec.js';
 import { BrushTool } from './gfx-tool/brush-tool.js';
 import { ConnectorTool } from './gfx-tool/connector-tool.js';
@@ -46,7 +47,8 @@ export const EdgelessBuiltInManager: ExtensionType[] = [
   SnapManager,
   EdgelessFrameManager,
   EditPropsMiddlewareBuilder,
-];
+  EdgelessElementToolbarExtension,
+].flat();
 
 export const EdgelessBuiltInSpecs: ExtensionType[] = [
   EdgelessRootBlockSpec,

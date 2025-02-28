@@ -50,7 +50,6 @@ export const builtinToolbarConfig = {
       ],
       content(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedSyncedDocBlockComponent
         );
         if (!component) return null;
@@ -117,14 +116,13 @@ export const builtinToolbarConfig = {
           label: 'Inline view',
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedSyncedDocBlockComponent
             );
             component?.covertToInline();
 
             // Clears
-            ctx.reset();
             ctx.select('note');
+            ctx.reset();
 
             ctx.track('SelectedView', {
               ...trackBaseProps,
@@ -138,7 +136,6 @@ export const builtinToolbarConfig = {
           label: 'Card view',
           run(ctx) {
             const component = ctx.getCurrentBlockComponentBy(
-              BlockSelection,
               EmbedSyncedDocBlockComponent
             );
             component?.convertToCard();
@@ -192,7 +189,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedSyncedDocBlockComponent
         );
         component?.captionEditor?.show();

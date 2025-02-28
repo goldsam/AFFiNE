@@ -37,7 +37,6 @@ export const builtinToolbarConfig = {
       tooltip: 'Open this doc',
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedHtmlBlockComponent
         );
         component?.open();
@@ -99,7 +98,6 @@ export const builtinToolbarConfig = {
       icon: CaptionIcon(),
       run(ctx) {
         const component = ctx.getCurrentBlockComponentBy(
-          BlockSelection,
           EmbedHtmlBlockComponent
         );
         component?.captionEditor?.show();
