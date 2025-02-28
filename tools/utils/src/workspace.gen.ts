@@ -735,6 +735,7 @@ export const PackageList = [
       'packages/frontend/electron-api',
       'packages/frontend/i18n',
       'packages/common/nbstore',
+      'blocksuite/affine/all',
       'packages/common/infra',
       'tools/utils',
     ],

@@ -17,6 +17,13 @@ export interface HelperToRenderer {
 // helper <-> main
 export interface HelperToMain {
   getMeta: () => ExposedMeta;
+  encodeToMp3: (
+    samples: Float32Array,
+    opts?: {
+      channels?: number;
+      sampleRate?: number;
+    }
+  ) => Uint8Array;
 }
 
 export type MainToHelper = Pick<
