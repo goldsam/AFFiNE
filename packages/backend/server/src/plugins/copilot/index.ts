@@ -23,6 +23,7 @@ import {
   PerplexityProvider,
   registerCopilotProvider,
 } from './providers';
+import { GoogleProvider } from './providers/google';
 import {
   CopilotResolver,
   PromptsManagementResolver,
@@ -34,6 +35,7 @@ import { CopilotWorkflowExecutors, CopilotWorkflowService } from './workflow';
 
 registerCopilotProvider(FalProvider);
 registerCopilotProvider(OpenAIProvider);
+registerCopilotProvider(GoogleProvider);
 registerCopilotProvider(PerplexityProvider);
 
 @Plugin({

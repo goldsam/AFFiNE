@@ -17,6 +17,7 @@ const {
   METRICS_CUSTOMER_IO_TOKEN,
   COPILOT_OPENAI_API_KEY,
   COPILOT_FAL_API_KEY,
+  COPILOT_GOOGLE_API_KEY,
   COPILOT_PERPLEXITY_API_KEY,
   COPILOT_UNSPLASH_API_KEY,
   MAILER_SENDER,
@@ -35,7 +36,7 @@ const {
   STATIC_IP_NAME,
 } = process.env;
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+ 
 const buildType = BUILD_TYPE || 'canary';
 
 const isProduction = buildType === 'stable';
@@ -136,7 +137,7 @@ const createHelmCommand = ({ isDryRun }) => {
       : isInternal
         ? 'internal'
         : 'dev';
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+   
   const host = DEPLOY_HOST || CANARY_DEPLOY_HOST;
   const deployCommand = [
     `helm upgrade --install affine .github/helm/affine`,
@@ -161,6 +162,7 @@ const createHelmCommand = ({ isDryRun }) => {
     `--set        graphql.app.copilot.enabled=true`,
     `--set-string graphql.app.copilot.openai.key="${COPILOT_OPENAI_API_KEY}"`,
     `--set-string graphql.app.copilot.fal.key="${COPILOT_FAL_API_KEY}"`,
+    `--set-string graphql.app.copilot.google.key="${COPILOT_GOOGLE_API_KEY}"`,
     `--set-string graphql.app.copilot.perplexity.key="${COPILOT_PERPLEXITY_API_KEY}"`,
     `--set-string graphql.app.copilot.unsplash.key="${COPILOT_UNSPLASH_API_KEY}"`,
     `--set-string graphql.app.mailer.sender="${MAILER_SENDER}"`,

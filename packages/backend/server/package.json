@@ -20,6 +20,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.19",
     "@apollo/server": "^4.11.2",
     "@aws-sdk/client-s3": "^3.709.0",
     "@fal-ai/serverless-client": "^0.15.0",
@@ -60,6 +61,7 @@
     "@prisma/instrumentation": "^5.22.0",
     "@react-email/components": "0.0.33",
     "@socket.io/redis-adapter": "^8.3.0",
+    "ai": "^4.1.51",
     "bullmq": "^5.40.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
