@@ -7,6 +7,7 @@ import {
 import { ModuleRef } from '@nestjs/core';
 
 import { ApplyType } from '../base';
+import { CopilotJobModel } from './copilot-job';
 import { DocModel } from './doc';
 import { DocUserModel } from './doc-user';
 import { FeatureModel } from './feature';
@@ -36,6 +37,7 @@ const MODELS = {
   docUser: DocUserModel,
   history: HistoryModel,
   notification: NotificationModel,
+  copilotJob: CopilotJobModel,
 };
 
 type ModelsType = {
@@ -88,6 +90,7 @@ const ModelsSymbolProvider: ExistingProvider = {
 export class ModelsModule {}
 
 export * from './common';
+export * from './copilot-job';
 export * from './doc';
 export * from './doc-user';
 export * from './feature';
