@@ -32,6 +32,7 @@ import {
   RootBlockSchemaExtension,
   SurfaceRefBlockSchemaExtension,
   TableBlockSchemaExtension,
+  TranscriptionBlockSchemaExtension,
 } from '@blocksuite/affine-model';
 import {
   HighlightSelectionExtension,
@@ -86,6 +87,7 @@ export const StoreExtensions: ExtensionType[] = [
   LatexBlockSchemaExtension,
   TableBlockSchemaExtension,
   CalloutBlockSchemaExtension,
+  TranscriptionBlockSchemaExtension,
 
   BlockSelectionExtension,
   TextSelectionExtension,

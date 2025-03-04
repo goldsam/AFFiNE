@@ -1,11 +1,11 @@
 import { ViewBody, ViewHeader } from '@affine/core/modules/workbench';
 
-import { AttachmentPreviewErrorBoundary, Error } from './error';
-import { PDFViewer } from './pdf-viewer';
-import * as styles from './styles.css';
-import { Titlebar } from './titlebar';
-import type { AttachmentViewerProps, PDFViewerProps } from './types';
+import { AttachmentFallback, AttachmentPreviewErrorBoundary } from './error';
+import { PDFViewer } from './pdf/pdf-viewer';
+import type { AttachmentViewerBaseProps, AttachmentViewerProps } from './types';
 import { buildAttachmentProps } from './utils';
+import { Titlebar } from './viewer';
+import * as styles from './viewer.css';
 
 // In Peek view
 export const AttachmentViewer = ({ model }: AttachmentViewerProps) => {
@@ -35,12 +35,12 @@ export const AttachmentViewerView = ({ model }: AttachmentViewerProps) => {
   );
 };
 
-const AttachmentViewerInner = (props: PDFViewerProps) => {
+const AttachmentViewerInner = (props: AttachmentViewerBaseProps) => {
   return props.model.type.endsWith('pdf') ? (
     <AttachmentPreviewErrorBoundary>
       <PDFViewer {...props} />
     </AttachmentPreviewErrorBoundary>
   ) : (
-    <Error {...props} />
+    <AttachmentFallback {...props} />
   );
 };

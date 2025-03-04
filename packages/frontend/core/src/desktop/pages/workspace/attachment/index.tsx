@@ -1,11 +1,11 @@
 import { Skeleton } from '@affine/component';
+import { AttachmentViewer } from '@affine/core/components/attachment-viewer';
 import { type Doc, DocsService } from '@affine/core/modules/doc';
 import { type AttachmentBlockModel } from '@blocksuite/affine/model';
 import { FrameworkScope, useLiveData, useService } from '@toeverything/infra';
 import { type ReactElement, useLayoutEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { AttachmentViewerView } from '../../../../components/attachment-viewer';
 import { ViewIcon, ViewTitle } from '../../../../modules/workbench';
 import { PageNotFound } from '../../404';
 import * as styles from './index.css';
@@ -69,7 +69,7 @@ export const AttachmentPage = ({
       <FrameworkScope scope={doc.scope}>
         <ViewTitle title={model.name} />
         <ViewIcon icon={model.type.endsWith('pdf') ? 'pdf' : 'attachment'} />
-        <AttachmentViewerView model={model} />
+        <AttachmentViewer model={model} />
       </FrameworkScope>
     );
   }

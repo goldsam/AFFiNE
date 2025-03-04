@@ -10,6 +10,7 @@
   "dependencies": {
     "@affine/component": "workspace:*",
     "@affine/core": "workspace:*",
+    "@affine/debug": "workspace:*",
     "@affine/electron-api": "workspace:*",
     "@affine/i18n": "workspace:*",
     "@affine/nbstore": "workspace:*",

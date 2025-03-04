@@ -10,8 +10,8 @@ import {
 import clsx from 'clsx';
 import { useState } from 'react';
 
-import * as styles from './styles.css';
 import { download } from './utils';
+import * as styles from './viewer.css';
 
 const items = [
   /*

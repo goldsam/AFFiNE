@@ -1,21 +1,21 @@
 import { IconButton, observeResize } from '@affine/component';
-import type {
-  PDF,
-  PDFRendererState,
-  PDFStatus,
-} from '@affine/core/modules/pdf';
+import type { PDF, PDFRendererState } from '@affine/core/modules/pdf';
+import { PDFService, PDFStatus } from '@affine/core/modules/pdf';
 import {
   Item,
   List,
   ListPadding,
   ListWithSmallGap,
+  LoadingSvg,
   PDFPageRenderer,
   type PDFVirtuosoContext,
   type PDFVirtuosoProps,
   Scroller,
   ScrollSeekPlaceholder,
 } from '@affine/core/modules/pdf/views';
+import track from '@affine/track';
 import { CollapseIcon, ExpandIcon } from '@blocksuite/icons/rc';
+import { useLiveData, useService } from '@toeverything/infra';
 import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -24,11 +24,21 @@ import {
   type VirtuosoHandle,
 } from 'react-virtuoso';
 
+import type { AttachmentViewerProps } from '../types';
 import * as styles from './styles.css';
-import { calculatePageNum, fitToPage } from './utils';
+import { fitToPage } from './utils';
 
 const THUMBNAIL_WIDTH = 94;
 
+function calculatePageNum(el: HTMLElement, pageCount: number) {
+  const { scrollTop, scrollHeight } = el;
+  const pageHeight = scrollHeight / pageCount;
+  const n = scrollTop / pageHeight;
+  const t = n / pageCount;
+  const index = Math.floor(n + t);
+  const cursor = Math.min(index, pageCount - 1);
+  return cursor;
+}
 export interface PDFViewerInnerProps {
   pdf: PDF;
   state: Extract<PDFRendererState, { status: PDFStatus.Opened }>;
@@ -234,3 +244,48 @@ export const PDFViewerInner = ({ pdf, state }: PDFViewerInnerProps) => {
     </div>
   );
 };
+
+function PDFViewerStatus({
+  pdf,
+  ...props
+}: AttachmentViewerProps & { pdf: PDF }) {
+  const state = useLiveData(pdf.state$);
+
+  useEffect(() => {
+    if (state.status !== PDFStatus.Error) return;
+
+    track.$.attachment.$.openPDFRendererFail();
+  }, [state]);
+
+  if (state?.status !== PDFStatus.Opened) {
+    return <PDFLoading />;
+  }
+
+  return <PDFViewerInner {...props} pdf={pdf} state={state} />;
+}
+
+export function PDFViewer({ model, ...props }: AttachmentViewerProps) {
+  const pdfService = useService(PDFService);
+  const [pdf, setPdf] = useState<PDF | null>(null);
+
+  useEffect(() => {
+    const { pdf, release } = pdfService.get(model);
+    setPdf(pdf);
+
+    return () => {
+      release();
+    };
+  }, [model, pdfService, setPdf]);
+
+  if (!pdf) {
+    return <PDFLoading />;
+  }
+
+  return <PDFViewerStatus {...props} model={model} pdf={pdf} />;
+}
+
+const PDFLoading = () => (
+  <div style={{ margin: 'auto' }}>
+    <LoadingSvg />
+  </div>
+);

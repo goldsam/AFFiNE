@@ -291,6 +291,8 @@ export class PointerEventWatcher {
     const grabber = this.widget.dragHandleGrabber;
     if (!container || !grabber) return;
 
+    console.log('block.flavour', block.flavour);
+
     this.widget.activeDragHandle = 'block';
 
     const draggingAreaRect = this.widget.draggingAreaRect.peek();

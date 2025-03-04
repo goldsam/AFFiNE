@@ -14,6 +14,8 @@ import chokidar from 'chokidar';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs-extra';
+import { debounce } from 'lodash-es';
+import multer from 'multer';
 import { Server } from 'socket.io';
 
 import { gemini, type TranscriptionResult } from './gemini';
@@ -87,6 +89,20 @@ const io = new Server(httpServer, {
   cors: { origin: '*' },
 });
 
+// Add CORS headers middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  );
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
 
 // Update the static file serving to handle the new folder structure
@@ -115,6 +131,14 @@ app.use(
   },
   express.static(RECORDING_DIR)
 );
+
+// Configure multer for temporary file storage
+const upload = multer({
+  dest: RECORDING_DIR,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+});
 
 // Recording management
 async function saveRecording(recording: Recording): Promise<string | null> {
@@ -258,7 +282,9 @@ async function startRecording(app: TappableApplication) {
 
   try {
     const processGroupId = app.processGroupId;
-    const rootApp = shareableContent.applicationWithProcessId(processGroupId);
+    const rootApp =
+      shareableContent.applicationWithProcessId(processGroupId) ||
+      shareableContent.applicationWithProcessId(app.processId);
     if (!rootApp) {
       console.error(`❌ App group not found for ${app.name}`);
       return;
@@ -520,6 +546,8 @@ async function getAllApps(): Promise<AppInfo[]> {
     })
   );
 
+  listenToAppStateChanges(filteredApps);
+
   return filteredApps;
 }
 
@@ -529,25 +557,29 @@ function listenToAppStateChanges(apps: AppInfo[]) {
       if (!app) {
         return { unsubscribe: () => {} };
       }
-      return ShareableContent.onAppStateChanged(app, () => {
-        setTimeout(() => {
-          console.log(
-            `🔄 Application state changed: ${app.name} (PID: ${app.processId}) is now ${
-              app.isRunning ? '▶️ running' : '⏹️ stopped'
-            }`
-          );
-          io.emit('apps:state-changed', {
-            processId: app.processId,
-            isRunning: app.isRunning,
-          });
 
-          if (!app.isRunning) {
-            stopRecording(app.processId).catch(error => {
-              console.error('❌ Error stopping recording:', error);
-            });
-          }
-        }, 100);
-      });
+      const onAppStateChanged = () => {
+        console.log(
+          `🔄 Application state changed: ${app.name} (PID: ${app.processId}) is now ${
+            app.isRunning ? '▶️ running' : '⏹️ stopped'
+          }`
+        );
+        io.emit('apps:state-changed', {
+          processId: app.processId,
+          isRunning: app.isRunning,
+        });
+
+        if (!app.isRunning) {
+          stopRecording(app.processId).catch(error => {
+            console.error('❌ Error stopping recording:', error);
+          });
+        }
+      };
+
+      return ShareableContent.onAppStateChanged(
+        app,
+        debounce(onAppStateChanged, 500)
+      );
     } catch (error) {
       console.error(
         `Failed to listen to app state changes for ${app?.name}:`,
@@ -795,6 +827,51 @@ app.post(
       // Notify clients of transcription error
       io.emit('apps:recording-transcription-end', {
         filename: foldername,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      res.status(500).json({
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+);
+
+app.post(
+  '/transcribe',
+  rateLimiter,
+  upload.single('audio') as any,
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No audio file provided' });
+      }
+
+      const tempAudioPath = req.file.path;
+
+      // Notify clients that transcription has started
+      io.emit('apps:recording-transcription-start', { filename: 'temp' });
+
+      const transcription = await gemini(tempAudioPath, {
+        mode: 'transcript',
+      });
+
+      // Clean up temporary file
+      await fs.remove(tempAudioPath);
+
+      res.json({ success: true, transcription });
+    } catch (error) {
+      console.error('❌ Error during transcription:', error);
+
+      // Clean up temporary file if it exists
+      if (req.file?.path) {
+        await fs.remove(req.file.path).catch(console.error);
+      }
+
+      // Notify clients of transcription error
+      io.emit('apps:recording-transcription-end', {
+        filename: 'temp',
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       });

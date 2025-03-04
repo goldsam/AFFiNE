@@ -7,7 +7,7 @@ import type { PropsWithChildren, ReactElement } from 'react';
 import { Suspense } from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 
-import * as styles from './styles.css';
+import * as styles from './error.css';
 import { download } from './utils';
 
 // https://github.com/toeverything/blocksuite/blob/master/packages/affine/components/src/icons/file-icons.ts
@@ -67,7 +67,7 @@ interface ErrorBaseProps {
   buttons?: ReactElement[];
 }
 
-export const ErrorBase = ({
+const ErrorBase = ({
   title,
   subtitle,
   icon = <FileIcon />,
@@ -88,7 +88,7 @@ interface ErrorProps {
   ext: string;
 }
 
-export const Error = ({ model, ext }: ErrorProps) => {
+export const AttachmentFallback = ({ model, ext }: ErrorProps) => {
   const t = useI18n();
   const Icon = FILE_ICONS[model.type] ?? FileIcon;
   const title = t['com.affine.attachment.preview.error.title']();

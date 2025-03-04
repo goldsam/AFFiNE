@@ -22,6 +22,7 @@ import { GlobalContextService } from '@affine/core/modules/global-context';
 import { I18nProvider } from '@affine/core/modules/i18n';
 import { JournalService } from '@affine/core/modules/journal';
 import { LifecycleService } from '@affine/core/modules/lifecycle';
+import { AudioAttachmentService } from '@affine/core/modules/media/services/audio-attachment';
 import {
   configureElectronStateStorageImpls,
   NbstoreProvider,
@@ -37,9 +38,13 @@ import {
 import { WorkspacesService } from '@affine/core/modules/workspace';
 import { configureBrowserWorkspaceFlavours } from '@affine/core/modules/workspace-engine';
 import createEmotionCache from '@affine/core/utils/create-emotion-cache';
+import { DebugLogger } from '@affine/debug';
 import { apis, events } from '@affine/electron-api';
 import { StoreManagerClient } from '@affine/nbstore/worker/client';
-import type { AttachmentBlockProps } from '@blocksuite/affine/blocks';
+import type {
+  AttachmentBlockModel,
+  AttachmentBlockProps,
+} from '@blocksuite/affine/model';
 import { Text } from '@blocksuite/affine/store';
 import { CacheProvider } from '@emotion/react';
 import { Framework, FrameworkRoot, getCurrentStore } from '@toeverything/infra';
@@ -49,6 +54,8 @@ import { RouterProvider } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
 import { DesktopThemeSync } from './theme-sync';
+
+const logger = new DebugLogger('electron-renderer');
 
 const storeManagerClient = createStoreManagerClient();
 window.addEventListener('beforeunload', () => {
@@ -161,19 +168,19 @@ function getCurrentWorkspace() {
   return {
     workspace,
     dispose,
+    [Symbol.dispose]: dispose,
   };
 }
 
 events?.applicationMenu.openAboutPageInSettingModal(() => {
-  const currentWorkspace = getCurrentWorkspace();
+  using currentWorkspace = getCurrentWorkspace();
   if (!currentWorkspace) {
     return;
   }
-  const { workspace, dispose } = currentWorkspace;
+  const { workspace } = currentWorkspace;
   workspace.scope.get(WorkspaceDialogService).open('setting', {
     activeTab: 'about',
   });
-  dispose();
 });
 
 events?.applicationMenu.onNewPageAction(type => {
@@ -183,11 +190,11 @@ events?.applicationMenu.onNewPageAction(type => {
       if (!isActive) {
         return;
       }
-      const currentWorkspace = getCurrentWorkspace();
+      using currentWorkspace = getCurrentWorkspace();
       if (!currentWorkspace) {
         return;
       }
-      const { workspace, dispose } = currentWorkspace;
+      const { workspace } = currentWorkspace;
       const editorSettingService = frameworkProvider.get(EditorSettingService);
       const docsService = workspace.scope.get(DocsService);
       const editorSetting = editorSettingService.editorSetting;
@@ -197,7 +204,6 @@ events?.applicationMenu.onNewPageAction(type => {
       };
       const page = docsService.createDoc({ docProps, primaryMode: type });
       workspace.scope.get(WorkbenchService).workbench.openDoc(page.id);
-      dispose();
     })
     .catch(err => {
       console.error(err);
@@ -207,11 +213,11 @@ events?.applicationMenu.onNewPageAction(type => {
 events?.recording.onRecordingStatusChanged(status => {
   (async () => {
     if ((await apis?.ui.isActiveTab()) && status?.status === 'stopped') {
-      const currentWorkspace = getCurrentWorkspace();
+      using currentWorkspace = getCurrentWorkspace();
       if (!currentWorkspace) {
         return;
       }
-      const { workspace, dispose } = currentWorkspace;
+      const { workspace } = currentWorkspace;
       const editorSettingService = frameworkProvider.get(EditorSettingService);
       const docsService = workspace.scope.get(DocsService);
       const editorSetting = editorSettingService.editorSetting;
@@ -230,25 +236,42 @@ events?.recording.onRecordingStatusChanged(status => {
           (async () => {
             const data = await apis?.recording.saveRecording(status.id);
             if (!data) {
+              logger.error('Failed to save recording');
               return;
             }
-            const blob = new Blob([data], { type: 'audio/mp3' });
+            const blob = new Blob([data], { type: 'audio/mpeg' });
             const blobId = await doc.workspace.blobSync.set(blob);
             const attachmentProps: Partial<AttachmentBlockProps> = {
               name: 'Recording',
               size: blob.size,
-              type: 'audio/mp3',
+              type: 'audio/mpeg',
               sourceId: blobId,
               embed: true,
             };
-            doc.addBlock('affine:attachment', attachmentProps, noteId);
+            const attachmentBlockId = doc.addBlock(
+              'affine:attachment',
+              attachmentProps,
+              noteId
+            );
+            const model = doc.getBlock(attachmentBlockId)
+              ?.model as AttachmentBlockModel;
+            if (model) {
+              using currentWorkspace = getCurrentWorkspace();
+              if (!currentWorkspace) {
+                return;
+              }
+              const { workspace } = currentWorkspace;
+              const audioAttachment = workspace.scope
+                .get(AudioAttachmentService)
+                .get(model);
+              audioAttachment?.obj.transcribe();
+              audioAttachment?.release();
+            }
           })().catch(console.error);
         },
       };
       const page = docsService.createDoc({ docProps, primaryMode: 'page' });
       workspace.scope.get(WorkbenchService).workbench.openDoc(page.id);
-
-      dispose();
     }
   })().catch(console.error);
 });

@@ -10,6 +10,7 @@
   "references": [
     { "path": "../../component" },
     { "path": "../../core" },
+    { "path": "../../../common/debug" },
     { "path": "../../electron-api" },
     { "path": "../../i18n" },
     { "path": "../../../common/nbstore" },

@@ -36,7 +36,11 @@ export type AttachmentEmbedConfig = {
   /**
    * The template will be used to render the embed view.
    */
-  template?: (model: AttachmentBlockModel, blobUrl: string) => TemplateResult;
+  template?: (
+    model: AttachmentBlockModel,
+    std: BlockStdScope,
+    blobUrl: string
+  ) => TemplateResult;
 };
 
 // Single embed config.
@@ -121,7 +125,7 @@ export class AttachmentEmbedService extends Extension {
       return;
     }
 
-    return config.template(model, blobUrl);
+    return config.template(model, this.std, blobUrl);
   }
 }
 
@@ -142,7 +146,7 @@ const embedConfig: AttachmentEmbedConfig[] = [
     name: 'pdf',
     check: (model, maxFileSize) =>
       model.type === 'application/pdf' && model.size <= maxFileSize,
-    template: (_, blobUrl) => {
+    template: (_, __, blobUrl) => {
       // More options: https://tinytip.co/tips/html-pdf-params/
       // https://chromium.googlesource.com/chromium/src/+/refs/tags/121.0.6153.1/chrome/browser/resources/pdf/open_pdf_params_parser.ts
       const parameters = '#toolbar=0';
@@ -163,7 +167,7 @@ const embedConfig: AttachmentEmbedConfig[] = [
     name: 'video',
     check: (model, maxFileSize) =>
       model.type.startsWith('video/') && model.size <= maxFileSize,
-    template: (_, blobUrl) =>
+    template: (_, __, blobUrl) =>
       html`<video
         style="max-height: max-content;"
         width="100%;"
@@ -176,7 +180,7 @@ const embedConfig: AttachmentEmbedConfig[] = [
     name: 'audio',
     check: (model, maxFileSize) =>
       model.type.startsWith('audio/') && model.size <= maxFileSize,
-    template: (_, blobUrl) =>
+    template: (_, __, blobUrl) =>
       html`<audio controls src=${blobUrl} style="margin: 4px;"></audio>`,
   },
 ];

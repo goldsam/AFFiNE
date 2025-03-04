@@ -50,7 +50,10 @@ import {
   type DefaultOpenProperty,
   DocPropertiesTable,
 } from '../../components/doc-properties';
-import { patchForAttachmentEmbedViews } from '../extensions/attachment-embed-view';
+import {
+  patchForAudioEmbedView,
+  patchForPDFEmbedView,
+} from '../extensions/attachment-embed-view';
 import { patchDocModeService } from '../extensions/doc-mode-service';
 import { patchDocUrlExtensions } from '../extensions/doc-url';
 import { EdgelessClipboardWatcher } from '../extensions/edgeless-clipboard';
@@ -147,6 +150,14 @@ const usePatchSpecs = (mode: DocMode) => {
     featureFlagService.flags.enable_turbo_renderer.$
   );
 
+  const enablePDFEmbedPreview = useLiveData(
+    featureFlagService.flags.enable_pdf_embed_preview.$
+  );
+
+  const enableAudioBlock = useLiveData(
+    featureFlagService.flags.enable_audio_block.$
+  );
+
   const patchedSpecs = useMemo(() => {
     const builder = enableEditorExtension(framework, mode, enableAI);
 
@@ -174,8 +185,11 @@ const usePatchSpecs = (mode: DocMode) => {
       ].flat()
     );
 
-    if (featureFlagService.flags.enable_pdf_embed_preview.value) {
-      builder.extend([patchForAttachmentEmbedViews(reactToLit)]);
+    if (enablePDFEmbedPreview) {
+      builder.extend([patchForPDFEmbedView(reactToLit)]);
+    }
+    if (enableAudioBlock) {
+      builder.extend([patchForAudioEmbedView(reactToLit)]);
     }
     if (BUILD_CONFIG.isMobileEdition) {
       enableMobileExtension(builder, framework);
@@ -200,7 +214,8 @@ const usePatchSpecs = (mode: DocMode) => {
     memberSearchService,
     publicUserService,
     enableTurboRenderer,
-    featureFlagService.flags.enable_pdf_embed_preview.value,
+    enablePDFEmbedPreview,
+    enableAudioBlock,
   ]);
 
   return [

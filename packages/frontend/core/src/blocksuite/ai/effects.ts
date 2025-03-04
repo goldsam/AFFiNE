@@ -2,6 +2,7 @@ import { SpecProvider } from '@blocksuite/affine/shared/utils';
 
 import { AIChatBlockComponent } from './blocks/ai-chat-block/ai-chat-block';
 import { EdgelessAIChatBlockComponent } from './blocks/ai-chat-block/ai-chat-edgeless-block';
+import { LitTranscriptionBlock } from './blocks/ai-chat-block/ai-transcription-block';
 import {
   AIChatMessage,
   AIChatMessages,
@@ -138,6 +139,8 @@ export function registerAIEffects() {
     'edgeless-copilot-toolbar-entry',
     EdgelessCopilotToolbarEntry
   );
+
+  customElements.define('transcription-block', LitTranscriptionBlock);
 
   SpecProvider._.extendSpec('store', [AIChatBlockSchemaExtension]);
 }

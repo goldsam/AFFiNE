@@ -104,7 +104,7 @@ export class AttachmentAdapter extends BaseAdapter<Attachment> {
           name: item.name,
           size: item.size,
           type: item.type,
-          embed: false,
+          embed: item.type.startsWith('audio/'),
           style: 'horizontalThin',
           index: 'a0',
           xywh: '[0,0,0,0]',

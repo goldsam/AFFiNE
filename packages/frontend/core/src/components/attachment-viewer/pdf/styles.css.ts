@@ -2,6 +2,87 @@ import { cssVar } from '@toeverything/theme';
 import { cssVarV2 } from '@toeverything/theme/v2';
 import { style } from '@vanilla-extract/css';
 
+export { viewer } from '../viewer.css';
+
+export const virtuoso = style({
+  width: '100%',
+});
+
+export const pdfIndicator = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0 12px',
+});
+
+export const pdfPage = style({
+  maxWidth: 'calc(100% - 40px)',
+  background: cssVarV2('layer/white'),
+  boxSizing: 'border-box',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: cssVarV2('layer/insideBorder/border'),
+  boxShadow:
+    '0px 4px 20px 0px var(--transparent-black-200, rgba(0, 0, 0, 0.10))',
+  overflow: 'hidden',
+  maxHeight: 'max-content',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+});
+
+export const pdfThumbnails = style({
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'absolute',
+  boxSizing: 'border-box',
+  width: '120px',
+  padding: '12px 0',
+  right: '30px',
+  bottom: '30px',
+  maxHeight: 'calc(100% - 60px)',
+  borderRadius: '8px',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: cssVarV2('layer/insideBorder/border'),
+  backgroundColor: cssVarV2('layer/background/primary'),
+  fontSize: '12px',
+  fontWeight: 500,
+  lineHeight: '20px',
+  color: cssVarV2('text/secondary'),
+});
+
+export const pdfThumbnailsList = style({
+  position: 'relative',
+  display: 'flex',
+  flexDirection: 'column',
+  maxHeight: '100%',
+  overflow: 'hidden',
+  selectors: {
+    '&.collapsed': {
+      display: 'none',
+    },
+    '&:not(.collapsed)': {
+      marginBottom: '8px',
+    },
+  },
+});
+
+export const pdfThumbnail = style({
+  display: 'flex',
+  overflow: 'hidden',
+  // width: '100%',
+  borderRadius: '4px',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: cssVarV2('layer/insideBorder/border'),
+  selectors: {
+    '&.selected': {
+      borderColor: '#29A3FA',
+    },
+  },
+});
+
 export const pdfContainer = style({
   width: '100%',
   borderRadius: '8px',

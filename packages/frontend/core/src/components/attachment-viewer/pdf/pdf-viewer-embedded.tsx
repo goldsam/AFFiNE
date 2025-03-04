@@ -28,9 +28,8 @@ import {
   useState,
 } from 'react';
 
+import type { AttachmentViewerProps } from '../types';
 import * as styles from './styles.css';
-import * as embeddedStyles from './styles.embedded.css';
-import type { PDFViewerProps } from './types';
 
 function defaultMeta() {
   return {
@@ -40,7 +39,7 @@ function defaultMeta() {
   };
 }
 
-export function PDFViewerEmbeddedInner({ model }: PDFViewerProps) {
+export function PDFViewerEmbedded({ model }: AttachmentViewerProps) {
   const scale = window.devicePixelRatio;
   const peekView = useService(PeekViewService).peekView;
   const pdfService = useService(PDFService);
@@ -194,8 +193,8 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerProps) {
   }, []);
 
   return (
-    <div ref={viewerRef} className={embeddedStyles.pdfContainer}>
-      <main className={embeddedStyles.pdfViewer}>
+    <div ref={viewerRef} className={styles.pdfContainer}>
+      <main className={styles.pdfViewer}>
         <div
           className={styles.pdfPage}
           style={{
@@ -216,11 +215,11 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerProps) {
           />
         </div>
 
-        <div className={embeddedStyles.pdfControls}>
+        <div className={styles.pdfControls}>
           <IconButton
             size={16}
             icon={<ArrowUpSmallIcon />}
-            className={embeddedStyles.pdfControlButton}
+            className={styles.pdfControlButton}
             onDoubleClick={stopPropagation}
             aria-label="Prev"
             {...navigator.prev}
@@ -228,7 +227,7 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerProps) {
           <IconButton
             size={16}
             icon={<ArrowDownSmallIcon />}
-            className={embeddedStyles.pdfControlButton}
+            className={styles.pdfControlButton}
             onDoubleClick={stopPropagation}
             aria-label="Next"
             {...navigator.next}
@@ -236,27 +235,18 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerProps) {
           <IconButton
             size={16}
             icon={<CenterPeekIcon />}
-            className={embeddedStyles.pdfControlButton}
+            className={styles.pdfControlButton}
             onDoubleClick={stopPropagation}
             {...navigator.peek}
           />
         </div>
       </main>
-      <footer className={embeddedStyles.pdfFooter}>
-        <div
-          className={clsx([embeddedStyles.pdfFooterItem, { truncate: true }])}
-        >
+      <footer className={styles.pdfFooter}>
+        <div className={clsx([styles.pdfFooterItem, { truncate: true }])}>
           <AttachmentIcon />
-          <span className={clsx([embeddedStyles.pdfTitle, 'pdf-name'])}>
-            {name}
-          </span>
+          <span className={clsx([styles.pdfTitle, 'pdf-name'])}>{name}</span>
         </div>
-        <div
-          className={clsx([
-            embeddedStyles.pdfFooterItem,
-            embeddedStyles.pdfPageCount,
-          ])}
-        >
+        <div className={clsx([styles.pdfFooterItem, styles.pdfPageCount])}>
           <span className="page-cursor">
             {meta.pageCount > 0 ? cursor + 1 : '-'}
           </span>

@@ -243,6 +243,15 @@ export const AFFINE_FLAGS = {
     configurable: !isMobile,
     defaultState: false,
   },
+  enable_audio_block: {
+    category: 'affine',
+    displayName:
+      'com.affine.settings.workspace.experimental-features.enable-audio-block.name',
+    description:
+      'com.affine.settings.workspace.experimental-features.enable-audio-block.description',
+    configurable: !isMobile,
+    defaultState: false,
+  },
   enable_editor_rtl: {
     category: 'affine',
     displayName:
