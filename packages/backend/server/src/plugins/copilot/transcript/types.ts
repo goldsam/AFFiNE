@@ -1,20 +1,24 @@
 import { z } from 'zod';
 
-export const TranscriptionSchema = z
-  .object({
-    speaker: z.string(),
-    start: z.string(),
-    end: z.string(),
-    transcription: z.string(),
-  })
-  .array();
+import { OneMB } from '../../../base';
 
-export const TranscriptConfigSchema = z.object({
-  transcription: TranscriptionSchema.optional(),
-  summary: z.string().optional(),
+const TranscriptionItemSchema = z.object({
+  speaker: z.string(),
+  start: z.string(),
+  end: z.string(),
+  transcription: z.string(),
 });
 
+export const TranscriptionSchema = z.array(TranscriptionItemSchema);
+
+export const TranscriptConfigSchema = z.object({
+  transcription: TranscriptionSchema.nullable().optional(),
+  summary: z.string().nullable().optional(),
+});
+
+export type TranscriptionItem = z.infer<typeof TranscriptionItemSchema>;
 export type Transcription = z.infer<typeof TranscriptionSchema>;
+export type TranscriptionConfig = z.infer<typeof TranscriptConfigSchema>;
 
 declare global {
   interface Jobs {
@@ -30,4 +34,10 @@ declare global {
       retry?: number;
     };
   }
+}
+
+export const MAX_TRANSCRIPTION_SIZE = 50 * OneMB;
+
+export function checkTranscriptionAudioExceeded(recvSize: number) {
+  return recvSize > MAX_TRANSCRIPTION_SIZE;
 }

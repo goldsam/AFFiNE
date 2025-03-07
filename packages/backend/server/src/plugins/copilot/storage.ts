@@ -13,6 +13,7 @@ import {
   URLHelper,
 } from '../../base';
 import { QuotaService } from '../../core/quota';
+import { readBufferFromStream } from './utils';
 
 @Injectable()
 export class CopilotStorage {
@@ -63,29 +64,10 @@ export class CopilotStorage {
       throw new BlobQuotaExceeded();
     }
 
-    const buffer = await new Promise<Buffer>((resolve, reject) => {
-      const stream = blob.createReadStream();
-      const chunks: Uint8Array[] = [];
-      stream.on('data', chunk => {
-        chunks.push(chunk);
-
-        // check size after receive each chunk to avoid unnecessary memory usage
-        const bufferSize = chunks.reduce((acc, cur) => acc + cur.length, 0);
-        if (checkExceeded(bufferSize)) {
-          reject(new BlobQuotaExceeded());
-        }
-      });
-      stream.on('error', reject);
-      stream.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-
-        if (checkExceeded(buffer.length)) {
-          reject(new BlobQuotaExceeded());
-        } else {
-          resolve(buffer);
-        }
-      });
-    });
+    const buffer = await readBufferFromStream(
+      blob.createReadStream(),
+      checkExceeded
+    );
 
     return {
       buffer,
