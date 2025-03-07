@@ -13,7 +13,9 @@ import {
   applyUpdate,
   type Doc as YDoc,
   encodeStateAsUpdate,
+  Map as YMap,
   mergeUpdates,
+  type Transaction as YTransaction,
 } from 'yjs';
 
 import type { DocRecord, DocStorage } from '../storage';
@@ -403,13 +405,18 @@ export class DocFrontend {
     this.statusUpdatedSubject$.next(job.docId);
   }
 
+  private isApplyingUpdate = false;
+
   applyUpdate(docId: string, update: Uint8Array) {
     const doc = this.status.docs.get(docId);
     if (doc && !isEmptyUpdate(update)) {
       try {
+        this.isApplyingUpdate = true;
         applyUpdate(doc, update, NBSTORE_ORIGIN);
       } catch (err) {
         console.error('failed to apply update yjs doc', err);
+      } finally {
+        this.isApplyingUpdate = false;
       }
     }
   }
@@ -417,10 +424,27 @@ export class DocFrontend {
   private readonly handleDocUpdate = (
     update: Uint8Array,
     origin: any,
-    doc: YDoc
+    doc: YDoc,
+    transaction: YTransaction
   ) => {
     if (origin === NBSTORE_ORIGIN) {
       return;
+    }
+    if (this.isApplyingUpdate && BUILD_CONFIG.debug) {
+      let changedList = '';
+      for (const [changed, keys] of transaction.changed) {
+        for (const key of keys) {
+          if (changed instanceof YMap && key) {
+            changedList += `${key} => ${changed.get(key)}\n`;
+          }
+        }
+      }
+      console.warn(`⚠️ When nbstore applies a remote update, some code triggers a local change to the doc.
+This will causes the document's 'edited by' to become the current user, even if the user has not actually modified the document.
+This is usually caused by a coding error and needs to be fixed by the developer.
+Changed:
+${changedList}
+`);
     }
     if (!this.status.docs.has(doc.guid)) {
       return;
