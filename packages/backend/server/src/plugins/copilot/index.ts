@@ -31,6 +31,10 @@ import {
 } from './resolver';
 import { ChatSessionService } from './session';
 import { CopilotStorage } from './storage';
+import {
+  CopilotTranscriptionResolver,
+  CopilotTranscriptionService,
+} from './transcript';
 import { CopilotWorkflowExecutors, CopilotWorkflowService } from './workflow';
 
 registerCopilotProvider(FalProvider);
@@ -58,6 +62,9 @@ registerCopilotProvider(PerplexityProvider);
     CopilotContextResolver,
     CopilotContextService,
     CopilotContextDocJob,
+    // transcription
+    CopilotTranscriptionService,
+    CopilotTranscriptionResolver,
   ],
   controllers: [CopilotController],
   contributesTo: ServerFeature.Copilot,

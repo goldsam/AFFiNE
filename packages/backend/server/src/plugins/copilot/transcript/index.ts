@@ -1,2 +1,2 @@
-export { TranscriptionResolver } from './resolver';
-export { TranscriptionService } from './service';
+export { CopilotTranscriptionResolver } from './resolver';
+export { CopilotTranscriptionService } from './service';

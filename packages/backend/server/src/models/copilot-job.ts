@@ -62,6 +62,31 @@ export class CopilotJobModel extends BaseModel {
     return false;
   }
 
+  async list(userId: string, workspaceId: string, type?: CopilotJobType) {
+    const jobs = await this.db.aiJobs.findMany({
+      where: {
+        workspaceId,
+        type,
+        OR: [
+          {
+            createdBy: userId,
+            status: { in: [AiJobStatus.finished, AiJobStatus.claim] },
+          },
+          { createdBy: { not: userId }, status: AiJobStatus.claim },
+        ],
+      },
+      select: {
+        id: true,
+        workspaceId: true,
+        blobId: true,
+        createdBy: true,
+        type: true,
+        status: true,
+      },
+    });
+    return jobs;
+  }
+
   async get(jobId: string): Promise<CopilotJob | null> {
     const row = await this.db.aiJobs.findUnique({
       where: {

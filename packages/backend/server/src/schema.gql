@@ -73,6 +73,7 @@ type Copilot {
 
   """Get the session list in the workspace"""
   sessions(docId: String, options: QueryChatSessionsInput): [CopilotSessionType!]!
+  transcriptionsJobs: [TranscriptionsJob!]!
   workspaceId: ID
 }
 
@@ -807,6 +808,7 @@ type Mutation {
   cancelSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, workspaceId: String): SubscriptionType!
   changeEmail(email: String!, token: String!): UserType!
   changePassword(newPassword: String!, token: String!, userId: String): Boolean!
+  claimTranscriptionJob(jobId: String!): TranscriptionResultType!
 
   """Cleanup sessions"""
   cleanupCopilotSession(options: DeleteSessionInput!): [String!]!
@@ -896,6 +898,7 @@ type Mutation {
   sendVerifyChangeEmail(callbackUrl: String!, email: String!, token: String!): Boolean!
   sendVerifyEmail(callbackUrl: String!): Boolean!
   setBlob(blob: Upload!, workspaceId: String!): String!
+  submitTranscriptionJob(blob: Upload!, blobId: String!, workspaceId: String!): String!
 
   """Update a copilot prompt"""
   updateCopilotPrompt(messages: [CopilotPromptMessageInput!]!, name: String!): CopilotPromptType!
@@ -1335,6 +1338,26 @@ type SubscriptionType {
 enum SubscriptionVariant {
   EA
   Onetime
+}
+
+type TranscriptionItemType {
+  end: String!
+  speaker: String!
+  start: String!
+  transcription: String!
+}
+
+type TranscriptionResultType {
+  summary: String
+  transcription: [TranscriptionItemType!]
+}
+
+type TranscriptionsJob {
+  blobId: String!
+  createdBy: String
+  id: String!
+  status: String!
+  workspaceId: String!
 }
 
 union UnionNotificationBodyType = InvitationAcceptedNotificationBodyType | InvitationBlockedNotificationBodyType | InvitationNotificationBodyType | MentionNotificationBodyType

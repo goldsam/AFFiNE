@@ -28,7 +28,7 @@ import {
 } from './types';
 
 @Injectable()
-export class TranscriptionService {
+export class CopilotTranscriptionService {
   constructor(
     private readonly models: Models,
     private readonly job: JobQueue,

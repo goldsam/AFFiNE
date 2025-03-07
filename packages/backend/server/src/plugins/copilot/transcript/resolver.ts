@@ -1,24 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { Args, Field, Mutation, ObjectType } from '@nestjs/graphql';
+import {
+  Args,
+  Field,
+  Mutation,
+  ObjectType,
+  Parent,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
 
 import type { FileUpload } from '../../../base';
 import { CurrentUser } from '../../../core/auth';
-import { TranscriptionService } from './service';
+import { AccessController } from '../../../core/permission';
+import { CopilotType } from '../resolver';
+import { CopilotTranscriptionService } from './service';
 import type { TranscriptionConfig, TranscriptionItem } from './types';
 
 @ObjectType()
 class TranscriptionItemType implements TranscriptionItem {
-  @Field()
+  @Field(() => String)
   speaker!: string;
 
-  @Field()
+  @Field(() => String)
   start!: string;
 
-  @Field()
+  @Field(() => String)
   end!: string;
 
-  @Field()
+  @Field(() => String)
   transcription!: string;
 }
 
@@ -27,24 +37,46 @@ class TranscriptionResultType implements TranscriptionConfig {
   @Field(() => [TranscriptionItemType], { nullable: true })
   transcription!: TranscriptionItemType[] | null;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   summary!: string | null;
 }
 
+@ObjectType()
+class TranscriptionsJob {
+  @Field(() => String)
+  id!: string;
+
+  @Field(() => String)
+  status!: string;
+
+  @Field(() => String)
+  workspaceId!: string;
+
+  @Field(() => String)
+  blobId!: string;
+
+  @Field(() => String, { nullable: true })
+  createdBy!: string | null;
+}
+
 @Injectable()
-export class TranscriptionResolver {
-  constructor(private readonly service: TranscriptionService) {}
+@Resolver(() => CopilotType)
+export class CopilotTranscriptionResolver {
+  constructor(
+    private readonly ac: AccessController,
+    private readonly service: CopilotTranscriptionService
+  ) {}
 
   @Mutation(() => String)
   async submitTranscriptionJob(
-    @CurrentUser() userId: string,
+    @CurrentUser() user: CurrentUser,
     @Args('workspaceId') workspaceId: string,
     @Args('blobId') blobId: string,
     @Args({ name: 'blob', type: () => GraphQLUpload })
     blob: FileUpload
   ): Promise<string> {
     const jobId = await this.service.submitTranscriptionJob(
-      userId,
+      user.id,
       workspaceId,
       blobId,
       blob
@@ -55,10 +87,10 @@ export class TranscriptionResolver {
 
   @Mutation(() => TranscriptionResultType)
   async claimTranscriptionJob(
-    @CurrentUser() userId: string,
+    @CurrentUser() user: CurrentUser,
     @Args('jobId') jobId: string
   ): Promise<TranscriptionResultType | null> {
-    const result = await this.service.claimTranscriptionResult(userId, jobId);
+    const result = await this.service.claimTranscriptionResult(user.id, jobId);
     if (result) {
       return {
         transcription: result.transcription || null,
@@ -66,5 +98,20 @@ export class TranscriptionResolver {
       };
     }
     return null;
+  }
+
+  @ResolveField(() => [TranscriptionsJob], {})
+  async transcriptionsJobs(
+    @Parent() copilot: CopilotType,
+    @CurrentUser() user: CurrentUser
+  ): Promise<TranscriptionsJob[]> {
+    if (!copilot.workspaceId) return [];
+    await this.ac
+      .user(user.id)
+      .workspace(copilot.workspaceId)
+      .allowLocal()
+      .assert('Workspace.Copilot');
+
+    return this.service.queryTranscriptionJobs(user.id, copilot.workspaceId);
   }
 }
