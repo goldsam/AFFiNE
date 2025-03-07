@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { AiJobStatus } from '@prisma/client';
 import type { ZodType } from 'zod';
 
@@ -41,6 +42,24 @@ export class CopilotJobModel extends BaseModel {
       },
     });
     return ret.count > 0;
+  }
+
+  @Transactional()
+  async claim(jobId: string, userId: string) {
+    const job = await this.get(jobId);
+
+    if (job) {
+      if (job.status === AiJobStatus.claim) {
+        return true;
+      } else if (
+        job?.createdBy === userId &&
+        job.status === AiJobStatus.finished
+      ) {
+        return await this.update(jobId, { status: AiJobStatus.finished });
+      }
+    }
+
+    return false;
   }
 
   async get(jobId: string): Promise<CopilotJob | null> {

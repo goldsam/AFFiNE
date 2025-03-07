@@ -479,6 +479,7 @@ enum AiJobStatus {
   pending
   running
   finished
+  claim
   failed
 }
 

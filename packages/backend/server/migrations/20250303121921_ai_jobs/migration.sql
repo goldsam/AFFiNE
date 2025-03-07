@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "AiJobStatus" AS ENUM ('pending', 'running', 'finished', 'failed');
+CREATE TYPE "AiJobStatus" AS ENUM ('pending', 'running', 'finished', 'claim', 'failed');
 
 -- CreateTable
 CREATE TABLE "ai_jobs" (

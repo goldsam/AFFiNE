@@ -59,6 +59,18 @@ export class TranscriptionService {
     return jobId;
   }
 
+  async claimTranscriptionResult(userId: string, jobId: string) {
+    const claimed = await this.models.copilotJob.claim(jobId, userId);
+    if (claimed) {
+      const transcription = await this.models.copilotJob.getConfig(
+        jobId,
+        TranscriptConfigSchema
+      );
+      return transcription;
+    }
+    return null;
+  }
+
   private async getProvider(model: string): Promise<CopilotTextProvider> {
     let provider = await this.provider.getProviderByCapability(
       CopilotCapability.TextToText,
