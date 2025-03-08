@@ -239,8 +239,7 @@ export function createBuiltinToolbarConfigForExternal(
           const viewType$ = signal(
             `${viewType === 'card' ? 'Card' : 'Embed'} view`
           );
-
-          const toggle = (e: CustomEvent<boolean>) => {
+          const onToggle = (e: CustomEvent<boolean>) => {
             const opened = e.detail;
             if (!opened) return;
 
@@ -253,9 +252,9 @@ export function createBuiltinToolbarConfigForExternal(
           return html`${keyed(
             model,
             html`<affine-view-dropdown-menu
+              @toggle=${onToggle}
               .actions=${actions}
               .context=${ctx}
-              .toggle=${toggle}
               .viewType$=${viewType$}
             ></affine-view-dropdown-menu>`
           )}`;
@@ -290,7 +289,7 @@ export function createBuiltinToolbarConfigForExternal(
             },
           })) satisfies ToolbarAction[];
 
-          const toggle = (e: CustomEvent<boolean>) => {
+          const onToggle = (e: CustomEvent<boolean>) => {
             const opened = e.detail;
             if (!opened) return;
 
@@ -303,9 +302,9 @@ export function createBuiltinToolbarConfigForExternal(
           return html`${keyed(
             model,
             html`<affine-card-style-dropdown-menu
+              @toggle=${onToggle}
               .actions=${actions}
               .context=${ctx}
-              .toggle=${toggle}
               .style$=${model.style$}
             ></affine-card-style-dropdown-menu>`
           )}`;

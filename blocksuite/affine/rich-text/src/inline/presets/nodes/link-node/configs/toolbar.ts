@@ -260,7 +260,7 @@ export const builtinInlineLinkToolbarConfig = {
 
         const actions = this.actions.map(action => ({ ...action }));
         const viewType$ = signal(actions[0].label);
-        const toggle = (e: CustomEvent<boolean>) => {
+        const onToggle = (e: CustomEvent<boolean>) => {
           const opened = e.detail;
           if (!opened) return;
 
@@ -275,7 +275,7 @@ export const builtinInlineLinkToolbarConfig = {
           html`<affine-view-dropdown-menu
             .actions=${actions}
             .context=${ctx}
-            .toggle=${toggle}
+            .onToggle=${onToggle}
             .viewType$=${viewType$}
           ></affine-view-dropdown-menu>`
         )}`;

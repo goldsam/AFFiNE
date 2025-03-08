@@ -21,8 +21,10 @@ import { ifDefined } from 'lit-html/directives/if-defined.js';
 import { repeat } from 'lit-html/directives/repeat.js';
 
 import {
+  EmbedCardDarkCubeIcon,
   EmbedCardDarkHorizontalIcon,
   EmbedCardDarkListIcon,
+  EmbedCardLightCubeIcon,
   EmbedCardLightHorizontalIcon,
   EmbedCardLightListIcon,
 } from '../icons';
@@ -30,11 +32,15 @@ import {
 const cardStyleMap: Record<ColorScheme, Record<string, TemplateResult>> = {
   light: {
     horizontal: EmbedCardLightHorizontalIcon,
+    horizontalThin: EmbedCardLightListIcon,
     list: EmbedCardLightListIcon,
+    cubeThick: EmbedCardLightCubeIcon,
   },
   dark: {
     horizontal: EmbedCardDarkHorizontalIcon,
+    horizontalThin: EmbedCardDarkListIcon,
     list: EmbedCardDarkListIcon,
+    cubeThick: EmbedCardDarkCubeIcon,
   },
 };
 
@@ -53,9 +59,6 @@ export class CardStyleDropdownMenu extends SignalWatcher(ShadowlessElement) {
   @property({ attribute: false })
   accessor style$!: Signal<string> | ReadonlySignal<string>;
 
-  @property({ attribute: false })
-  accessor toggle: ((e: CustomEvent<boolean>) => void) | undefined;
-
   icons$ = computed(
     () => cardStyleMap[this.context.themeProvider.theme$.value]
   );
@@ -64,14 +67,12 @@ export class CardStyleDropdownMenu extends SignalWatcher(ShadowlessElement) {
     const {
       actions,
       context,
-      toggle,
       style$: { value: style },
       icons$: { value: icons },
     } = this;
 
     return html`
       <editor-menu-button
-        @toggle=${toggle}
         .contentPadding="${'8px'}"
         .button=${html`
           <editor-icon-button
@@ -88,12 +89,13 @@ export class CardStyleDropdownMenu extends SignalWatcher(ShadowlessElement) {
             action => action.id,
             ({ id, label, icon, disabled, run }) => html`
               <editor-icon-button
-                aria-label="${label}"
+                aria-label="${ifDefined(label)}"
                 data-testid="${id}"
                 .tooltip="${label}"
                 .activeMode="${'border'}"
                 .iconContainerWidth="${'76px'}"
                 .iconContainerHeight="${'76px'}"
+                .justify="${'center'}"
                 ?active="${id === style}"
                 ?disabled="${ifDefined(disabled)}"
                 @click=${() => run?.(context)}

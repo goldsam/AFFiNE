@@ -3139,6 +3139,7 @@ __metadata:
   resolution: "@blocksuite/affine-widget-toolbar@workspace:blocksuite/affine/widgets/widget-toolbar"
   dependencies:
     "@blocksuite/affine-block-database": "workspace:*"
+    "@blocksuite/affine-block-surface": "workspace:*"
     "@blocksuite/affine-block-table": "workspace:*"
     "@blocksuite/affine-components": "workspace:*"
     "@blocksuite/affine-model": "workspace:*"

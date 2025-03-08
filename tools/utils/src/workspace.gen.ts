@@ -574,6 +574,7 @@ export const PackageList = [
     name: '@blocksuite/affine-widget-toolbar',
     workspaceDependencies: [
       'blocksuite/affine/blocks/block-database',
+      'blocksuite/affine/blocks/block-surface',
       'blocksuite/affine/blocks/block-table',
       'blocksuite/affine/components',
       'blocksuite/affine/model',

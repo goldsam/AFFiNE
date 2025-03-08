@@ -148,7 +148,7 @@ export const builtinToolbarConfig = {
         if (!model) return null;
 
         const actions = this.actions.map(action => ({ ...action }));
-        const toggle = (e: CustomEvent<boolean>) => {
+        const onToggle = (e: CustomEvent<boolean>) => {
           const opened = e.detail;
           if (!opened) return;
 
@@ -161,9 +161,9 @@ export const builtinToolbarConfig = {
         return html`${keyed(
           model,
           html`<affine-view-dropdown-menu
+            @toggle=${onToggle}
             .actions=${actions}
             .context=${ctx}
-            .toggle=${toggle}
             .viewType$=${signal(actions[1].label)}
           ></affine-view-dropdown-menu>`
         )}`;
@@ -198,7 +198,7 @@ export const builtinToolbarConfig = {
           },
         })) satisfies ToolbarAction[];
 
-        const toggle = (e: CustomEvent<boolean>) => {
+        const onToggle = (e: CustomEvent<boolean>) => {
           const opened = e.detail;
           if (!opened) return;
 
@@ -211,9 +211,9 @@ export const builtinToolbarConfig = {
         return html`${keyed(
           model,
           html`<affine-card-style-dropdown-menu
+            @toggle=${onToggle}
             .actions=${actions}
             .context=${ctx}
-            .toggle=${toggle}
             .style$=${model.style$}
           ></affine-card-style-dropdown-menu>`
         )}`;

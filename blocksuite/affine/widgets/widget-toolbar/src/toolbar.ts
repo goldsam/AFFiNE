@@ -1,4 +1,5 @@
 import { DatabaseSelection } from '@blocksuite/affine-block-database';
+import { EdgelessLegacySlotIdentifier } from '@blocksuite/affine-block-surface';
 import { TableSelection } from '@blocksuite/affine-block-table';
 import { EditorToolbar } from '@blocksuite/affine-components/toolbar';
 import {
@@ -432,7 +433,7 @@ export class AffineToolbarWidget extends WidgetComponent {
     const eventOptions = { passive: false };
     this.handleEvent('dragStart', () => {
       dragStart();
-      host.addEventListener('pointerup', dragEnd, { once: true });
+      document.addEventListener('pointerup', dragEnd, { once: true });
     });
     this.handleEvent('nativeDrop', dragEnd);
     disposables.addFromEvent(host, 'dragenter', dragStart, eventOptions);
@@ -440,7 +441,7 @@ export class AffineToolbarWidget extends WidgetComponent {
       host,
       'dragleave',
       throttle(
-        event => {
+        (event: DragEvent) => {
           const { x, y, target } = event;
           if (target === this) return;
           const rect = host.getBoundingClientRect();
@@ -459,7 +460,12 @@ export class AffineToolbarWidget extends WidgetComponent {
       eventOptions
     );
 
-    // Handles element when hovering
+    // Handles elements when resizing
+    const edgelessSlots = std.get(EdgelessLegacySlotIdentifier);
+    disposables.add(edgelessSlots.elementResizeStart.on(dragStart));
+    disposables.add(edgelessSlots.elementResizeEnd.on(dragEnd));
+
+    // Handles elements when hovering
     disposables.add(
       message$.subscribe(data => {
         if (
@@ -496,7 +502,7 @@ export class AffineToolbarWidget extends WidgetComponent {
         const value = flags.value$.value;
 
         // Hides toolbar
-        if (value === Flag.None || flags.check(Flag.Hiding, value)) {
+        if (Flag.None === value || flags.check(Flag.Hiding, value)) {
           if (toolbar.dataset.open) delete toolbar.dataset.open;
           return;
         }
@@ -525,12 +531,8 @@ export class AffineToolbarWidget extends WidgetComponent {
 
         const value = flags.value$.value;
 
-        if (
-          !context.activated ||
-          Flag.None === value ||
-          flags.contains(Flag.Hiding, value)
-        )
-          return;
+        if (!context.activated) return;
+        if (Flag.None === value || flags.contains(Flag.Hiding, value)) return;
 
         const build = referenceElement$.value;
         const referenceElement = build?.();

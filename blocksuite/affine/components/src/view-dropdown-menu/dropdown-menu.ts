@@ -30,20 +30,15 @@ export class ViewDropdownMenu extends SignalWatcher(ShadowlessElement) {
   @property({ attribute: false })
   accessor viewType$!: Signal<string> | ReadonlySignal<string>;
 
-  @property({ attribute: false })
-  accessor toggle: ((e: CustomEvent<boolean>) => void) | undefined;
-
   override render() {
     const {
       actions,
       context,
-      toggle,
       viewType$: { value: viewType },
     } = this;
 
     return html`
       <editor-menu-button
-        @toggle=${toggle}
         .contentPadding="${'8px'}"
         .button=${html`
           <editor-icon-button
@@ -67,7 +62,7 @@ export class ViewDropdownMenu extends SignalWatcher(ShadowlessElement) {
             action => action.id,
             ({ id, label, disabled, run }) => html`
               <editor-menu-action
-                aria-label="${label}"
+                aria-label="${ifDefined(label)}"
                 data-testid="${`link-to-${id}`}"
                 ?data-selected="${label === viewType}"
                 ?disabled="${ifDefined(

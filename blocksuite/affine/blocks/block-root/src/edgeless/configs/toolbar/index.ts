@@ -2,7 +2,6 @@ import { ToolbarModuleExtension } from '@blocksuite/affine-shared/services';
 import { BlockFlavourIdentifier } from '@blocksuite/block-std';
 import type { ExtensionType } from '@blocksuite/store';
 
-import { builtinAttachmentToolbarConfig } from './attachment';
 import { builtinBookmarkToolbarConfig } from './bookmark';
 import { builtinBrushToolbarConfig } from './brush';
 import { builtinConnectorToolbarConfig } from './connector';
@@ -17,11 +16,6 @@ import { builtinShapeToolbarConfig } from './shape';
 import { builtinTextToolbarConfig } from './text';
 
 export const EdgelessElementToolbarExtension: ExtensionType[] = [
-  ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:attachment'),
-    config: builtinAttachmentToolbarConfig,
-  }),
-
   ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:bookmark'),
     config: builtinBookmarkToolbarConfig,

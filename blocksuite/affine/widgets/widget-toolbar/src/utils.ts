@@ -63,7 +63,8 @@ export function autoUpdatePosition(
   const config = {
     placement,
     middleware: [
-      offset(10 + offsetY),
+      //offset(10 + offsetY),
+      offset(100 + offsetY),
       isInline ? inline() : undefined,
       shift(state => ({
         padding: {
