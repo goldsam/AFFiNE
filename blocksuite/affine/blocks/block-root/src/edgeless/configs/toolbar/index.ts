@@ -4,7 +4,6 @@ import type { ExtensionType } from '@blocksuite/store';
 
 import { builtinBrushToolbarConfig } from './brush';
 import { builtinConnectorToolbarConfig } from './connector';
-import { builtinEmbedToolbarConfig } from './embed';
 import { builtinFrameToolbarConfig } from './frame';
 import { builtinGroupToolbarConfig } from './group';
 import { builtinImageToolbarConfig } from './image';
@@ -28,11 +27,6 @@ export const EdgelessElementToolbarExtension: ExtensionType[] = [
   ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:connector'),
     config: builtinConnectorToolbarConfig,
-  }),
-
-  ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:embed'),
-    config: builtinEmbedToolbarConfig,
   }),
 
   ToolbarModuleExtension({

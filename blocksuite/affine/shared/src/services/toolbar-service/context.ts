@@ -133,13 +133,27 @@ abstract class ToolbarContextBase {
     );
   }
 
-  getSurfaceModelsByType<M extends abstract new (...args: any) => any>(
-    klass: M
+  getSurfaceModelsByType<T extends abstract new (...args: any) => any>(
+    klass: T
   ) {
     if (this.hasSelectedSurfaceModels) {
       const elements = this.elementsMap$.peek().get(this.flavour$.peek());
       if (elements?.length) {
         return elements.filter(e => this.matchModel(e, klass));
+      }
+    }
+    return [];
+  }
+
+  getSurfaceBlocksByType<T extends abstract new (...args: any) => any>(
+    klass: T
+  ) {
+    if (this.hasSelectedSurfaceModels) {
+      const elements = this.elementsMap$.peek().get(this.flavour$.peek());
+      if (elements?.length) {
+        return elements
+          .map(model => this.gfx.view.get(model.id))
+          .filter(block => block && this.matchBlock(block, klass));
       }
     }
     return [];
@@ -165,17 +179,17 @@ abstract class ToolbarContextBase {
       : this.getCurrentBlockBy(BlockSelection);
   }
 
-  getCurrentBlockByType<K extends abstract new (...args: any) => any>(
-    klass: K
+  getCurrentBlockByType<T extends abstract new (...args: any) => any>(
+    klass: T
   ) {
     const block = this.getCurrentBlock();
     return this.matchBlock(block, klass) ? block : null;
   }
 
-  matchBlock<K extends abstract new (...args: any) => any>(
+  matchBlock<T extends abstract new (...args: any) => any>(
     component: GfxElementModelView | BlockComponent | null,
-    klass: K
-  ): component is InstanceType<K> {
+    klass: T
+  ): component is InstanceType<T> {
     return component instanceof klass;
   }
 
@@ -189,23 +203,23 @@ abstract class ToolbarContextBase {
     return this.store.getBlock(selection.blockId)?.model ?? null;
   }
 
-  getCurrentModel() {
+  getCurrentModel(): GfxModel | BlockModel | null {
     return this.hasSelectedSurfaceModels
       ? this.getCurrentModelBy(SurfaceSelection)
       : this.getCurrentModelBy(BlockSelection);
   }
 
-  getCurrentModelByType<M extends abstract new (...args: any) => any>(
-    klass: M
+  getCurrentModelByType<T extends abstract new (...args: any) => any>(
+    klass: T
   ) {
     const model = this.getCurrentModel();
     return this.matchModel(model, klass) ? model : null;
   }
 
-  matchModel<K extends abstract new (...args: any) => any>(
+  matchModel<T extends abstract new (...args: any) => any>(
     model: GfxModel | BlockModel | null,
-    klass: K
-  ): model is InstanceType<K> {
+    klass: T
+  ): model is InstanceType<T> {
     return model instanceof klass;
   }
 

@@ -392,23 +392,30 @@ export class AffineToolbarWidget extends WidgetComponent {
     // `card view` or `embed view`
     disposables.add(
       std.view.viewUpdated.subscribe(record => {
-        if (record.type !== 'block') return;
-        if (!flags.isBlock()) return;
+        const hasAddedBlock =
+          record.type === 'block' && record.method === 'add';
+        if (!hasAddedBlock) return;
 
-        const blockIds = std.selection
-          .filter$(BlockSelection)
-          .peek()
-          .map(s => s.blockId);
+        if (flags.isBlock()) {
+          const blockIds = std.selection
+            .filter$(BlockSelection)
+            .peek()
+            .map(s => s.blockId);
+          if (blockIds.includes(record.id)) {
+            batch(() => {
+              this.setReferenceElementWithBlocks(
+                blockIds
+                  .map(id => std.view.getBlock(id))
+                  .filter(block => block !== null)
+              );
+              flags.refresh(Flag.Block);
+            });
+          }
+          return;
+        }
 
-        if (record.method === 'add' && blockIds.includes(record.id)) {
-          batch(() => {
-            this.setReferenceElementWithBlocks(
-              blockIds
-                .map(id => std.view.getBlock(id))
-                .filter(block => block !== null)
-            );
-            flags.refresh(Flag.Block);
-          });
+        if (flags.isSurface()) {
+          flags.refresh(Flag.Surface);
           return;
         }
       })
@@ -462,8 +469,8 @@ export class AffineToolbarWidget extends WidgetComponent {
 
     // Handles elements when resizing
     const edgelessSlots = std.get(EdgelessLegacySlotIdentifier);
-    disposables.add(edgelessSlots.elementResizeStart.on(dragStart));
-    disposables.add(edgelessSlots.elementResizeEnd.on(dragEnd));
+    disposables.add(edgelessSlots.elementResizeStart.subscribe(dragStart));
+    disposables.add(edgelessSlots.elementResizeEnd.subscribe(dragEnd));
 
     // Handles elements when hovering
     disposables.add(
