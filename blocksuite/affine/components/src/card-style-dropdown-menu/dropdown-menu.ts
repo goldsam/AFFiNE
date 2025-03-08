@@ -3,11 +3,7 @@ import {
   type ToolbarAction,
   ToolbarContext,
 } from '@blocksuite/affine-shared/services';
-import {
-  PropTypes,
-  requiredProperties,
-  ShadowlessElement,
-} from '@blocksuite/block-std';
+import { PropTypes, requiredProperties } from '@blocksuite/block-std';
 import { SignalWatcher } from '@blocksuite/global/lit';
 import { PaletteIcon } from '@blocksuite/icons/lit';
 import {
@@ -15,6 +11,7 @@ import {
   type ReadonlySignal,
   type Signal,
 } from '@preact/signals-core';
+import { LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { html, type TemplateResult } from 'lit-html';
 import { ifDefined } from 'lit-html/directives/if-defined.js';
@@ -24,23 +21,29 @@ import {
   EmbedCardDarkCubeIcon,
   EmbedCardDarkHorizontalIcon,
   EmbedCardDarkListIcon,
+  EmbedCardDarkVerticalIcon,
   EmbedCardLightCubeIcon,
   EmbedCardLightHorizontalIcon,
   EmbedCardLightListIcon,
+  EmbedCardLightVerticalIcon,
 } from '../icons';
 
 const cardStyleMap: Record<ColorScheme, Record<string, TemplateResult>> = {
   light: {
+    cube: EmbedCardLightCubeIcon,
+    cubeThick: EmbedCardLightCubeIcon,
     horizontal: EmbedCardLightHorizontalIcon,
     horizontalThin: EmbedCardLightListIcon,
     list: EmbedCardLightListIcon,
-    cubeThick: EmbedCardLightCubeIcon,
+    vertical: EmbedCardLightVerticalIcon,
   },
   dark: {
+    cube: EmbedCardDarkCubeIcon,
+    cubeThick: EmbedCardDarkCubeIcon,
     horizontal: EmbedCardDarkHorizontalIcon,
     horizontalThin: EmbedCardDarkListIcon,
     list: EmbedCardDarkListIcon,
-    cubeThick: EmbedCardDarkCubeIcon,
+    vertical: EmbedCardDarkVerticalIcon,
   },
 };
 
@@ -49,7 +52,7 @@ const cardStyleMap: Record<ColorScheme, Record<string, TemplateResult>> = {
   context: PropTypes.instanceOf(ToolbarContext),
   style$: PropTypes.object,
 })
-export class CardStyleDropdownMenu extends SignalWatcher(ShadowlessElement) {
+export class CardStyleDropdownMenu extends SignalWatcher(LitElement) {
   @property({ attribute: false })
   accessor actions!: ToolbarAction[];
 

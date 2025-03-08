@@ -1,14 +1,27 @@
+import { reassociateConnectorsCommand } from '@blocksuite/affine-block-surface';
 import { toast } from '@blocksuite/affine-components/toast';
-import { BookmarkBlockModel } from '@blocksuite/affine-model';
+import {
+  BookmarkBlockModel,
+  BookmarkStyles,
+  type EmbedCardStyle,
+} from '@blocksuite/affine-model';
+import {
+  EMBED_CARD_HEIGHT,
+  EMBED_CARD_WIDTH,
+} from '@blocksuite/affine-shared/consts';
 import {
   ActionPlacement,
   EmbedOptionProvider,
+  type LinkEventType,
   type ToolbarAction,
   type ToolbarActionGroup,
+  type ToolbarContext,
   type ToolbarModuleConfig,
+  ToolbarModuleExtension,
 } from '@blocksuite/affine-shared/services';
 import { getBlockProps } from '@blocksuite/affine-shared/utils';
-import { BlockSelection } from '@blocksuite/block-std';
+import { BlockFlavourIdentifier, BlockSelection } from '@blocksuite/block-std';
+import { Bound } from '@blocksuite/global/gfx';
 import {
   CaptionIcon,
   CopyIcon,
@@ -16,8 +29,8 @@ import {
   DuplicateIcon,
   ResetIcon,
 } from '@blocksuite/icons/lit';
-import { Slice, Text } from '@blocksuite/store';
-import { signal } from '@preact/signals-core';
+import { type ExtensionType, Slice, Text } from '@blocksuite/store';
+import { computed, signal } from '@preact/signals-core';
 import { html } from 'lit';
 import { keyed } from 'lit/directives/keyed.js';
 import * as Y from 'yjs';
@@ -25,26 +38,62 @@ import * as Y from 'yjs';
 import { BookmarkBlockComponent } from '../bookmark-block';
 
 const trackBaseProps = {
-  segment: 'doc',
-  page: 'doc editor',
-  module: 'toolbar',
   category: 'bookmark',
   type: 'card view',
 };
 
-export const builtinToolbarConfig = {
+const previewAction = {
+  id: 'a.preview',
+  content(ctx) {
+    const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+    if (!model) return null;
+
+    const { url } = model;
+
+    return html`<affine-link-preview .url=${url}></affine-link-preview>`;
+  },
+} satisfies ToolbarAction;
+
+const captionAction = {
+  id: 'd.caption',
+  tooltip: 'Caption',
+  icon: CaptionIcon(),
+  run(ctx) {
+    const block = ctx.getCurrentBlockByType(BookmarkBlockComponent);
+    block?.captionEditor?.show();
+
+    ctx.track('OpenedCaptionEditor', {
+      ...trackBaseProps,
+      control: 'add caption',
+    });
+  },
+} satisfies ToolbarAction;
+
+const createOnToggleFn =
+  (
+    ctx: ToolbarContext,
+    name: Extract<
+      LinkEventType,
+      | 'OpenedViewSelector'
+      | 'OpenedCardStyleSelector'
+      | 'OpenedCardScaleSelector'
+    >,
+    control: string
+  ) =>
+  (e: CustomEvent<boolean>) => {
+    e.stopPropagation();
+    const opened = e.detail;
+    if (!opened) return;
+
+    ctx.track(name, {
+      ...trackBaseProps,
+      control,
+    });
+  };
+
+const builtinToolbarConfig = {
   actions: [
-    {
-      id: 'a.preview',
-      content(ctx) {
-        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
-        if (!model) return null;
-
-        const { url } = model;
-
-        return html`<affine-link-preview .url=${url}></affine-link-preview>`;
-      },
-    },
+    previewAction,
     {
       id: 'b.conversions',
       actions: [
@@ -148,15 +197,12 @@ export const builtinToolbarConfig = {
         if (!model) return null;
 
         const actions = this.actions.map(action => ({ ...action }));
-        const onToggle = (e: CustomEvent<boolean>) => {
-          const opened = e.detail;
-          if (!opened) return;
-
-          ctx.track('OpenedViewSelector', {
-            ...trackBaseProps,
-            control: 'switch view',
-          });
-        };
+        const viewType$ = signal(actions[1].label);
+        const onToggle = createOnToggleFn(
+          ctx,
+          'OpenedViewSelector',
+          'switch view'
+        );
 
         return html`${keyed(
           model,
@@ -164,7 +210,7 @@ export const builtinToolbarConfig = {
             @toggle=${onToggle}
             .actions=${actions}
             .context=${ctx}
-            .viewType$=${signal(actions[1].label)}
+            .viewType$=${viewType$}
           ></affine-view-dropdown-menu>`
         )}`;
       },
@@ -197,16 +243,11 @@ export const builtinToolbarConfig = {
             });
           },
         })) satisfies ToolbarAction[];
-
-        const onToggle = (e: CustomEvent<boolean>) => {
-          const opened = e.detail;
-          if (!opened) return;
-
-          ctx.track('OpenedCardStyleSelector', {
-            ...trackBaseProps,
-            control: 'switch card style',
-          });
-        };
+        const onToggle = createOnToggleFn(
+          ctx,
+          'OpenedCardStyleSelector',
+          'switch card style'
+        );
 
         return html`${keyed(
           model,
@@ -219,20 +260,7 @@ export const builtinToolbarConfig = {
         )}`;
       },
     } satisfies ToolbarActionGroup<ToolbarAction>,
-    {
-      id: 'd.caption',
-      tooltip: 'Caption',
-      icon: CaptionIcon(),
-      run(ctx) {
-        const block = ctx.getCurrentBlockByType(BookmarkBlockComponent);
-        block?.captionEditor?.show();
-
-        ctx.track('OpenedCaptionEditor', {
-          ...trackBaseProps,
-          control: 'add caption',
-        });
-      },
-    },
+    captionAction,
     {
       placement: ActionPlacement.More,
       id: 'a.clipboard',
@@ -298,3 +326,231 @@ export const builtinToolbarConfig = {
     },
   ],
 } as const satisfies ToolbarModuleConfig;
+
+const builtinSurfaceToolbarConfig = {
+  actions: [
+    previewAction,
+    {
+      id: 'b.conversions',
+      actions: [
+        {
+          id: 'card',
+          label: 'Card view',
+          disabled: true,
+        },
+        {
+          id: 'embed',
+          label: 'Embed view',
+          run(ctx) {
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+            if (!model) return;
+
+            const { id: oldId, url, caption, xywh, parent } = model;
+            const options = ctx.std
+              .get(EmbedOptionProvider)
+              .getEmbedBlockOptions(url);
+
+            if (options?.viewType !== 'embed') return;
+
+            const { flavour, styles } = options;
+            let { style } = model;
+
+            if (!styles.includes(style)) {
+              style = styles[0];
+            }
+
+            const bounds = Bound.deserialize(xywh);
+            bounds.w = EMBED_CARD_WIDTH[style];
+            bounds.h = EMBED_CARD_HEIGHT[style];
+
+            const newId = ctx.store.addBlock(
+              flavour,
+              { url, caption, style, xywh: bounds.serialize() },
+              parent
+            );
+
+            ctx.command.exec(reassociateConnectorsCommand, { oldId, newId });
+
+            ctx.store.deleteBlock(model);
+
+            // Selects new block
+            ctx.gfx.selection.set({ editing: false, elements: [newId] });
+
+            ctx.track('SelectedView', {
+              ...trackBaseProps,
+              control: 'select view',
+              type: 'embed view',
+            });
+          },
+        },
+      ],
+      when(ctx) {
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+        if (!model) return false;
+
+        const { url } = model;
+        const options = ctx.std
+          .get(EmbedOptionProvider)
+          .getEmbedBlockOptions(url);
+
+        return options?.viewType === 'embed';
+      },
+      content(ctx) {
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+        if (!model) return null;
+
+        const actions = this.actions.map(action => ({ ...action }));
+        const viewType$ = signal('Card view');
+        const onToggle = createOnToggleFn(
+          ctx,
+          'OpenedViewSelector',
+          'switch view'
+        );
+
+        return html`${keyed(
+          model,
+          html`<affine-view-dropdown-menu
+            @toggle=${onToggle}
+            .actions=${actions}
+            .context=${ctx}
+            .viewType$=${viewType$}
+          ></affine-view-dropdown-menu>`
+        )}`;
+      },
+    } satisfies ToolbarActionGroup<ToolbarAction>,
+    {
+      id: 'b.style',
+      actions: [
+        {
+          id: 'horizontal',
+          label: 'Large horizontal style',
+        },
+        {
+          id: 'list',
+          label: 'Small horizontal style',
+        },
+        {
+          id: 'vertical',
+          label: 'Large vertical style',
+        },
+        {
+          id: 'cube',
+          label: 'Small vertical style',
+        },
+      ].filter(action => BookmarkStyles.includes(action.id as EmbedCardStyle)),
+      content(ctx) {
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+        if (!model) return null;
+
+        const actions = this.actions.map(action => ({
+          ...action,
+          run: ({ store }) => {
+            const style = action.id as EmbedCardStyle;
+            const bounds = Bound.deserialize(model.xywh);
+            bounds.w = EMBED_CARD_WIDTH[style];
+            bounds.h = EMBED_CARD_HEIGHT[style];
+            const xywh = bounds.serialize();
+
+            store.updateBlock(model, { style, xywh });
+
+            ctx.track('SelectedCardStyle', {
+              ...trackBaseProps,
+              control: 'select card style',
+              type: style,
+            });
+          },
+        })) satisfies ToolbarAction[];
+        const onToggle = createOnToggleFn(
+          ctx,
+          'OpenedCardStyleSelector',
+          'switch card style'
+        );
+
+        return html`${keyed(
+          model,
+          html`<affine-card-style-dropdown-menu
+            @toggle=${onToggle}
+            .actions=${actions}
+            .context=${ctx}
+            .style$=${model.style$}
+          ></affine-card-style-dropdown-menu>`
+        )}`;
+      },
+    } satisfies ToolbarActionGroup<ToolbarAction>,
+    {
+      ...captionAction,
+      id: 'c.caption',
+    },
+    {
+      id: 'd.scale',
+      content(ctx) {
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
+        if (!model) return null;
+
+        const scale$ = computed(() => {
+          const {
+            xywh$: { value: xywh },
+            style$: { value: style },
+          } = model;
+          const bounds = Bound.deserialize(xywh);
+          const height = EMBED_CARD_HEIGHT[style];
+          return Math.round(100 * (bounds.h / height));
+        });
+        const onSelect = (e: CustomEvent<number>) => {
+          e.stopPropagation();
+
+          const scale = e.detail / 100;
+
+          const bounds = Bound.deserialize(model.xywh);
+          const style = model.style;
+          bounds.w = EMBED_CARD_WIDTH[style] * scale;
+          bounds.h = EMBED_CARD_HEIGHT[style] * scale;
+          const xywh = bounds.serialize();
+
+          ctx.store.updateBlock(model, { xywh });
+
+          ctx.track('SelectedCardScale', {
+            ...trackBaseProps,
+            control: 'select card scale',
+          });
+        };
+        const onToggle = createOnToggleFn(
+          ctx,
+          'OpenedCardScaleSelector',
+          'switch card scale'
+        );
+        const format = (value: number) => `${value}%`;
+
+        return html`${keyed(
+          model,
+          html`<affine-size-dropdown-menu
+            @select=${onSelect}
+            @toggle=${onToggle}
+            .format=${format}
+            .size$=${scale$}
+          ></affine-size-dropdown-menu>`
+        )}`;
+      },
+    },
+  ],
+
+  when: ctx => ctx.getSurfaceModelsByType(BookmarkBlockModel).length === 1,
+} as const satisfies ToolbarModuleConfig;
+
+export const createBuiltinToolbarConfigExtension = (
+  flavour: string
+): ExtensionType[] => {
+  const name = flavour.split(':').pop();
+
+  return [
+    ToolbarModuleExtension({
+      id: BlockFlavourIdentifier(flavour),
+      config: builtinToolbarConfig,
+    }),
+
+    ToolbarModuleExtension({
+      id: BlockFlavourIdentifier(`affine:surface:${name}`),
+      config: builtinSurfaceToolbarConfig,
+    }),
+  ];
+};

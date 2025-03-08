@@ -32,6 +32,7 @@ import { IconButton } from '@blocksuite/affine-components/icon-button';
 import { effects as componentLinkPreviewEffects } from '@blocksuite/affine-components/link-preview';
 import { effects as componentLinkedDocTitleEffects } from '@blocksuite/affine-components/linked-doc-title';
 import { effects as componentPortalEffects } from '@blocksuite/affine-components/portal';
+import { effects as componentSizeDropdownMenuEffects } from '@blocksuite/affine-components/size-dropdown-menu';
 import { SmoothCorner } from '@blocksuite/affine-components/smooth-corner';
 import { effects as componentToggleButtonEffects } from '@blocksuite/affine-components/toggle-button';
 import { ToggleSwitch } from '@blocksuite/affine-components/toggle-switch';
@@ -147,6 +148,7 @@ export function effects() {
   componentHighlightDropdownMenuEffects();
   componentViewDropdownMenuEffects();
   componentTooltipContentWithShortcutEffects();
+  componentSizeDropdownMenuEffects();
 
   widgetScrollAnchoringEffects();
   widgetFrameTitleEffects();
