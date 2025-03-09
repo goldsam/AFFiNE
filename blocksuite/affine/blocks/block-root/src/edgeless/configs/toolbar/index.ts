@@ -6,7 +6,6 @@ import { builtinBrushToolbarConfig } from './brush';
 import { builtinConnectorToolbarConfig } from './connector';
 import { builtinFrameToolbarConfig } from './frame';
 import { builtinGroupToolbarConfig } from './group';
-import { builtinImageToolbarConfig } from './image';
 import { builtinMindmapToolbarConfig } from './mindmap';
 import { builtinMiscToolbarConfig } from './misc';
 import { builtinNoteToolbarConfig } from './note';
@@ -14,11 +13,6 @@ import { builtinShapeToolbarConfig } from './shape';
 import { builtinTextToolbarConfig } from './text';
 
 export const EdgelessElementToolbarExtension: ExtensionType[] = [
-  ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:image'),
-    config: builtinImageToolbarConfig,
-  }),
-
   ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:brush'),
     config: builtinBrushToolbarConfig,
