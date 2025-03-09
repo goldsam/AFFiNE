@@ -1005,7 +1005,17 @@ export const createCustomToolbarExtension = (
     }),
 
     ToolbarModuleExtension({
+      id: BlockFlavourIdentifier('custom:affine:surface:embed-linked-doc'),
+      config: embedLinkedDocToolbarConfig,
+    }),
+
+    ToolbarModuleExtension({
       id: BlockFlavourIdentifier('custom:affine:embed-synced-doc'),
+      config: embedSyncedDocToolbarConfig,
+    }),
+
+    ToolbarModuleExtension({
+      id: BlockFlavourIdentifier('custom:affine:surface:embed-synced-doc'),
       config: embedSyncedDocToolbarConfig,
     }),
 
