@@ -5,8 +5,10 @@ import {
   type ToolbarAction,
   type ToolbarActionGroup,
   type ToolbarModuleConfig,
+  ToolbarModuleExtension,
 } from '@blocksuite/affine-shared/services';
 import { getBlockProps } from '@blocksuite/affine-shared/utils';
+import { BlockFlavourIdentifier } from '@blocksuite/block-std';
 import {
   CaptionIcon,
   CopyIcon,
@@ -14,31 +16,45 @@ import {
   DuplicateIcon,
   ExpandFullIcon,
 } from '@blocksuite/icons/lit';
-import { Slice } from '@blocksuite/store';
+import { type ExtensionType, Slice } from '@blocksuite/store';
 import { html } from 'lit';
 import { keyed } from 'lit/directives/keyed.js';
 
 import { EmbedHtmlBlockComponent } from '../embed-html-block';
 
 const trackBaseProps = {
-  segment: 'doc',
-  page: 'doc editor',
-  module: 'toolbar',
   category: 'html',
   type: 'card view',
 };
 
-export const builtinToolbarConfig = {
+const openDocAction = {
+  id: 'a.open-doc',
+  icon: ExpandFullIcon(),
+  tooltip: 'Open this doc',
+  run(ctx) {
+    const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
+    block?.open();
+  },
+} as const satisfies ToolbarAction;
+
+const captionAction = {
+  id: 'c.caption',
+  tooltip: 'Caption',
+  icon: CaptionIcon(),
+  run(ctx) {
+    const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
+    block?.captionEditor?.show();
+
+    ctx.track('OpenedCaptionEditor', {
+      ...trackBaseProps,
+      control: 'add caption',
+    });
+  },
+} as const satisfies ToolbarAction;
+
+const builtinToolbarConfig = {
   actions: [
-    {
-      id: 'a.open-doc',
-      icon: ExpandFullIcon(),
-      tooltip: 'Open this doc',
-      run(ctx) {
-        const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
-        block?.open();
-      },
-    },
+    openDocAction,
     {
       id: 'b.style',
       actions: [
@@ -68,6 +84,7 @@ export const builtinToolbarConfig = {
           },
         }));
         const onToggle = (e: CustomEvent<boolean>) => {
+          e.stopPropagation();
           const opened = e.detail;
           if (!opened) return;
 
@@ -88,20 +105,7 @@ export const builtinToolbarConfig = {
         )}`;
       },
     } satisfies ToolbarActionGroup<ToolbarAction>,
-    {
-      id: 'c.caption',
-      tooltip: 'Caption',
-      icon: CaptionIcon(),
-      run(ctx) {
-        const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
-        block?.captionEditor?.show();
-
-        ctx.track('OpenedCaptionEditor', {
-          ...trackBaseProps,
-          control: 'add caption',
-        });
-      },
-    },
+    captionAction,
     {
       placement: ActionPlacement.More,
       id: 'a.clipboard',
@@ -156,4 +160,34 @@ export const builtinToolbarConfig = {
       },
     },
   ],
+
+  when: ctx => ctx.getSurfaceModelsByType(EmbedHtmlModel).length === 1,
 } as const satisfies ToolbarModuleConfig;
+
+const builtinSurfaceToolbarConfig = {
+  actions: [
+    openDocAction,
+    {
+      ...captionAction,
+      id: 'b.caption',
+    },
+  ],
+} as const satisfies ToolbarModuleConfig;
+
+export const createBuiltinToolbarConfigExtension = (
+  flavour: string
+): ExtensionType[] => {
+  const name = flavour.split(':').pop();
+
+  return [
+    ToolbarModuleExtension({
+      id: BlockFlavourIdentifier(flavour),
+      config: builtinToolbarConfig,
+    }),
+
+    ToolbarModuleExtension({
+      id: BlockFlavourIdentifier(`affine:surface:${name}`),
+      config: builtinSurfaceToolbarConfig,
+    }),
+  ];
+};
