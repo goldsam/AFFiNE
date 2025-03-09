@@ -148,7 +148,7 @@ export class AffineToolbarWidget extends WidgetComponent {
       host,
       std,
     } = this;
-    const { flags, elementsMap$, flavour$, message$ } = toolbarRegistry;
+    const { flags, flavour$, message$, elementsMap$ } = toolbarRegistry;
     const context = new ToolbarContext(std);
 
     // TODO(@fundon): fix toolbar position shaking when the wheel scrolls
@@ -387,14 +387,14 @@ export class AffineToolbarWidget extends WidgetComponent {
       })
     );
 
+    // Handles blocks when adding
     // TODO(@fundon): improve these cases
     // Waits until the view is created when switching the view mode.
     // `card view` or `embed view`
     disposables.add(
       std.view.viewUpdated.subscribe(record => {
-        const hasAddedBlock =
-          record.type === 'block' && record.method === 'add';
-        if (!hasAddedBlock) return;
+        const hasAdded = record.type === 'block' && record.method === 'add';
+        if (!hasAdded) return;
 
         if (flags.isBlock()) {
           const blockIds = std.selection
@@ -421,16 +421,53 @@ export class AffineToolbarWidget extends WidgetComponent {
       })
     );
 
+    // Handles blocks when updating
     disposables.add(
+      // TODO(@fundon): use rxjs' filter
       std.store.slots.blockUpdated.subscribe(record => {
-        if (
-          flags.isBlock() &&
-          record.type === 'update' &&
-          record.props.key === 'text'
-        ) {
-          flags.refresh(Flag.Block);
+        const hasUpdated = record.type === 'update';
+        if (!hasUpdated) return;
+
+        if (flags.isBlock()) {
+          const blockIds = std.selection
+            .filter$(BlockSelection)
+            .peek()
+            .map(s => s.blockId);
+          if (blockIds.includes(record.id)) {
+            batch(() => {
+              this.setReferenceElementWithBlocks(
+                blockIds
+                  .map(id => std.view.getBlock(id))
+                  .filter(block => block !== null)
+              );
+              flags.refresh(Flag.Block);
+            });
+          }
           return;
         }
+
+        if (flags.isSurface()) {
+          flags.refresh(Flag.Surface);
+          return;
+        }
+      })
+    );
+
+    // Handles elemets when updating
+    disposables.add(
+      effect(() => {
+        const surface = context.gfx.surface$.value;
+        if (!surface) return;
+
+        const subscription = surface.elementUpdated.subscribe(() => {
+          if (!flags.isSurface()) return;
+
+          flags.refresh(Flag.Surface);
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
       })
     );
 

@@ -92,7 +92,7 @@ const conversionsActionGroup = {
           .button=${html`
             <editor-icon-button
               aria-label="Conversions"
-              .tooltip="${'Turn Into'}"
+              .tooltip="${'Turn into'}"
             >
               ${conversion.icon} ${ArrowDownSmallIcon()}
             </editor-icon-button>

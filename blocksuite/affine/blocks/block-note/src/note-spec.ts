@@ -6,9 +6,10 @@ import { literal } from 'lit/static-html.js';
 import {
   DocNoteBlockAdapterExtensions,
   EdgelessNoteBlockAdapterExtensions,
-} from './adapters/index.js';
-import { NoteSlashMenuConfigExtension } from './configs/slash-menu.js';
-import { NoteBlockService } from './note-service.js';
+} from './adapters/index';
+import { NoteSlashMenuConfigExtension } from './configs/slash-menu';
+import { createBuiltinToolbarConfigExtension } from './configs/toolbar';
+import { NoteBlockService } from './note-service';
 
 const flavour = NoteBlockSchema.model.flavour;
 
@@ -26,4 +27,5 @@ export const EdgelessNoteBlockSpec: ExtensionType[] = [
   BlockViewExtension(flavour, literal`affine-edgeless-note`),
   EdgelessNoteBlockAdapterExtensions,
   NoteSlashMenuConfigExtension,
+  createBuiltinToolbarConfigExtension(flavour),
 ].flat();

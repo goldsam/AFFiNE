@@ -3,7 +3,7 @@ import { PropTypes, requiredProperties } from '@blocksuite/block-std';
 import { SignalWatcher } from '@blocksuite/global/lit';
 import { ArrowDownSmallIcon, DoneIcon } from '@blocksuite/icons/lit';
 import type { ReadonlySignal, Signal } from '@preact/signals-core';
-import { css, html, LitElement } from 'lit';
+import { css, html, LitElement, type TemplateResult } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { repeat } from 'lit-html/directives/repeat.js';
 import { when } from 'lit-html/directives/when.js';
@@ -39,7 +39,7 @@ export class SizeDropdownMenu extends SignalWatcher(LitElement) {
 
     :host([data-type='check']) editor-menu-action[data-selected] {
       color: var(--affine-primary-color);
-      background-color: none;
+      background-color: unset;
     }
 
     input {
@@ -75,6 +75,12 @@ export class SizeDropdownMenu extends SignalWatcher(LitElement) {
 
   @property({ attribute: false })
   accessor format: ((e: number) => string) | undefined;
+
+  @property({ attribute: false })
+  accessor label: string = 'Scale';
+
+  @property({ attribute: false })
+  accessor icon: TemplateResult | undefined;
 
   @property({ attribute: 'data-type' })
   accessor type: 'normal' | 'check' = 'normal';
@@ -118,6 +124,8 @@ export class SizeDropdownMenu extends SignalWatcher(LitElement) {
       sizes,
       format,
       type,
+      icon,
+      label,
       size$: { value: size },
     } = this;
     const isCheckType = type === 'check';
@@ -128,13 +136,14 @@ export class SizeDropdownMenu extends SignalWatcher(LitElement) {
         .contentPadding="${'8px'}"
         .button=${html`
           <editor-icon-button
-            aria-label="Scale"
-            .tooltip="${'Scale'}"
+            aria-label="${label}"
+            .tooltip="${label}"
             .justify="${'space-between'}"
             .labelHeight="${'20px'}"
-            .iconContainerWidth="${'65px'}"
+            .iconContainerWidth="${icon ? 'unset' : '65px'}"
           >
-            <span class="label">${format?.(size) ?? size}</span>
+            ${icon ??
+            html`<span class="label">${format?.(size) ?? size}</span>`}
             ${ArrowDownSmallIcon()}
           </editor-icon-button>
         `}

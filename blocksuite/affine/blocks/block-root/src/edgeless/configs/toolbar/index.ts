@@ -8,7 +8,6 @@ import { builtinFrameToolbarConfig } from './frame';
 import { builtinGroupToolbarConfig } from './group';
 import { builtinMindmapToolbarConfig } from './mindmap';
 import { builtinMiscToolbarConfig } from './misc';
-import { builtinNoteToolbarConfig } from './note';
 import { builtinShapeToolbarConfig } from './shape';
 import { builtinTextToolbarConfig } from './text';
 
@@ -36,11 +35,6 @@ export const EdgelessElementToolbarExtension: ExtensionType[] = [
   ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:mindmap'),
     config: builtinMindmapToolbarConfig,
-  }),
-
-  ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:note'),
-    config: builtinNoteToolbarConfig,
   }),
 
   ToolbarModuleExtension({

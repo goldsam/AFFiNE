@@ -1,0 +1,41 @@
+import { LineWidth, type StrokeStyle } from '@blocksuite/affine-model';
+import { ShadowlessElement } from '@blocksuite/block-std';
+import { ArrowDownSmallIcon, LineStyleIcon } from '@blocksuite/icons/lit';
+import { html } from 'lit';
+import { property } from 'lit/decorators.js';
+
+export class EdgelessNoteBorderDropdownMenu extends ShadowlessElement {
+  override render() {
+    const { lineSize, lineStyle } = this;
+
+    return html`
+      <editor-menu-button
+        .button=${html`
+          <editor-icon-button
+            aria-label="Border style"
+            .tooltip="${'Border style'}"
+          >
+            ${LineStyleIcon()} ${ArrowDownSmallIcon()}
+          </editor-icon-button>
+        `}
+      >
+        <affine-edgeless-line-styles-panel
+          .lineSize=${lineSize}
+          .lineStyle=${lineStyle}
+        ></affine-edgeless-line-styles-panel>
+      </editor-menu-button>
+    `;
+  }
+
+  @property({ attribute: false })
+  accessor lineStyle!: StrokeStyle;
+
+  @property({ attribute: false })
+  accessor lineSize: LineWidth = LineWidth.Two;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'edgeless-note-border-dropdown-menu': EdgelessNoteBorderDropdownMenu;
+  }
+}

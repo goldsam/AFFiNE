@@ -56,6 +56,10 @@ abstract class ToolbarContextBase {
     return this.std.store;
   }
 
+  get history() {
+    return this.store.history;
+  }
+
   get view() {
     return this.std.view;
   }

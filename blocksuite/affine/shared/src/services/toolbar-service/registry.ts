@@ -25,13 +25,13 @@ export function ToolbarModuleExtension(module: ToolbarModule): ExtensionType {
 export class ToolbarRegistryExtension extends Extension {
   flavour$ = signal<string>('affine:note');
 
+  elementsMap$ = signal<Map<string, GfxModel[]>>(new Map());
+
   message$ = signal<{
     flavour: string;
     element: Element;
     setFloating: (element?: Element) => void;
   } | null>(null);
-
-  elementsMap$ = signal<Map<string, GfxModel[]>>(new Map());
 
   flags = new Flags();
 

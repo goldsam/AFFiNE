@@ -69,7 +69,9 @@
     "./card-style-dropdown-menu": "./src/card-style-dropdown-menu/index.ts",
     "./highlight-dropdown-menu": "./src/highlight-dropdown-menu/index.ts",
     "./tooltip-content-with-shortcut": "./src/tooltip-content-with-shortcut/index.ts",
-    "./size-dropdown-menu": "./src/size-dropdown-menu/index.ts"
+    "./size-dropdown-menu": "./src/size-dropdown-menu/index.ts",
+    "./edgeless-line-width-panel": "./src/edgeless-line-width-panel/index.ts",
+    "./edgeless-line-styles-panel": "./src/edgeless-line-styles-panel/index.ts"
   },
   "files": [
     "src",
