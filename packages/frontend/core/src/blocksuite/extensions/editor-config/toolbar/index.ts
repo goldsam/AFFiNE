@@ -408,7 +408,7 @@ function createExternalLinkableToolbarConfig(
             tooltip: 'Copy link',
             icon: CopyIcon(),
             run(ctx) {
-              const model = ctx.getCurrentBlockComponentBy(klass)?.model;
+              const model = ctx.getCurrentBlockByType(klass)?.model;
               if (!model) return;
 
               const { url } = model;
@@ -433,12 +433,12 @@ function createExternalLinkableToolbarConfig(
             tooltip: 'Edit',
             icon: EditIcon(),
             run(ctx) {
-              const component = ctx.getCurrentBlockComponentBy(klass);
-              if (!component) return;
+              const block = ctx.getCurrentBlockByType(klass);
+              if (!block) return;
 
               ctx.hide();
 
-              const model = component.model;
+              const model = block.model;
               const abortController = new AbortController();
               abortController.signal.onabort = () => ctx.show();
 
@@ -450,7 +450,7 @@ function createExternalLinkableToolbarConfig(
                 undefined,
                 (_std, _component, props) => {
                   ctx.store.updateBlock(model, props);
-                  component.requestUpdate();
+                  block.requestUpdate();
                 },
                 abortController
               );
@@ -507,8 +507,8 @@ function createOpenDocActionGroup(
     id: 'A.open-doc',
     actions: openDocActions,
     content(ctx) {
-      const component = ctx.getCurrentBlockComponentBy(klass);
-      if (!component) return null;
+      const block = ctx.getCurrentBlockByType(klass);
+      if (!block) return null;
 
       const actions = this.actions
         .map<ToolbarAction>(action => {
@@ -521,15 +521,14 @@ function createOpenDocActionGroup(
           return {
             ...action,
             disabled: shouldOpenInActiveView
-              ? component.model.pageId === ctx.store.id
+              ? block.model.pageId === ctx.store.id
               : false,
             when:
-              allowed &&
-              (shouldOpenInCenterPeek ? isPeekable(component) : true),
+              allowed && (shouldOpenInCenterPeek ? isPeekable(block) : true),
             run: shouldOpenInCenterPeek
-              ? (_ctx: ToolbarContext) => peek(component)
+              ? (_ctx: ToolbarContext) => peek(block)
               : (_ctx: ToolbarContext) =>
-                  component.open({
+                  block.open({
                     openMode: action.id as OpenDocMode,
                   }),
           };
@@ -582,10 +581,7 @@ const embedLinkedDocToolbarConfig = {
           tooltip: 'Copy link',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              EmbedLinkedDocModel
-            );
+            const model = ctx.getCurrentModelByType(EmbedLinkedDocModel);
             if (!model) return;
 
             const { pageId, params } = model;
@@ -614,21 +610,21 @@ const embedLinkedDocToolbarConfig = {
           tooltip: 'Edit',
           icon: EditIcon(),
           run(ctx) {
-            const component = ctx.getCurrentBlockComponentBy(
+            const block = ctx.getCurrentBlockByType(
               EmbedLinkedDocBlockComponent
             );
-            if (!component) return;
+            if (!block) return;
 
             ctx.hide();
 
-            const model = component.model;
+            const model = block.model;
             const doc = ctx.workspace.getDoc(model.pageId);
             const abortController = new AbortController();
             abortController.signal.onabort = () => ctx.show();
 
             toggleEmbedCardEditModal(
               ctx.host,
-              component.model,
+              model,
               'card',
               doc
                 ? {
@@ -637,12 +633,12 @@ const embedLinkedDocToolbarConfig = {
                   }
                 : undefined,
               std => {
-                component.refreshData();
+                block.refreshData();
                 notifyLinkedDocClearedAliases(std);
               },
               (_std, _component, props) => {
                 ctx.store.updateBlock(model, props);
-                component.requestUpdate();
+                block.requestUpdate();
               },
               abortController
             );
@@ -674,10 +670,7 @@ const embedSyncedDocToolbarConfig = {
           tooltip: 'Copy link',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              EmbedSyncedDocModel
-            );
+            const model = ctx.getCurrentModelByType(EmbedSyncedDocModel);
             if (!model) return;
 
             const { pageId, params } = model;
@@ -706,14 +699,14 @@ const embedSyncedDocToolbarConfig = {
           tooltip: 'Edit',
           icon: EditIcon(),
           run(ctx) {
-            const component = ctx.getCurrentBlockComponentBy(
+            const block = ctx.getCurrentBlockByType(
               EmbedSyncedDocBlockComponent
             );
-            if (!component) return;
+            if (!block) return;
 
             ctx.hide();
 
-            const model = component.model;
+            const model = block.model;
             const doc = ctx.workspace.getDoc(model.pageId);
             const abortController = new AbortController();
             abortController.signal.onabort = () => ctx.show();
@@ -725,7 +718,7 @@ const embedSyncedDocToolbarConfig = {
               doc ? { title: doc.meta?.title } : undefined,
               undefined,
               (std, _component, props) => {
-                component.convertToCard(props);
+                block.convertToCard(props);
 
                 notifyLinkedDocSwitchedToCard(std);
               },
@@ -754,8 +747,7 @@ const inlineReferenceToolbarConfig = {
       id: 'A.open-doc',
       actions: openDocActions,
       content(ctx) {
-        const registry = ctx.toolbarRegistry;
-        const target = registry.message$.peek()?.element;
+        const target = ctx.message$.peek()?.element;
         if (!(target instanceof AffineReference)) return null;
 
         const actions = this.actions

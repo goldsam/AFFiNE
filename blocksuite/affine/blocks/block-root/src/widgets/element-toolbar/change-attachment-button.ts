@@ -109,7 +109,7 @@ export class EdgelessChangeAttachmentButton extends WithDisposable(LitElement) {
             `,
 
         // TODO(@fundon): should remove it when refactoring the element toolbar
-        attachmentViewDropdownMenu(new ToolbarContext(this.std)),
+        attachmentViewDropdownMenu.content(new ToolbarContext(this.std)),
 
         html`
           <editor-icon-button

@@ -37,10 +37,7 @@ export const builtinToolbarConfig = {
     {
       id: 'a.preview',
       content(ctx) {
-        const model = ctx.getCurrentModelByType(
-          BlockSelection,
-          BookmarkBlockModel
-        );
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
         if (!model) return null;
 
         const { url } = model;
@@ -55,10 +52,7 @@ export const builtinToolbarConfig = {
           id: 'inline',
           label: 'Inline view',
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              BookmarkBlockModel
-            );
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
             if (!model) return;
 
             const { title, caption, url, parent } = model;
@@ -95,10 +89,7 @@ export const builtinToolbarConfig = {
           id: 'embed',
           label: 'Embed view',
           disabled(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              BookmarkBlockModel
-            );
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
             if (!model) return true;
 
             const options = ctx.std
@@ -108,10 +99,7 @@ export const builtinToolbarConfig = {
             return options?.viewType !== 'embed';
           },
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              BookmarkBlockModel
-            );
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
             if (!model) return;
 
             const { caption, url, style, parent } = model;
@@ -156,10 +144,7 @@ export const builtinToolbarConfig = {
         },
       ],
       content(ctx) {
-        const model = ctx.getCurrentModelByType(
-          BlockSelection,
-          BookmarkBlockModel
-        );
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
         if (!model) return null;
 
         const actions = this.actions.map(action => ({ ...action }));
@@ -197,10 +182,7 @@ export const builtinToolbarConfig = {
         },
       ],
       content(ctx) {
-        const model = ctx.getCurrentModelByType(
-          BlockSelection,
-          BookmarkBlockModel
-        );
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
         if (!model) return null;
 
         const actions = this.actions.map(action => ({
@@ -242,10 +224,8 @@ export const builtinToolbarConfig = {
       tooltip: 'Caption',
       icon: CaptionIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          BookmarkBlockComponent
-        );
-        component?.captionEditor?.show();
+        const block = ctx.getCurrentBlockByType(BookmarkBlockComponent);
+        block?.captionEditor?.show();
 
         ctx.track('OpenedCaptionEditor', {
           ...trackBaseProps,
@@ -262,7 +242,7 @@ export const builtinToolbarConfig = {
           label: 'Copy',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModel();
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
             if (!model) return;
 
             const slice = Slice.fromModels(ctx.store, [model]);
@@ -277,7 +257,7 @@ export const builtinToolbarConfig = {
           label: 'Duplicate',
           icon: DuplicateIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModel();
+            const model = ctx.getCurrentModelByType(BookmarkBlockModel);
             if (!model) return;
 
             const { flavour, parent } = model;
@@ -295,10 +275,8 @@ export const builtinToolbarConfig = {
       label: 'Reload',
       icon: ResetIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          BookmarkBlockComponent
-        );
-        component?.refreshData();
+        const block = ctx.getCurrentBlockByType(BookmarkBlockComponent);
+        block?.refreshData();
       },
     },
     {
@@ -308,7 +286,7 @@ export const builtinToolbarConfig = {
       icon: DeleteIcon(),
       variant: 'destructive',
       run(ctx) {
-        const model = ctx.getCurrentModel();
+        const model = ctx.getCurrentModelByType(BookmarkBlockModel);
         if (!model) return;
 
         ctx.store.deleteBlock(model);

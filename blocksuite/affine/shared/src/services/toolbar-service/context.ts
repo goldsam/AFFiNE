@@ -4,15 +4,18 @@ import {
   type BlockStdScope,
   SurfaceSelection,
 } from '@blocksuite/block-std';
-import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import {
+  GfxControllerIdentifier,
+  type GfxElementModelView,
+  type GfxModel,
+} from '@blocksuite/block-std/gfx';
 import { nextTick } from '@blocksuite/global/utils';
 import type {
   BaseSelection,
-  Block,
+  BlockModel,
   SelectionConstructor,
 } from '@blocksuite/store';
 
-import { matchModels } from '../../utils';
 import { DocModeProvider } from '../doc-mode-service';
 import { TelemetryProvider, type TelemetryService } from '../telemetry-service';
 import { ThemeProvider } from '../theme-service';
@@ -111,60 +114,99 @@ abstract class ToolbarContextBase {
     return this.toolbarRegistry.flags;
   }
 
+  get flavour$() {
+    return this.toolbarRegistry.flavour$;
+  }
+
   get message$() {
     return this.toolbarRegistry.message$;
   }
 
-  getCurrentElement() {
-    const selection = this.selection.find(SurfaceSelection);
-    return selection?.elements.length
-      ? this.gfx.getElementById(selection.elements[0])
-      : null;
+  get elementsMap$() {
+    return this.toolbarRegistry.elementsMap$;
   }
 
-  getCurrentBlock(): Block | null {
-    return this.getCurrentBlockBy();
+  get hasSelectedSurfaceModels() {
+    return (
+      this.flavour$.peek().includes('surface') &&
+      this.elementsMap$.peek().size > 0
+    );
   }
 
-  getCurrentBlockComponent(): BlockComponent | null {
+  getSurfaceElementsByType<M extends abstract new (...args: any) => any>(
+    klass: M
+  ) {
+    if (this.hasSelectedSurfaceModels) {
+      const elements = this.elementsMap$.peek().get(this.flavour$.peek());
+      if (elements?.length) {
+        return elements.filter(e => this.matchModel(e, klass));
+      }
+    }
+    return [];
+  }
+
+  getCurrentBlockBy<T extends SelectionConstructor>(type: T) {
+    const selection = this.selection.find(type);
+    if (!selection) return null;
+    if (selection.is(SurfaceSelection)) {
+      const elementId = selection.elements[0];
+      const model = this.gfx.getElementById(elementId);
+      if (!model) return null;
+      return this.gfx.view.get(model.id) ?? null;
+    }
+    const model = this.store.getBlock(selection.blockId);
+    if (!model) return null;
+    return this.view.getBlock(model.id);
+  }
+
+  getCurrentBlock() {
+    return this.hasSelectedSurfaceModels
+      ? this.getCurrentBlockBy(SurfaceSelection)
+      : this.getCurrentBlockBy(BlockSelection);
+  }
+
+  getCurrentBlockByType<K extends abstract new (...args: any) => any>(
+    klass: K
+  ) {
     const block = this.getCurrentBlock();
-    return block && this.view.getBlock(block.id);
+    return this.matchBlock(block, klass) ? block : null;
   }
 
-  getCurrentModel() {
-    return this.getCurrentBlock()?.model ?? null;
-  }
-
-  getCurrentBlockBy<T extends SelectionConstructor>(type?: T): Block | null {
-    const selection = this.selection.find(type ?? BlockSelection);
-    return (selection && this.store.getBlock(selection.blockId)) ?? null;
+  matchBlock<K extends abstract new (...args: any) => any>(
+    component: GfxElementModelView | BlockComponent | null,
+    klass: K
+  ): component is InstanceType<K> {
+    return component instanceof klass;
   }
 
   getCurrentModelBy<T extends SelectionConstructor>(type: T) {
-    return this.getCurrentBlockBy<T>(type)?.model ?? null;
+    const selection = this.selection.find(type);
+    if (!selection) return null;
+    if (selection.is(SurfaceSelection)) {
+      const elementId = selection.elements[0];
+      return elementId ? this.gfx.getElementById(elementId) : null;
+    }
+    return this.store.getBlock(selection.blockId)?.model ?? null;
   }
 
-  getCurrentModelByType<
-    T extends SelectionConstructor,
-    M extends Parameters<typeof matchModels>[1][number],
-  >(type: T, klass: M) {
-    const model = this.getCurrentModelBy(type);
-    return matchModels(model, [klass]) ? model : null;
+  getCurrentModel() {
+    return this.hasSelectedSurfaceModels
+      ? this.getCurrentModelBy(SurfaceSelection)
+      : this.getCurrentModelBy(BlockSelection);
   }
 
-  getCurrentBlockComponentBy<K extends abstract new (...args: any) => any>(
+  getCurrentModelByType<M extends abstract new (...args: any) => any>(
+    klass: M
+  ) {
+    const model = this.getCurrentModel();
+    return this.matchModel(model, klass) ? model : null;
+  }
+
+  matchModel<K extends abstract new (...args: any) => any>(
+    model: GfxModel | BlockModel | null,
     klass: K
-  ): InstanceType<K> | null {
-    const block = this.getCurrentBlockBy();
-    const component = block && this.view.getBlock(block.id);
-    return this.blockComponentIs(component, klass) ? component : null;
-  }
-
-  blockComponentIs<K extends abstract new (...args: any) => any>(
-    component: BlockComponent | null,
-    ...classes: K[]
-  ): component is InstanceType<K> {
-    return classes.some(k => component instanceof k);
+  ): model is InstanceType<K> {
+    return model instanceof klass;
   }
 
   select(group: string, selections: BaseSelection[] = []) {

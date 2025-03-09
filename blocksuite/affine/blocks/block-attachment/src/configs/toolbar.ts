@@ -11,10 +11,8 @@ import {
   ActionPlacement,
   type ToolbarAction,
   type ToolbarActionGroup,
-  type ToolbarContext,
   type ToolbarModuleConfig,
 } from '@blocksuite/affine-shared/services';
-import { BlockSelection, SurfaceSelection } from '@blocksuite/block-std';
 import { Bound } from '@blocksuite/global/gfx';
 import {
   CaptionIcon,
@@ -25,7 +23,6 @@ import {
   EditIcon,
   ResetIcon,
 } from '@blocksuite/icons/lit';
-import type { SelectionConstructor } from '@blocksuite/store';
 import { flip, offset } from '@floating-ui/dom';
 import { computed } from '@preact/signals-core';
 import { html } from 'lit';
@@ -44,101 +41,95 @@ const trackBaseProps = {
   type: 'card view',
 };
 
-const createAttachmentViewDropdownMenuWith = <T extends SelectionConstructor>(
-  t: T
-) => {
-  return {
-    id: 'b.conversions',
-    actions: [
-      {
-        id: 'card',
-        label: 'Card view',
-        run(ctx) {
-          const model = ctx.getCurrentModelByType(t, AttachmentBlockModel);
-          if (!model) return;
+export const attachmentViewDropdownMenu = {
+  id: 'b.conversions',
+  actions: [
+    {
+      id: 'card',
+      label: 'Card view',
+      run(ctx) {
+        const model = ctx.getCurrentModelByType(AttachmentBlockModel);
+        if (!model) return;
 
-          const style = defaultAttachmentProps.style!;
-          const width = EMBED_CARD_WIDTH[style];
-          const height = EMBED_CARD_HEIGHT[style];
-          const bound = Bound.deserialize(model.xywh);
-          bound.w = width;
-          bound.h = height;
+        const style = defaultAttachmentProps.style!;
+        const width = EMBED_CARD_WIDTH[style];
+        const height = EMBED_CARD_HEIGHT[style];
+        const bound = Bound.deserialize(model.xywh);
+        bound.w = width;
+        bound.h = height;
 
-          ctx.store.updateBlock(model, {
-            style,
-            embed: false,
-            xywh: bound.serialize(),
-          });
-        },
-      },
-      {
-        id: 'embed',
-        label: 'Embed view',
-        run(ctx) {
-          const model = ctx.getCurrentModelByType(t, AttachmentBlockModel);
-          if (!model) return;
-
-          // Clears
-          ctx.reset();
-          ctx.select('note');
-
-          ctx.std.get(AttachmentEmbedProvider).convertTo(model);
-
-          ctx.track('SelectedView', {
-            ...trackBaseProps,
-            control: 'select view',
-            type: 'embed view',
-          });
-        },
-      },
-    ],
-    content(ctx) {
-      const model = ctx.getCurrentModelByType(t, AttachmentBlockModel);
-      if (!model) return null;
-
-      const embedProvider = ctx.std.get(AttachmentEmbedProvider);
-      const actions = this.actions.map(action => ({ ...action }));
-      const viewType$ = computed(() => {
-        const [cardAction, embedAction] = actions;
-        const embed = model.embed$.value ?? false;
-
-        cardAction.disabled = !embed;
-        embedAction.disabled = embed && embedProvider.embedded(model);
-
-        return embed ? embedAction.label : cardAction.label;
-      });
-      const toggle = (e: CustomEvent<boolean>) => {
-        const opened = e.detail;
-        if (!opened) return;
-
-        ctx.track('OpenedViewSelector', {
-          ...trackBaseProps,
-          control: 'switch view',
+        ctx.store.updateBlock(model, {
+          style,
+          embed: false,
+          xywh: bound.serialize(),
         });
-      };
-
-      return html`${keyed(
-        model,
-        html`<affine-view-dropdown-menu
-          .actions=${actions}
-          .context=${ctx}
-          .toggle=${toggle}
-          .viewType$=${viewType$}
-        ></affine-view-dropdown-menu>`
-      )}`;
+      },
     },
-  } satisfies ToolbarActionGroup<ToolbarAction>;
-};
+    {
+      id: 'embed',
+      label: 'Embed view',
+      run(ctx) {
+        const model = ctx.getCurrentModelByType(AttachmentBlockModel);
+        if (!model) return;
+
+        // Clears
+        ctx.reset();
+        ctx.select('note');
+
+        ctx.std.get(AttachmentEmbedProvider).convertTo(model);
+
+        ctx.track('SelectedView', {
+          ...trackBaseProps,
+          control: 'select view',
+          type: 'embed view',
+        });
+      },
+    },
+  ],
+  content(ctx) {
+    const model = ctx.getCurrentModelByType(AttachmentBlockModel);
+    if (!model) return null;
+
+    const embedProvider = ctx.std.get(AttachmentEmbedProvider);
+    const actions = this.actions.map(action => ({ ...action }));
+    const viewType$ = computed(() => {
+      const [cardAction, embedAction] = actions;
+      const embed = model.embed$.value ?? false;
+
+      cardAction.disabled = !embed;
+      embedAction.disabled = embed && embedProvider.embedded(model);
+
+      return embed ? embedAction.label : cardAction.label;
+    });
+    const toggle = (e: CustomEvent<boolean>) => {
+      const opened = e.detail;
+      if (!opened) return;
+
+      ctx.track('OpenedViewSelector', {
+        ...trackBaseProps,
+        control: 'switch view',
+      });
+    };
+
+    return html`${keyed(
+      model,
+      html`<affine-view-dropdown-menu
+        .actions=${actions}
+        .context=${ctx}
+        .toggle=${toggle}
+        .viewType$=${viewType$}
+      ></affine-view-dropdown-menu>`
+    )}`;
+  },
+} satisfies ToolbarActionGroup<ToolbarAction>;
 
 export const builtinToolbarConfig = {
   actions: [
     {
       id: 'a.rename',
       content(cx) {
-        const component = cx.getCurrentBlockComponentBy(
-          AttachmentBlockComponent
-        );
-        if (!component) return null;
+        const block = cx.getCurrentBlockByType(AttachmentBlockComponent);
+        if (!block) return null;
 
         const abortController = new AbortController();
         abortController.signal.onabort = () => cx.show();
@@ -152,12 +143,12 @@ export const builtinToolbarConfig = {
 
               createLitPortal({
                 template: RenameModal({
-                  model: component.model,
+                  model: block.model,
                   editorHost: cx.host,
                   abortController,
                 }),
                 computePosition: {
-                  referenceElement: component,
+                  referenceElement: block,
                   placement: 'top-start',
                   middleware: [flip(), offset(4)],
                 },
@@ -170,16 +161,14 @@ export const builtinToolbarConfig = {
         `;
       },
     },
-    createAttachmentViewDropdownMenuWith(BlockSelection),
+    attachmentViewDropdownMenu,
     {
       id: 'c.download',
       tooltip: 'Download',
       icon: DownloadIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          AttachmentBlockComponent
-        );
-        component?.download();
+        const block = ctx.getCurrentBlockByType(AttachmentBlockComponent);
+        block?.download();
       },
     },
     {
@@ -187,10 +176,8 @@ export const builtinToolbarConfig = {
       tooltip: 'Caption',
       icon: CaptionIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          AttachmentBlockComponent
-        );
-        component?.captionEditor?.show();
+        const block = ctx.getCurrentBlockByType(AttachmentBlockComponent);
+        block?.captionEditor?.show();
 
         ctx.track('OpenedCaptionEditor', {
           ...trackBaseProps,
@@ -208,10 +195,8 @@ export const builtinToolbarConfig = {
           icon: CopyIcon(),
           run(ctx) {
             // TODO(@fundon): unify `clone` method
-            const component = ctx.getCurrentBlockComponentBy(
-              AttachmentBlockComponent
-            );
-            component?.copy();
+            const block = ctx.getCurrentBlockByType(AttachmentBlockComponent);
+            block?.copy();
           },
         },
         {
@@ -219,9 +204,7 @@ export const builtinToolbarConfig = {
           label: 'Duplicate',
           icon: DuplicateIcon(),
           run(ctx) {
-            const model = ctx.getCurrentBlockComponentBy(
-              AttachmentBlockComponent
-            )?.model;
+            const model = ctx.getCurrentModelByType(AttachmentBlockModel);
             if (!model) return;
 
             // TODO(@fundon): unify `duplicate` method
@@ -241,10 +224,8 @@ export const builtinToolbarConfig = {
       label: 'Reload',
       icon: ResetIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          AttachmentBlockComponent
-        );
-        component?.refreshData();
+        const block = ctx.getCurrentBlockByType(AttachmentBlockComponent);
+        block?.refreshData();
       },
     },
     {
@@ -257,7 +238,7 @@ export const builtinToolbarConfig = {
         const model = ctx.getCurrentModel();
         if (!model) return;
 
-        ctx.store.deleteBlock(model);
+        ctx.store.deleteBlock(model.id);
 
         // Clears
         ctx.select('note');
@@ -266,7 +247,3 @@ export const builtinToolbarConfig = {
     },
   ],
 } as const satisfies ToolbarModuleConfig;
-
-export const attachmentViewDropdownMenu = (ctx: ToolbarContext) => {
-  return createAttachmentViewDropdownMenuWith(SurfaceSelection).content(ctx);
-};

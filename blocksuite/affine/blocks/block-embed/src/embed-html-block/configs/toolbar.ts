@@ -7,7 +7,6 @@ import {
   type ToolbarModuleConfig,
 } from '@blocksuite/affine-shared/services';
 import { getBlockProps } from '@blocksuite/affine-shared/utils';
-import { BlockSelection } from '@blocksuite/block-std';
 import {
   CaptionIcon,
   CopyIcon,
@@ -36,10 +35,8 @@ export const builtinToolbarConfig = {
       icon: ExpandFullIcon(),
       tooltip: 'Open this doc',
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          EmbedHtmlBlockComponent
-        );
-        component?.open();
+        const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
+        block?.open();
       },
     },
     {
@@ -55,7 +52,7 @@ export const builtinToolbarConfig = {
         },
       ],
       content(ctx) {
-        const model = ctx.getCurrentModelByType(BlockSelection, EmbedHtmlModel);
+        const model = ctx.getCurrentModelByType(EmbedHtmlModel);
         if (!model) return null;
 
         const actions = this.actions.map<ToolbarAction>(action => ({
@@ -97,10 +94,8 @@ export const builtinToolbarConfig = {
       tooltip: 'Caption',
       icon: CaptionIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          EmbedHtmlBlockComponent
-        );
-        component?.captionEditor?.show();
+        const block = ctx.getCurrentBlockByType(EmbedHtmlBlockComponent);
+        block?.captionEditor?.show();
 
         ctx.track('OpenedCaptionEditor', {
           ...trackBaseProps,
@@ -117,7 +112,7 @@ export const builtinToolbarConfig = {
           label: 'Copy',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModelBy(BlockSelection);
+            const model = ctx.getCurrentModelByType(EmbedHtmlModel);
             if (!model) return;
 
             const slice = Slice.fromModels(ctx.store, [model]);
@@ -132,7 +127,7 @@ export const builtinToolbarConfig = {
           label: 'Duplicate',
           icon: DuplicateIcon(),
           run(ctx) {
-            const model = ctx.getCurrentModelBy(BlockSelection);
+            const model = ctx.getCurrentModelByType(EmbedHtmlModel);
             if (!model) return;
 
             const { flavour, parent } = model;
@@ -151,7 +146,7 @@ export const builtinToolbarConfig = {
       icon: DeleteIcon(),
       variant: 'destructive',
       run(ctx) {
-        const model = ctx.getCurrentModelBy(BlockSelection);
+        const model = ctx.getCurrentModelByType(EmbedHtmlModel);
         if (!model) return;
 
         ctx.store.deleteBlock(model);

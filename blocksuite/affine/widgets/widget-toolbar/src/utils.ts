@@ -42,7 +42,7 @@ export const sideMap = new Map([
   ['affine:surface:frame', { top: 28 }],
   // includes group element
   ['affine:surface:group', { top: 20 }],
-  // only one shape element
+  // has only one shape element
   ['affine:surface:shape', { top: 26, bottom: -26 }],
 ]);
 
@@ -196,6 +196,11 @@ export function renderToolbar(
     .flat()
     .map(key => toolbarRegistry.modules.get(key))
     .filter(module => !!module)
+    .filter(module =>
+      typeof module.config.when === 'function'
+        ? module.config.when(context)
+        : (module.config.when ?? true)
+    )
     .map<ToolbarActions>(module => module.config.actions)
     .flat();
 
@@ -220,7 +225,7 @@ export function renderToolbar(
     );
     // if (moreMenuItems.length) {
     // TODO(@fundon): edgeless case needs to be considered
-    const key = `${context.getCurrentModel()?.id ?? context.getCurrentElement()?.id}`;
+    const key = `${context.getCurrentModel()?.id}`;
 
     primaryActionGroup.push({
       id: 'more',

@@ -1,4 +1,5 @@
 import { type BlockStdScope, StdIdentifier } from '@blocksuite/block-std';
+import type { GfxModel } from '@blocksuite/block-std/gfx';
 import { type Container, createIdentifier } from '@blocksuite/global/di';
 import { Extension, type ExtensionType } from '@blocksuite/store';
 import { signal } from '@preact/signals-core';
@@ -22,11 +23,15 @@ export function ToolbarModuleExtension(module: ToolbarModule): ExtensionType {
 }
 
 export class ToolbarRegistryExtension extends Extension {
+  flavour$ = signal<string>('affine:note');
+
   message$ = signal<{
     flavour: string;
     element: Element;
     setFloating: (element?: Element) => void;
   } | null>(null);
+
+  elementsMap$ = signal<Map<string, GfxModel[]>>(new Map());
 
   flags = new Flags();
 
