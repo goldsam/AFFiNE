@@ -98,53 +98,52 @@ export class GoogleProvider implements CopilotTextToTextProvider {
     return undefined;
   }
 
-  protected chatToGPTMessage(
+  protected async chatToGPTMessage(
     messages: PromptMessage[]
-  ): [string | undefined, ChatMessage[]] {
+  ): Promise<[string | undefined, ChatMessage[]]> {
     let system =
       messages[0]?.role === 'system' ? messages.shift()?.content : undefined;
 
     // filter redundant fields
-    const msgs = messages
-      .filter(m => m.role !== 'system')
-      .map(({ role, content, attachments, params }) => {
-        content = content.trim();
-        role = role as 'user' | 'assistant';
-        const mimetype = params?.mimetype;
-        if (Array.isArray(attachments)) {
-          const contents: (TextPart | FilePart)[] = [];
-          if (content.length) {
-            contents.push({
-              type: 'text',
-              text: content,
-            });
-          }
-          contents.push(
-            ...attachments
-              .map(url => {
-                if (SIMPLE_IMAGE_URL_REGEX.test(url)) {
-                  const mimeType =
-                    typeof mimetype === 'string'
-                      ? mimetype
-                      : this.inferMimeType(url);
-                  if (mimeType) {
-                    const data = url.startsWith('data:') ? url : new URL(url);
-                    return {
-                      type: 'file' as const,
-                      data,
-                      mimeType,
-                    };
-                  }
-                }
-                return undefined;
-              })
-              .filter(c => !!c)
-          );
-          return { role, content: contents } as ChatMessage;
-        } else {
-          return { role, content } as ChatMessage;
+    const msgs: ChatMessage[] = [];
+    for (let { role, content, attachments, params } of messages.filter(
+      m => m.role !== 'system'
+    )) {
+      content = content.trim();
+      role = role as 'user' | 'assistant';
+      const mimetype = params?.mimetype;
+      if (Array.isArray(attachments)) {
+        const contents: (TextPart | FilePart)[] = [];
+        if (content.length) {
+          contents.push({
+            type: 'text',
+            text: content,
+          });
         }
-      });
+
+        for (const url of attachments) {
+          if (SIMPLE_IMAGE_URL_REGEX.test(url)) {
+            const mimeType =
+              typeof mimetype === 'string' ? mimetype : this.inferMimeType(url);
+            if (mimeType) {
+              const data = url.startsWith('data:')
+                ? await fetch(url).then(r => r.arrayBuffer())
+                : new URL(url);
+              contents.push({
+                type: 'file' as const,
+                data,
+                mimeType,
+              });
+            }
+          }
+        }
+
+        msgs.push({ role, content: contents } as ChatMessage);
+      } else {
+        msgs.push({ role, content });
+      }
+    }
+
     return [system, msgs];
   }
 
@@ -233,7 +232,7 @@ export class GoogleProvider implements CopilotTextToTextProvider {
     try {
       metrics.ai.counter('chat_text_calls').add(1, { model });
 
-      const [system, msgs] = this.chatToGPTMessage(messages);
+      const [system, msgs] = await this.chatToGPTMessage(messages);
 
       const { text } = await generateText({
         model: this.instance(model, {
@@ -262,7 +261,7 @@ export class GoogleProvider implements CopilotTextToTextProvider {
 
     try {
       metrics.ai.counter('chat_text_stream_calls').add(1, { model });
-      const [system, msgs] = this.chatToGPTMessage(messages);
+      const [system, msgs] = await this.chatToGPTMessage(messages);
 
       const { textStream } = streamText({
         model: this.instance(model),

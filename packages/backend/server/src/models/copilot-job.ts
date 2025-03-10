@@ -31,6 +31,17 @@ export class CopilotJobModel extends BaseModel {
     return row;
   }
 
+  async has(workspaceId: string, blobId: string, type?: CopilotJobType) {
+    const row = await this.db.aiJobs.findFirst({
+      where: {
+        workspaceId,
+        blobId,
+        type,
+      },
+    });
+    return !!row;
+  }
+
   async update(jobId: string, data: UpdateCopilotJobInput) {
     const ret = await this.db.aiJobs.updateMany({
       where: {

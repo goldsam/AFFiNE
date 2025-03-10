@@ -686,6 +686,10 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'action_forbidden',
     message: `Embedding feature not available, you may need to install pgvector extension to your database`,
   },
+  copilot_transcription_job_exists: {
+    type: 'bad_request',
+    message: () => 'Transcription job already exists',
+  },
 
   // Quota & Limit errors
   blob_quota_exceeded: {

@@ -3,6 +3,7 @@ import { AiJobStatus } from '@prisma/client';
 
 import {
   CopilotPromptNotFound,
+  CopilotTranscriptionJobExists,
   type FileUpload,
   JobQueue,
   mapAnyError,
@@ -43,6 +44,16 @@ export class CopilotTranscriptionService {
     blobId: string,
     blob: FileUpload
   ): Promise<string> {
+    if (
+      await this.models.copilotJob.has(
+        workspaceId,
+        blobId,
+        CopilotJobType.Transcription
+      )
+    ) {
+      throw new CopilotTranscriptionJobExists();
+    }
+
     const { id: jobId } = await this.models.copilotJob.create({
       workspaceId,
       blobId,
@@ -138,6 +149,7 @@ export class CopilotTranscriptionService {
     try {
       const result = await this.chatWithPrompt('Transcript audio', {
         attachments: [url],
+        params: { mimetype: mimeType },
       });
 
       const transcription = TranscriptionSchema.parse(
