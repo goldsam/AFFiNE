@@ -266,6 +266,13 @@ export const AFFINE_FLAGS = {
     configurable: isCanaryBuild,
     defaultState: false,
   },
+  enable_integration: {
+    category: 'affine',
+    displayName: 'Enable Integration',
+    description: 'Enable Integration',
+    configurable: isCanaryBuild,
+    defaultState: false,
+  },
 } satisfies { [key in string]: FlagInfo };
 
 // oxlint-disable-next-line no-redeclare

@@ -28,6 +28,7 @@ import { configureGlobalContextModule } from './global-context';
 import { configureI18nModule } from './i18n';
 import { configureImportClipperModule } from './import-clipper';
 import { configureImportTemplateModule } from './import-template';
+import { configureIntegrationModule } from './integration';
 import { configureJournalModule } from './journal';
 import { configureLifecycleModule } from './lifecycle';
 import { configureNavigationModule } from './navigation';
@@ -104,4 +105,5 @@ export function configureCommonModules(framework: Framework) {
   configureBlobManagementModule(framework);
   configureImportClipperModule(framework);
   configureNotificationModule(framework);
+  configureIntegrationModule(framework);
 }

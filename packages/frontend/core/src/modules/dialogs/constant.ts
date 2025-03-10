@@ -12,7 +12,7 @@ export type SettingTab =
   | 'experimental-features'
   | 'editor'
   | 'account'
-  | `workspace:${'preference' | 'properties' | 'members' | 'storage' | 'billing' | 'license'}`;
+  | `workspace:${'preference' | 'properties' | 'members' | 'storage' | 'billing' | 'license' | 'integrations'}`;
 
 export type GLOBAL_DIALOG_SCHEMA = {
   'create-workspace': (props: { serverId?: string }) => {

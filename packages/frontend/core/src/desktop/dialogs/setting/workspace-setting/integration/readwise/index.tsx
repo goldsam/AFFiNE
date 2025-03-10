@@ -1,0 +1,47 @@
+import { IntegrationService } from '@affine/core/modules/integration';
+import { useI18n } from '@affine/i18n';
+import { ReadwiseLogoDuotoneIcon } from '@blocksuite/icons/rc';
+import { useLiveData, useService } from '@toeverything/infra';
+import { useCallback } from 'react';
+
+import {
+  IntegrationCard,
+  IntegrationCardContent,
+  IntegrationCardFooter,
+  IntegrationCardHeader,
+} from '../card';
+import { ConnectButton } from './connect';
+import { ConnectedActions } from './connected';
+
+export const ReadwiseIntegration = () => {
+  const t = useI18n();
+  const readwise = useService(IntegrationService).readwise;
+
+  const settings = useLiveData(readwise.settings$);
+  const token = settings?.token;
+
+  const handleConnectFinished = useCallback(
+    (token: string) => {
+      if (!token) return;
+      readwise.updateSetting('token', token);
+    },
+    [readwise]
+  );
+
+  return (
+    <IntegrationCard>
+      <IntegrationCardHeader icon={<ReadwiseLogoDuotoneIcon />} />
+      <IntegrationCardContent
+        title={t['com.affine.integration.readwise.name']()}
+        desc={t['com.affine.integration.readwise.desc']()}
+      />
+      <IntegrationCardFooter>
+        {token ? (
+          <ConnectedActions />
+        ) : (
+          <ConnectButton onConnected={handleConnectFinished} />
+        )}
+      </IntegrationCardFooter>
+    </IntegrationCard>
+  );
+};

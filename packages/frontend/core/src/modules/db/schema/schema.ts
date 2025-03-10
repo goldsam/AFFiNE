@@ -34,11 +34,26 @@ export const AFFiNE_WORKSPACE_DB_SCHEMA = {
     isDeleted: f.boolean().optional(),
     // we will keep deleted properties in the database, for override legacy data
   },
+
+  docIntegration: {
+    // docId as primary key
+    id: f.string().primaryKey(),
+    type: f.enum('readwise', 'zotero').optional(),
+    /**
+     * Identify **affine user** and **integration type** and **integration account**
+     * Used to quickly find user's all integrations
+     */
+    integrationId: f.string(),
+    userId: f.string(),
+    meta: f.json(),
+  },
 } as const satisfies DBSchemaBuilder;
 export type AFFiNEWorkspaceDbSchema = typeof AFFiNE_WORKSPACE_DB_SCHEMA;
 
 export type DocProperties = ORMEntity<AFFiNEWorkspaceDbSchema['docProperties']>;
-
+export type DocIntegrationProperties = ORMEntity<
+  AFFiNEWorkspaceDbSchema['docIntegration']
+>;
 export type DocCustomPropertyInfo = ORMEntity<
   AFFiNEWorkspaceDbSchema['docCustomPropertyInfo']
 >;
