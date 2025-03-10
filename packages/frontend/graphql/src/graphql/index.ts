@@ -351,6 +351,49 @@ export const getCopilotHistoriesQuery = {
 }`,
 };
 
+export const submitTranscriptionJobMutation = {
+  id: 'submitTranscriptionJobMutation' as const,
+  op: 'submitTranscriptionJob',
+  query: `mutation submitTranscriptionJob($workspaceId: String!, $blobId: String!, $blob: Upload!) {
+  submitTranscriptionJob(blob: $blob, blobId: $blobId, workspaceId: $workspaceId)
+}`,
+  file: true,
+};
+
+export const claimTranscriptionJobMutation = {
+  id: 'claimTranscriptionJobMutation' as const,
+  op: 'claimTranscriptionJob',
+  query: `mutation claimTranscriptionJob($jobId: String!) {
+  claimTranscriptionJob(jobId: $jobId) {
+    transcription {
+      speaker
+      start
+      end
+      transcription
+    }
+    summary
+  }
+}`,
+};
+
+export const getTranscriptionJobsQuery = {
+  id: 'getTranscriptionJobsQuery' as const,
+  op: 'getTranscriptionJobs',
+  query: `query getTranscriptionJobs($workspaceId: String!) {
+  currentUser {
+    copilot(workspaceId: $workspaceId) {
+      transcriptionsJobs {
+        id
+        workspaceId
+        blobId
+        createdBy
+        status
+      }
+    }
+  }
+}`,
+};
+
 export const createCopilotMessageMutation = {
   id: 'createCopilotMessageMutation' as const,
   op: 'createCopilotMessage',
@@ -639,9 +682,7 @@ export const getCurrentUserQuery = {
     }
   }
 }`,
-  deprecations: [
-    "'token' is deprecated: use [/api/auth/sign-in?native=true] instead",
-  ],
+  deprecations: ["'token' is deprecated: use [/api/auth/sign-in?native=true] instead"],
 };
 
 export const getDocDefaultRoleQuery = {
@@ -893,10 +934,7 @@ export const getWorkspaceInfoQuery = {
     team
   }
 }`,
-  deprecations: [
-    "'isAdmin' is deprecated: use WorkspaceType[role] instead",
-    "'isOwner' is deprecated: use WorkspaceType[role] instead",
-  ],
+  deprecations: ["'isAdmin' is deprecated: use WorkspaceType[role] instead","'isOwner' is deprecated: use WorkspaceType[role] instead"],
 };
 
 export const getWorkspacePageByIdQuery = {
@@ -1195,9 +1233,7 @@ export const quotaQuery = {
     }
   }
 }`,
-  deprecations: [
-    "'storageQuota' is deprecated: use `UserQuotaType['usedStorageQuota']` instead",
-  ],
+  deprecations: ["'storageQuota' is deprecated: use `UserQuotaType['usedStorageQuota']` instead"],
 };
 
 export const readNotificationMutation = {
@@ -1644,9 +1680,7 @@ export const getWorkspaceRolePermissionsQuery = {
     }
   }
 }`,
-  deprecations: [
-    "'workspaceRolePermissions' is deprecated: use WorkspaceType[permissions] instead",
-  ],
+  deprecations: ["'workspaceRolePermissions' is deprecated: use WorkspaceType[permissions] instead"],
 };
 
 export const approveWorkspaceTeamMemberMutation = {

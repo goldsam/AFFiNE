@@ -1,0 +1,15 @@
+query getTranscriptionJobs(
+  $workspaceId: String!
+) {
+  currentUser {
+    copilot(workspaceId: $workspaceId) {
+      transcriptionsJobs {
+        id
+        workspaceId
+        blobId
+        createdBy
+        status
+      }
+    }
+  }
+}

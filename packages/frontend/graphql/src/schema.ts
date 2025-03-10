@@ -115,6 +115,7 @@ export interface Copilot {
   sessionIds: Array<Scalars['String']['output']>;
   /** Get the session list in the workspace */
   sessions: Array<CopilotSessionType>;
+  transcriptionsJobs: Array<TranscriptionsJob>;
   workspaceId: Maybe<Scalars['ID']['output']>;
 }
 
@@ -155,6 +156,7 @@ export interface CopilotContext {
 export interface CopilotContextMatchContextArgs {
   content: Scalars['String']['input'];
   limit?: InputMaybe<Scalars['SafeInt']['input']>;
+  threshold?: InputMaybe<Scalars['Float']['input']>;
 }
 
 export interface CopilotContextMatchWorkspaceContextArgs {
@@ -523,6 +525,7 @@ export enum ErrorNames {
   COPILOT_QUOTA_EXCEEDED = 'COPILOT_QUOTA_EXCEEDED',
   COPILOT_SESSION_DELETED = 'COPILOT_SESSION_DELETED',
   COPILOT_SESSION_NOT_FOUND = 'COPILOT_SESSION_NOT_FOUND',
+  COPILOT_TRANSCRIPTION_JOB_EXISTS = 'COPILOT_TRANSCRIPTION_JOB_EXISTS',
   CUSTOMER_PORTAL_CREATE_FAILED = 'CUSTOMER_PORTAL_CREATE_FAILED',
   DOC_ACTION_DENIED = 'DOC_ACTION_DENIED',
   DOC_DEFAULT_ROLE_CAN_NOT_BE_OWNER = 'DOC_DEFAULT_ROLE_CAN_NOT_BE_OWNER',
@@ -939,6 +942,7 @@ export interface Mutation {
   cancelSubscription: SubscriptionType;
   changeEmail: UserType;
   changePassword: Scalars['Boolean']['output'];
+  claimTranscriptionJob: TranscriptionResultType;
   /** Cleanup sessions */
   cleanupCopilotSession: Array<Scalars['String']['output']>;
   /** Create change password url */
@@ -1010,6 +1014,7 @@ export interface Mutation {
   sendVerifyChangeEmail: Scalars['Boolean']['output'];
   sendVerifyEmail: Scalars['Boolean']['output'];
   setBlob: Scalars['String']['output'];
+  submitTranscriptionJob: Scalars['String']['output'];
   /** Update a copilot prompt */
   updateCopilotPrompt: CopilotPromptType;
   /** Update a chat session */
@@ -1082,6 +1087,10 @@ export interface MutationChangePasswordArgs {
   newPassword: Scalars['String']['input'];
   token: Scalars['String']['input'];
   userId?: InputMaybe<Scalars['String']['input']>;
+}
+
+export interface MutationClaimTranscriptionJobArgs {
+  jobId: Scalars['String']['input'];
 }
 
 export interface MutationCleanupCopilotSessionArgs {
@@ -1299,6 +1308,12 @@ export interface MutationSendVerifyEmailArgs {
 
 export interface MutationSetBlobArgs {
   blob: Scalars['Upload']['input'];
+  workspaceId: Scalars['String']['input'];
+}
+
+export interface MutationSubmitTranscriptionJobArgs {
+  blob: Scalars['Upload']['input'];
+  blobId: Scalars['String']['input'];
   workspaceId: Scalars['String']['input'];
 }
 
@@ -1814,6 +1829,29 @@ export interface SubscriptionType {
 export enum SubscriptionVariant {
   EA = 'EA',
   Onetime = 'Onetime',
+}
+
+export interface TranscriptionItemType {
+  __typename?: 'TranscriptionItemType';
+  end: Scalars['String']['output'];
+  speaker: Scalars['String']['output'];
+  start: Scalars['String']['output'];
+  transcription: Scalars['String']['output'];
+}
+
+export interface TranscriptionResultType {
+  __typename?: 'TranscriptionResultType';
+  summary: Maybe<Scalars['String']['output']>;
+  transcription: Maybe<Array<TranscriptionItemType>>;
+}
+
+export interface TranscriptionsJob {
+  __typename?: 'TranscriptionsJob';
+  blobId: Scalars['String']['output'];
+  createdBy: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  workspaceId: Scalars['String']['output'];
 }
 
 export type UnionNotificationBodyType =
@@ -2582,6 +2620,58 @@ export type GetCopilotHistoriesQuery = {
           attachments: Array<string> | null;
           createdAt: string;
         }>;
+      }>;
+    };
+  } | null;
+};
+
+export type SubmitTranscriptionJobMutationVariables = Exact<{
+  workspaceId: Scalars['String']['input'];
+  blobId: Scalars['String']['input'];
+  blob: Scalars['Upload']['input'];
+}>;
+
+export type SubmitTranscriptionJobMutation = {
+  __typename?: 'Mutation';
+  submitTranscriptionJob: string;
+};
+
+export type ClaimTranscriptionJobMutationVariables = Exact<{
+  jobId: Scalars['String']['input'];
+}>;
+
+export type ClaimTranscriptionJobMutation = {
+  __typename?: 'Mutation';
+  claimTranscriptionJob: {
+    __typename?: 'TranscriptionResultType';
+    summary: string | null;
+    transcription: Array<{
+      __typename?: 'TranscriptionItemType';
+      speaker: string;
+      start: string;
+      end: string;
+      transcription: string;
+    }> | null;
+  };
+};
+
+export type GetTranscriptionJobsQueryVariables = Exact<{
+  workspaceId: Scalars['String']['input'];
+}>;
+
+export type GetTranscriptionJobsQuery = {
+  __typename?: 'Query';
+  currentUser: {
+    __typename?: 'UserType';
+    copilot: {
+      __typename?: 'Copilot';
+      transcriptionsJobs: Array<{
+        __typename?: 'TranscriptionsJob';
+        id: string;
+        workspaceId: string;
+        blobId: string;
+        createdBy: string | null;
+        status: string;
       }>;
     };
   } | null;
@@ -4063,6 +4153,11 @@ export type Queries =
       response: GetCopilotHistoriesQuery;
     }
   | {
+      name: 'getTranscriptionJobsQuery';
+      variables: GetTranscriptionJobsQueryVariables;
+      response: GetTranscriptionJobsQuery;
+    }
+  | {
       name: 'getPromptsQuery';
       variables: GetPromptsQueryVariables;
       response: GetPromptsQuery;
@@ -4353,6 +4448,16 @@ export type Mutations =
       name: 'queueWorkspaceEmbeddingMutation';
       variables: QueueWorkspaceEmbeddingMutationVariables;
       response: QueueWorkspaceEmbeddingMutation;
+    }
+  | {
+      name: 'submitTranscriptionJobMutation';
+      variables: SubmitTranscriptionJobMutationVariables;
+      response: SubmitTranscriptionJobMutation;
+    }
+  | {
+      name: 'claimTranscriptionJobMutation';
+      variables: ClaimTranscriptionJobMutationVariables;
+      response: ClaimTranscriptionJobMutation;
     }
   | {
       name: 'createCopilotMessageMutation';

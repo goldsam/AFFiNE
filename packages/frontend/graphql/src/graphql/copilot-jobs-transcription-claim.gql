@@ -1,0 +1,11 @@
+mutation claimTranscriptionJob($jobId: String!) {
+  claimTranscriptionJob(jobId: $jobId) {
+    transcription {
+      speaker
+      start
+      end
+      transcription
+    }
+    summary
+  }
+}
