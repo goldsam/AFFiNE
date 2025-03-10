@@ -59,18 +59,19 @@ export class CopilotJobModel extends BaseModel {
   async claim(jobId: string, userId: string) {
     const job = await this.get(jobId);
 
-    if (job) {
-      if (job.status === AiJobStatus.claim) {
-        return true;
-      } else if (
-        job?.createdBy === userId &&
-        job.status === AiJobStatus.finished
-      ) {
-        return await this.update(jobId, { status: AiJobStatus.finished });
-      }
+    if (
+      job &&
+      job.createdBy === userId &&
+      job.status === AiJobStatus.finished
+    ) {
+      await this.update(jobId, { status: AiJobStatus.finished });
     }
 
-    return false;
+    const ret = await this.db.aiJobs.findFirst({
+      where: { id: jobId },
+      select: { status: true },
+    });
+    return ret?.status;
   }
 
   async list(userId: string, workspaceId: string, type?: CopilotJobType) {

@@ -83,16 +83,19 @@ export class CopilotTranscriptionService {
   async claimTranscriptionResult(
     userId: string,
     jobId: string
-  ): Promise<TranscriptionConfig | null> {
-    const claimed = await this.models.copilotJob.claim(jobId, userId);
-    if (claimed) {
-      const transcript = await this.models.copilotJob.getConfig(
+  ): Promise<{
+    transcription?: TranscriptionConfig;
+    status?: AiJobStatus;
+  } | null> {
+    const status = await this.models.copilotJob.claim(jobId, userId);
+    if (status === AiJobStatus.claim) {
+      const transcription = await this.models.copilotJob.getConfig(
         jobId,
         TranscriptConfigSchema
       );
-      return transcript;
+      return { transcription, status };
     }
-    return null;
+    return { status };
   }
 
   async queryTranscriptionJobs(userId: string, workspaceId: string) {

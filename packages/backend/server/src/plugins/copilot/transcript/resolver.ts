@@ -5,9 +5,11 @@ import {
   Mutation,
   ObjectType,
   Parent,
+  registerEnumType,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
+import { AiJobStatus } from '@prisma/client';
 import GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
 
 import type { FileUpload } from '../../../base';
@@ -16,6 +18,10 @@ import { AccessController } from '../../../core/permission';
 import { CopilotType } from '../resolver';
 import { CopilotTranscriptionService } from './service';
 import type { TranscriptionConfig, TranscriptionItem } from './types';
+
+registerEnumType(AiJobStatus, {
+  name: 'AiJobStatus',
+});
 
 @ObjectType()
 class TranscriptionItemType implements TranscriptionItem {
@@ -39,6 +45,9 @@ class TranscriptionResultType implements TranscriptionConfig {
 
   @Field(() => String, { nullable: true })
   summary!: string | null;
+
+  @Field(() => AiJobStatus, { nullable: true })
+  status!: AiJobStatus | null;
 }
 
 @ObjectType()
@@ -86,15 +95,17 @@ export class CopilotTranscriptionResolver {
   }
 
   @Mutation(() => TranscriptionResultType)
-  async claimTranscriptionJob(
+  async claimTranscriptionResult(
     @CurrentUser() user: CurrentUser,
     @Args('jobId') jobId: string
   ): Promise<TranscriptionResultType | null> {
     const result = await this.service.claimTranscriptionResult(user.id, jobId);
     if (result) {
+      const { transcription: ret, status } = result;
       return {
-        transcription: result.transcription || null,
-        summary: result.summary || null,
+        transcription: ret?.transcription || null,
+        summary: ret?.summary || null,
+        status: status || null,
       };
     }
     return null;

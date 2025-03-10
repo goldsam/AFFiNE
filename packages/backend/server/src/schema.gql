@@ -12,6 +12,14 @@ input AddContextFileInput {
   contextId: String!
 }
 
+enum AiJobStatus {
+  claim
+  failed
+  finished
+  pending
+  running
+}
+
 type AlreadyInSpaceDataType {
   spaceId: String!
 }
@@ -809,7 +817,7 @@ type Mutation {
   cancelSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, workspaceId: String): SubscriptionType!
   changeEmail(email: String!, token: String!): UserType!
   changePassword(newPassword: String!, token: String!, userId: String): Boolean!
-  claimTranscriptionJob(jobId: String!): TranscriptionResultType!
+  claimTranscriptionResult(jobId: String!): TranscriptionResultType!
 
   """Cleanup sessions"""
   cleanupCopilotSession(options: DeleteSessionInput!): [String!]!
@@ -1349,6 +1357,7 @@ type TranscriptionItemType {
 }
 
 type TranscriptionResultType {
+  status: AiJobStatus
   summary: String
   transcription: [TranscriptionItemType!]
 }

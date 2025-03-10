@@ -360,11 +360,12 @@ export const submitTranscriptionJobMutation = {
   file: true,
 };
 
-export const claimTranscriptionJobMutation = {
-  id: 'claimTranscriptionJobMutation' as const,
-  op: 'claimTranscriptionJob',
-  query: `mutation claimTranscriptionJob($jobId: String!) {
-  claimTranscriptionJob(jobId: $jobId) {
+export const claimTranscriptionResultMutation = {
+  id: 'claimTranscriptionResultMutation' as const,
+  op: 'claimTranscriptionResult',
+  query: `mutation claimTranscriptionResult($jobId: String!) {
+  claimTranscriptionResult(jobId: $jobId) {
+    status
     transcription {
       speaker
       start
