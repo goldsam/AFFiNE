@@ -1,11 +1,13 @@
+import { defaultBlockMarkdownAdapterMatchers } from '@blocksuite/affine/adapters';
+import { Container, type ServiceProvider } from '@blocksuite/affine/global/di';
 import {
-  defaultBlockMarkdownAdapterMatchers,
   InlineDeltaToMarkdownAdapterExtensions,
   MarkdownInlineToDeltaAdapterExtensions,
+} from '@blocksuite/affine/rich-text';
+import {
   MixTextAdapter,
   replaceIdMiddleware,
-} from '@blocksuite/affine/blocks';
-import { Container, type ServiceProvider } from '@blocksuite/affine/global/di';
+} from '@blocksuite/affine/shared/adapters';
 import { Transformer } from '@blocksuite/affine/store';
 import { Entity } from '@toeverything/infra';
 
