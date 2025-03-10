@@ -3,6 +3,7 @@ import type { Framework } from '@toeverything/infra';
 import { WorkspaceServerService } from '../cloud';
 import { WorkspaceDBService } from '../db';
 import { DocsService } from '../doc';
+import { I18nService } from '../i18n';
 import { GlobalState } from '../storage';
 import { WorkspaceScope, WorkspaceService } from '../workspace';
 import { ReadwiseIntegration } from './entities/readwise';
@@ -12,6 +13,7 @@ import { IntegrationStore } from './store/integration';
 import { ReadwiseStore } from './store/readwise';
 
 export { IntegrationService };
+export { IntegrationTypeIcon } from './views/icon';
 
 export function configureIntegrationModule(framework: Framework) {
   framework
@@ -22,7 +24,7 @@ export function configureIntegrationModule(framework: Framework) {
       WorkspaceService,
       WorkspaceServerService,
     ])
-    .service(IntegrationService, [IntegrationStore])
+    .service(IntegrationService, [IntegrationStore, I18nService])
     .entity(IntegrationWriter, [DocsService, WorkspaceService])
     .entity(ReadwiseIntegration, [IntegrationStore, ReadwiseStore]);
 }

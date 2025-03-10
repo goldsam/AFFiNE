@@ -1,6 +1,8 @@
-import { IntegrationService } from '@affine/core/modules/integration';
+import {
+  IntegrationService,
+  IntegrationTypeIcon,
+} from '@affine/core/modules/integration';
 import { useI18n } from '@affine/i18n';
-import { ReadwiseLogoDuotoneIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback } from 'react';
 
@@ -30,7 +32,7 @@ export const ReadwiseIntegration = () => {
 
   return (
     <IntegrationCard>
-      <IntegrationCardHeader icon={<ReadwiseLogoDuotoneIcon />} />
+      <IntegrationCardHeader icon={<IntegrationTypeIcon type="readwise" />} />
       <IntegrationCardContent
         title={t['com.affine.integration.readwise.name']()}
         desc={t['com.affine.integration.readwise.desc']()}

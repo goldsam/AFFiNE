@@ -4,20 +4,21 @@ import type { DocIntegrationProperties } from '../db/schema/schema';
 
 export type IntegrationType = NonNullable<DocIntegrationProperties['type']>;
 
-export type IntegrationProperty = {
+export type IntegrationMetaMap = {
+  readwise: ReadwiseIntegrationMeta;
+  zotero: never;
+};
+
+export type IntegrationProperty<T extends IntegrationType> = {
   key: string;
   label?: I18nString;
-  type: 'link' | 'text' | 'date';
+  type: 'link' | 'text' | 'date' | 'source';
   /**
    * Customize how to get the property value from the original meta
-   * @default `(originalMeta) => originalMeta[key]`
+   * @default `(meta) => originalMeta[key]`
    */
-  get?: (originalMeta: any) => any;
+  get?: (meta: IntegrationMetaMap[T]) => any;
 };
-export type IntegrationProperties<Keys extends string = string> = Record<
-  Keys,
-  IntegrationProperty
->;
 
 // ===============================
 // Readwise
