@@ -21,13 +21,17 @@ export const anyTypeStatsFunctions: StatisticsConfig[] = [
     dataType: t.unknown.instance(),
     impl: (data, { meta, dataSource }) => {
       const values = data
-        .flatMap(v => {
-          if (meta.config.values) {
-            return meta.config.values({ value: v, dataSource });
+        .map(v => {
+          if (Array.isArray(v)) {
+            return v.length;
           }
-          return v;
+          return meta.config.rawValue.isEmpty({ dataSource, value: data }) ==
+            null
+            ? 0
+            : 1;
         })
-        .filter(v => v != null);
+        .filter(v => v != null)
+        .reduce();
       return values.length.toString();
     },
   }),

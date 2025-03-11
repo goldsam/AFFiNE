@@ -21,15 +21,24 @@ const FALSE_VALUES = new Set([
 
 export const checkboxPropertyModelConfig = checkboxPropertyType.modelConfig({
   name: 'Checkbox',
-  valueSchema: zod.boolean().optional(),
-  type: () => t.boolean.instance(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) => (value ? 'True' : 'False'),
-  cellFromString: ({ value }) => ({
-    value: !FALSE_VALUES.has((value?.trim() ?? '').toLowerCase()),
-  }),
-  cellToJson: ({ value }) => value ?? null,
-  cellFromJson: ({ value }) => (typeof value !== 'boolean' ? undefined : value),
-  isEmpty: () => false,
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
+  },
+  cellValue: {
+    schema: zod.boolean(),
+    default: () => false,
+    type: () => t.boolean.instance(),
+    toString: ({ value }) => (value ? 'True' : 'False'),
+    fromString: ({ value }) => ({
+      value: !FALSE_VALUES.has((value?.trim() ?? '').toLowerCase()),
+    }),
+    toJSON: ({ value }) => value ?? null,
+    fromJSON: ({ value }) => (typeof value !== 'boolean' ? undefined : value),
+    isEmpty: () => false,
+  },
+  jsonValue: {
+    schema: zod.boolean(),
+  },
   minWidth: 34,
 });

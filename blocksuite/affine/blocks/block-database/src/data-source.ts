@@ -1,5 +1,5 @@
 import type {
-  Column,
+  ColumnDataType,
   ColumnUpdater,
   DatabaseBlockModel,
 } from '@blocksuite/affine-model';
@@ -24,12 +24,11 @@ import { propertyPresets } from '@blocksuite/data-view/property-presets';
 import { IS_MOBILE } from '@blocksuite/global/env';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import { type BlockModel } from '@blocksuite/store';
-import { computed, type ReadonlySignal } from '@preact/signals-core';
+import { computed, type ReadonlySignal, signal } from '@preact/signals-core';
 
 import { getIcon } from './block-icons.js';
 import {
-  databaseBlockAllPropertyMap,
-  databaseBlockPropertyList,
+  databaseBlockProperties,
   databasePropertyConverts,
 } from './properties/index.js';
 import {
@@ -53,6 +52,19 @@ import {
 } from './views/index.js';
 
 export class DatabaseBlockDataSource extends DataSourceBase {
+  static externalProperties = signal<PropertyMetaConfig[]>([]);
+  static propertiesList = computed(() => {
+    return [
+      ...Object.values(databaseBlockProperties),
+      ...this.externalProperties.value,
+    ];
+  });
+  static propertiesMap = computed(() => {
+    return Object.fromEntries(
+      this.propertiesList.value.map(v => [v.type, v as PropertyMetaConfig])
+    );
+  });
+
   private _batch = 0;
 
   private readonly _model: DatabaseBlockModel;
@@ -108,7 +120,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
   }
 
   allPropertyMetas$ = computed<PropertyMetaConfig<any, any, any>[]>(() => {
-    return databaseBlockPropertyList;
+    return DatabaseBlockDataSource.propertiesList.value;
   });
 
   propertyMetas$ = computed<PropertyMetaConfig[]>(() => {
@@ -151,6 +163,9 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     this._runCapture();
 
     const type = this.propertyTypeGet(propertyId);
+    if (type == null) {
+      return;
+    }
     const update = this.propertyMetaGet(type).config.valueUpdate;
     let newValue = value;
     if (update) {
@@ -183,7 +198,16 @@ export class DatabaseBlockDataSource extends DataSourceBase {
       const model = this.getModelById(rowId);
       return model?.text;
     }
-    return getCell(this._model, rowId, propertyId)?.value;
+    if (type == null) {
+      return;
+    }
+    const value = getCell(this._model, rowId, propertyId)?.value;
+    const meta = this.propertyMetaGet(type);
+    const result = meta.config.valueSchema.safeParse(value);
+    if (!result.success) {
+      return undefined;
+    }
+    return result.data;
   }
 
   propertyAdd(insertToPosition: InsertToPosition, type?: string): string {
@@ -201,7 +225,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
 
   protected override getNormalPropertyAndIndex(propertyId: string):
     | {
-        column: Column<Record<string, unknown>>;
+        column: ColumnDataType<Record<string, unknown>>;
         index: number;
       }
     | undefined {
@@ -223,7 +247,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
 
   private getPropertyAndIndex(propertyId: string):
     | {
-        column: Column<Record<string, unknown>>;
+        column: ColumnDataType<Record<string, unknown>>;
         index: number;
       }
     | undefined {
@@ -336,7 +360,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
   }
 
   propertyMetaGet(type: string): PropertyMetaConfig {
-    const property = databaseBlockAllPropertyMap[type];
+    const property = DatabaseBlockDataSource.propertiesMap.value[type];
     if (!property) {
       throw new BlockSuiteError(
         ErrorCode.DatabaseBlockError,
@@ -367,13 +391,13 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     return false;
   }
 
-  propertyTypeGet(propertyId: string): string {
+  propertyTypeGet(propertyId: string): string | undefined {
     if (propertyId === 'type') {
       return 'image';
     }
     const result = this.getPropertyAndIndex(propertyId);
     if (!result) {
-      return '';
+      return;
     }
     return result.column.type;
   }

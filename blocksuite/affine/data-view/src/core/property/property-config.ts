@@ -51,7 +51,7 @@ export const propertyType = <Type extends string>(type: Type) => ({
       return {
         type,
         name,
-        data: data ?? ops.defaultData(),
+        data: data ?? ops.propertyData.default(),
       };
     };
     return {

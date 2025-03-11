@@ -52,6 +52,7 @@ import {
   DocPropertiesTable,
 } from '../../components/doc-properties';
 import { patchForAttachmentEmbedViews } from '../extensions/attachment-embed-view';
+import { patchDatabaseBlockConfigService } from '../extensions/database-block-config-service';
 import { patchDocModeService } from '../extensions/doc-mode-service';
 import { patchDocUrlExtensions } from '../extensions/doc-url';
 import { EdgelessClipboardWatcher } from '../extensions/edgeless-clipboard';
@@ -170,6 +171,7 @@ const usePatchSpecs = (mode: DocMode) => {
               patchUserExtensions(publicUserService, authService),
             ]
           : [],
+        patchDatabaseBlockConfigService(),
         mode === 'edgeless' && enableTurboRenderer
           ? [ViewportTurboRendererExtension]
           : [],

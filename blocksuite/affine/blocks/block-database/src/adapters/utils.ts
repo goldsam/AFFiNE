@@ -1,4 +1,4 @@
-import type { Column, SerializedCells } from '@blocksuite/affine-model';
+import type { ColumnDataType, SerializedCells } from '@blocksuite/affine-model';
 import type { DeltaInsert } from '@blocksuite/inline';
 import type { BlockSnapshot } from '@blocksuite/store';
 
@@ -45,7 +45,7 @@ export const isDelta = (value: unknown): value is { delta: DeltaInsert[] } => {
   return false;
 };
 type Table = {
-  headers: Column[];
+  headers: ColumnDataType[];
   rows: Row[];
 };
 type Row = {
@@ -55,7 +55,7 @@ type Cell = {
   value: string | { delta: DeltaInsert[] };
 };
 export const processTable = (
-  columns: Column[],
+  columns: ColumnDataType[],
   children: BlockSnapshot[],
   cells: SerializedCells
 ): Table => {
