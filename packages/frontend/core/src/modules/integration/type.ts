@@ -23,6 +23,11 @@ export type IntegrationProperty<T extends IntegrationType> = {
 // ===============================
 // Readwise
 // ===============================
+export interface ReadwiseResponse {
+  count: number;
+  nextPageCursor: number | null;
+  results: ReadwiseBook[];
+}
 export interface ReadwiseBook {
   user_book_id: string | number;
   is_deleted: boolean;

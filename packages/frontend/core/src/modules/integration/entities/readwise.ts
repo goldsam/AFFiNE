@@ -9,6 +9,7 @@ import type {
   ReadwiseConfig,
   ReadwiseHighlight,
   ReadwiseIntegrationMeta,
+  ReadwiseResponse,
 } from '../type';
 import { encryptPBKDF2 } from '../utils/encrypt';
 import type { IntegrationWriter } from './writer';
@@ -106,7 +107,7 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
       while (true) {
         const queryParams = new URLSearchParams();
         if (nextPageCursor) {
-          queryParams.append('pageCursor', nextPageCursor);
+          queryParams.append('pageCursor', nextPageCursor.toString());
         }
         if (lastImportedAt) {
           queryParams.append('updatedAfter', lastImportedAt);
@@ -119,20 +120,20 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
             signal: options.signal,
           }
         );
-        const responseJson = await response.json();
+        const responseJson = (await response.json()) as ReadwiseResponse;
         highlights.push(
-          ...responseJson['results'].flatMap(
+          ...responseJson.results.flatMap(
             (book: ReadwiseBook) => book.highlights
           )
         );
-        responseJson['results'].forEach((book: ReadwiseBook) => {
+        responseJson.results.forEach((book: ReadwiseBook) => {
           if (books[book.user_book_id]) return;
           const { highlights: _, ...copy } = book;
           books[book.user_book_id] = copy;
         });
         onUpdate?.(highlights, books);
 
-        nextPageCursor = responseJson['nextPageCursor'];
+        nextPageCursor = responseJson.nextPageCursor;
         if (!nextPageCursor) {
           break;
         }
@@ -190,7 +191,7 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
             const localUpdatedAt = localMeta?.highlight.updated_at;
             const localDocId = localMeta?.docId;
             // write if not matched
-            if (localUpdatedAt !== highlight.updated_at) {
+            if (localUpdatedAt !== highlight.updated_at && !signal?.aborted) {
               await this.highlightToAffineDoc(highlight, book, localDocId, {
                 updateStrategy,
                 integrationId,

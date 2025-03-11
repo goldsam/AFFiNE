@@ -64,33 +64,31 @@ export const ImportDialog = ({ onClose }: { onClose: () => void }) => {
       abortControllerRef.current = abortController;
       const signal = abortController.signal;
 
-      setTimeout(() => {
-        readwise
-          .highlightsToAffineDocs(selectedHighlights, books, {
-            signal,
-            onProgress: setImportProgress,
-            onComplete: () => {
-              readwise.updateSetting('lastImportedAt', timestamp);
-              onClose();
-            },
-            onAbort: finished => {
-              notify({
-                icon: <InformationFillDuotoneIcon />,
-                style: 'normal',
-                alignMessage: 'icon',
-                title:
-                  t[
-                    'com.affine.integration.readwise.import.abort-notify-title'
-                  ](),
-                message: t.t(
-                  'com.affine.integration.readwise.import.abort-notify-desc',
-                  { finished }
-                ),
-              });
-            },
-          })
-          .catch(console.error);
-      }, 200);
+      readwise
+        .highlightsToAffineDocs(selectedHighlights, books, {
+          signal,
+          onProgress: setImportProgress,
+          onComplete: () => {
+            readwise.updateSetting('lastImportedAt', timestamp);
+            onClose();
+          },
+          onAbort: finished => {
+            notify({
+              icon: <InformationFillDuotoneIcon />,
+              style: 'normal',
+              alignMessage: 'icon',
+              title:
+                t[
+                  'com.affine.integration.readwise.import.abort-notify-title'
+                ](),
+              message: t.t(
+                'com.affine.integration.readwise.import.abort-notify-desc',
+                { finished }
+              ),
+            });
+          },
+        })
+        .catch(console.error);
     },
     [books, highlights, onClose, readwise, t, timestamp]
   );
