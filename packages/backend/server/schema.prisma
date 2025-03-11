@@ -39,6 +39,7 @@ model User {
   createdHistory        SnapshotHistory[]      @relation("createdHistory")
   // receive notifications
   notifications         Notification[]         @relation("user_notifications")
+  userSetting           UserSetting?
 
   @@index([email])
   @@map("users")
@@ -705,4 +706,15 @@ model Notification {
   // for user notifications list, including read and unread, ordered by createdAt
   @@index([userId, createdAt, read])
   @@map("notifications")
+}
+
+model UserSetting {
+  userId       String     @id @map("user_id") @db.VarChar
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  payload      Json       @db.JsonB
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
 }

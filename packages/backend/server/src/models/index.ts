@@ -17,6 +17,7 @@ import { SessionModel } from './session';
 import { UserModel } from './user';
 import { UserDocModel } from './user-doc';
 import { UserFeatureModel } from './user-feature';
+import { UserSettingModel } from './user-setting';
 import { VerificationTokenModel } from './verification-token';
 import { WorkspaceModel } from './workspace';
 import { WorkspaceFeatureModel } from './workspace-feature';
@@ -36,6 +37,7 @@ const MODELS = {
   docUser: DocUserModel,
   history: HistoryModel,
   notification: NotificationModel,
+  userSetting: UserSettingModel,
 };
 
 type ModelsType = {
@@ -97,6 +99,7 @@ export * from './session';
 export * from './user';
 export * from './user-doc';
 export * from './user-feature';
+export * from './user-setting';
 export * from './verification-token';
 export * from './workspace';
 export * from './workspace-feature';
