@@ -185,7 +185,7 @@ const SelectStage = ({
 
   const handleConfirmImport = useCallback(() => {
     onConfirm(selected);
-  }, [onConfirm, selected, highlights]);
+  }, [onConfirm, selected]);
 
   // select all highlights when highlights changed
   useEffect(() => {
