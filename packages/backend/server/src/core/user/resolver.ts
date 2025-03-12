@@ -7,6 +7,7 @@ import {
   Mutation,
   ObjectType,
   Query,
+  ResolveField,
   Resolver,
 } from '@nestjs/graphql';
 import { PrismaClient } from '@prisma/client';
@@ -19,7 +20,7 @@ import {
   Throttle,
   UserNotFound,
 } from '../../base';
-import { Models } from '../../models';
+import { Models, UserSettingSchema } from '../../models';
 import { Public } from '../auth/guard';
 import { sessionUser } from '../auth/service';
 import { CurrentUser } from '../auth/session';
@@ -32,7 +33,9 @@ import {
   PublicUserType,
   RemoveAvatar,
   UpdateUserInput,
+  UpdateUserSettingInput,
   UserOrLimitedUser,
+  UserSettingType,
   UserType,
 } from './types';
 
@@ -152,6 +155,35 @@ export class UserResolver {
   ): Promise<DeleteAccount> {
     await this.models.user.delete(user.id);
     return { success: true };
+  }
+}
+
+@Resolver(() => UserType)
+export class UserSettingResolver {
+  constructor(private readonly models: Models) {}
+
+  @Mutation(() => Boolean, {
+    name: 'updateUserSetting',
+    description: 'Update user setting',
+  })
+  async updateUserSetting(
+    @CurrentUser() user: CurrentUser,
+    @Args('input', { type: () => UpdateUserSettingInput })
+    input: UpdateUserSettingInput
+  ) {
+    UserSettingSchema.parse(input);
+    await this.models.userSetting.set(user.id, input);
+    return true;
+  }
+
+  @ResolveField(() => UserSettingType, {
+    name: 'setting',
+    description: 'Get user setting',
+  })
+  async getUserSetting(
+    @CurrentUser() me: CurrentUser
+  ): Promise<UserSettingType> {
+    return await this.models.userSetting.get(me.id);
   }
 }
 

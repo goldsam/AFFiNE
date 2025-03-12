@@ -5,5 +5,6 @@ export * from './permission';
 export * from './testing-app';
 export * from './testing-module';
 export * from './user';
+export * from './user-setting';
 export * from './utils';
 export * from './workspace';

@@ -1036,6 +1036,8 @@ export interface Mutation {
   updateUser: UserType;
   /** update user enabled feature */
   updateUserFeatures: Array<FeatureType>;
+  /** Update user setting */
+  updateUserSetting: Scalars['Boolean']['output'];
   /** Update workspace */
   updateWorkspace: WorkspaceType;
   /** Upload user avatar */
@@ -1357,6 +1359,10 @@ export interface MutationUpdateUserArgs {
 export interface MutationUpdateUserFeaturesArgs {
   features: Array<FeatureType>;
   id: Scalars['String']['input'];
+}
+
+export interface MutationUpdateUserSettingArgs {
+  input: UpdateUserSettingInput;
 }
 
 export interface MutationUpdateWorkspaceArgs {
@@ -1872,6 +1878,13 @@ export interface UpdateUserInput {
   name?: InputMaybe<Scalars['String']['input']>;
 }
 
+export interface UpdateUserSettingInput {
+  /** Receive invitation email */
+  receiveInvitationEmail?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Receive mention email */
+  receiveMentionEmail?: InputMaybe<Scalars['Boolean']['input']>;
+}
+
 export interface UpdateWorkspaceInput {
   /** Enable AI */
   enableAi?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1921,6 +1934,14 @@ export interface UserQuotaUsageType {
   storageQuota: Scalars['SafeInt']['output'];
 }
 
+export interface UserSettingType {
+  __typename?: 'UserSettingType';
+  /** Receive invitation email */
+  receiveInvitationEmail: Scalars['Boolean']['output'];
+  /** Receive mention email */
+  receiveMentionEmail: Scalars['Boolean']['output'];
+}
+
 export interface UserType {
   __typename?: 'UserType';
   /** User avatar url */
@@ -1953,6 +1974,8 @@ export interface UserType {
   notifications: PaginatedNotificationObjectType;
   quota: UserQuotaType;
   quotaUsage: UserQuotaUsageType;
+  /** Get user setting */
+  setting: UserSettingType;
   subscriptions: Array<SubscriptionType>;
   /** @deprecated use [/api/auth/sign-in?native=true] instead */
   token: TokenType;

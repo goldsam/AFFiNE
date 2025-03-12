@@ -928,6 +928,9 @@ type Mutation {
   """update user enabled feature"""
   updateUserFeatures(features: [FeatureType!]!, id: String!): [FeatureType!]!
 
+  """Update user setting"""
+  updateUserSetting(input: UpdateUserSettingInput!): Boolean!
+
   """Update workspace"""
   updateWorkspace(input: UpdateWorkspaceInput!): WorkspaceType!
 
@@ -1385,6 +1388,14 @@ input UpdateUserInput {
   name: String
 }
 
+input UpdateUserSettingInput {
+  """Receive invitation email"""
+  receiveInvitationEmail: Boolean
+
+  """Receive mention email"""
+  receiveMentionEmail: Boolean
+}
+
 input UpdateWorkspaceInput {
   """Enable AI"""
   enableAi: Boolean
@@ -1434,6 +1445,14 @@ type UserQuotaUsageType {
   storageQuota: SafeInt! @deprecated(reason: "use `UserQuotaType['usedStorageQuota']` instead")
 }
 
+type UserSettingType {
+  """Receive invitation email"""
+  receiveInvitationEmail: Boolean!
+
+  """Receive mention email"""
+  receiveMentionEmail: Boolean!
+}
+
 type UserType {
   """User avatar url"""
   avatarUrl: String
@@ -1472,6 +1491,9 @@ type UserType {
   notifications(pagination: PaginationInput!): PaginatedNotificationObjectType!
   quota: UserQuotaType!
   quotaUsage: UserQuotaUsageType!
+
+  """Get user setting"""
+  setting: UserSettingType!
   subscriptions: [SubscriptionType!]!
   token: tokenType! @deprecated(reason: "use [/api/auth/sign-in?native=true] instead")
 }

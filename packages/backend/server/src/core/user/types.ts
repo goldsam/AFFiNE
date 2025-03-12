@@ -7,7 +7,12 @@ import {
 } from '@nestjs/graphql';
 import type { User } from '@prisma/client';
 
-import { PublicUser, WorkspaceUser } from '../../models';
+import {
+  PublicUser,
+  UserSetting,
+  UserSettingInput,
+  WorkspaceUser,
+} from '../../models';
 import { type CurrentUser } from '../auth/session';
 
 @ObjectType()
@@ -109,6 +114,15 @@ export class RemoveAvatar {
   success!: boolean;
 }
 
+@ObjectType()
+export class UserSettingType implements UserSetting {
+  @Field({ description: 'Receive invitation email' })
+  receiveInvitationEmail!: boolean;
+
+  @Field({ description: 'Receive mention email' })
+  receiveMentionEmail!: boolean;
+}
+
 @InputType()
 export class UpdateUserInput implements Partial<User> {
   @Field({ description: 'User name', nullable: true })
@@ -122,4 +136,13 @@ export class ManageUserInput {
 
   @Field({ description: 'User name', nullable: true })
   name?: string;
+}
+
+@InputType()
+export class UpdateUserSettingInput implements UserSettingInput {
+  @Field({ description: 'Receive invitation email', nullable: true })
+  receiveInvitationEmail?: boolean;
+
+  @Field({ description: 'Receive mention email', nullable: true })
+  receiveMentionEmail?: boolean;
 }
