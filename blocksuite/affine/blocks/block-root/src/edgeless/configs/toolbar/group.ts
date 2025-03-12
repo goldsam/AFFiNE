@@ -1,11 +1,111 @@
-import type { ToolbarModuleConfig } from '@blocksuite/affine-shared/services';
+import { toast } from '@blocksuite/affine-components/toast';
+import {
+  DEFAULT_NOTE_HEIGHT,
+  GroupElementModel,
+  NoteBlockModel,
+  NoteBlockSchema,
+  NoteDisplayMode,
+  SurfaceRefBlockSchema,
+} from '@blocksuite/affine-model';
+import { type ToolbarModuleConfig } from '@blocksuite/affine-shared/services';
+import { matchModels } from '@blocksuite/affine-shared/utils';
+import { Bound } from '@blocksuite/global/gfx';
+import { EditIcon, PageIcon, UngroupIcon } from '@blocksuite/icons/lit';
+
+import { EdgelessRootBlockComponent } from '../..';
+import { mountGroupTitleEditor } from '../../utils/text';
 
 export const builtinGroupToolbarConfig = {
   actions: [
     {
-      id: 'a.test',
-      label: 'Group',
-      run() {},
+      id: 'a.insert-into-page',
+      label: 'Insert into Page',
+      tooltip: 'Insert into Page',
+      icon: PageIcon(),
+      when: ctx => ctx.getSurfaceModelsByType(GroupElementModel).length === 1,
+      run(ctx) {
+        const model = ctx.getCurrentModelByType(GroupElementModel);
+        if (!model) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        const { id: groupId, xywh } = model;
+        let lastNoteId = rootModel.children
+          .filter(
+            note =>
+              matchModels(note, [NoteBlockModel]) &&
+              note.displayMode !== NoteDisplayMode.EdgelessOnly
+          )
+          .pop()?.id;
+
+        if (!lastNoteId) {
+          const bounds = Bound.deserialize(xywh);
+          bounds.y += bounds.h;
+          bounds.h = DEFAULT_NOTE_HEIGHT;
+
+          lastNoteId = ctx.store.addBlock(
+            NoteBlockSchema.model.flavour,
+            { xywh: bounds.serialize() },
+            rootModel.id
+          );
+        }
+
+        ctx.store.addBlock(
+          SurfaceRefBlockSchema.model.flavour,
+          { reference: groupId, refFlavour: 'group' },
+          lastNoteId
+        );
+
+        toast(ctx.host, 'Group has been inserted into doc');
+      },
+    },
+    {
+      id: 'b.rename',
+      tooltip: 'Rename',
+      icon: EditIcon(),
+      when: ctx => ctx.getSurfaceModelsByType(GroupElementModel).length === 1,
+      run(ctx) {
+        const model = ctx.getCurrentModelByType(GroupElementModel);
+        if (!model) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        mountGroupTitleEditor(model, edgeless);
+      },
+    },
+    {
+      id: 'b.ungroup',
+      tooltip: 'Ungroup',
+      icon: UngroupIcon(),
+      run(ctx) {
+        const models = ctx.getSurfaceModelsByType(GroupElementModel);
+        if (!models.length) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        for (const model of models) {
+          edgeless.service.ungroup(model);
+        }
+      },
     },
   ],
+
+  when: ctx => ctx.getSurfaceModelsByType(GroupElementModel).length > 0,
 } as const satisfies ToolbarModuleConfig;
