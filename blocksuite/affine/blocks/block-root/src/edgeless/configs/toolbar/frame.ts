@@ -139,19 +139,17 @@ const builtinSurfaceToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(FrameBlockModel);
         if (!models.length) return null;
 
+        const field = 'background';
         const firstModel = models[0];
         const theme = ctx.themeProvider.edgelessTheme;
         const background =
           getMostCommonValue(
             models.map(model => ({
-              background: resolveColor(model.background, theme),
+              [field]: resolveColor(model[field], theme),
             })),
-            'background'
+            field
           ) ?? DefaultTheme.transparent;
-
         const onPick = (e: PickColorEvent) => {
-          const field = 'background';
-
           if (e.type === 'pick') {
             const color = e.detail.value;
             for (const model of models) {

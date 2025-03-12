@@ -5,6 +5,7 @@ import type { ExtensionType } from '@blocksuite/store';
 
 import { builtinBrushToolbarConfig } from './brush';
 import { builtinConnectorToolbarConfig } from './connector';
+import { builtinEdgelessTextToolbarConfig } from './edgeless-text';
 import { createFrameToolbarConfig } from './frame';
 import { builtinGroupToolbarConfig } from './group';
 import { builtinMindmapToolbarConfig } from './mindmap';
@@ -36,13 +37,18 @@ export const EdgelessElementToolbarExtension: ExtensionType[] = [
   }),
 
   ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:shape'),
-    config: builtinShapeToolbarConfig,
+    id: BlockFlavourIdentifier('affine:surface:text'),
+    config: builtinTextToolbarConfig,
   }),
 
   ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:text'),
-    config: builtinTextToolbarConfig,
+    id: BlockFlavourIdentifier('affine:surface:edgeless-text'),
+    config: builtinEdgelessTextToolbarConfig,
+  }),
+
+  ToolbarModuleExtension({
+    id: BlockFlavourIdentifier('affine:surface:shape'),
+    config: builtinShapeToolbarConfig,
   }),
 
   ToolbarModuleExtension({

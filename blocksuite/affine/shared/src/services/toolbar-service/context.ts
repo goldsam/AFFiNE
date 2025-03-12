@@ -142,16 +142,18 @@ abstract class ToolbarContextBase {
     );
   }
 
+  getSurfaceModels() {
+    if (this.hasSelectedSurfaceModels) {
+      const elements = this.elementsMap$.peek().get(this.flavour$.peek());
+      return elements ?? [];
+    }
+    return [];
+  }
+
   getSurfaceModelsByType<T extends abstract new (...args: any) => any>(
     klass: T
   ) {
-    if (this.hasSelectedSurfaceModels) {
-      const elements = this.elementsMap$.peek().get(this.flavour$.peek());
-      if (elements?.length) {
-        return elements.filter(e => this.matchModel(e, klass));
-      }
-    }
-    return [];
+    return this.getSurfaceModels().filter(e => this.matchModel(e, klass));
   }
 
   getSurfaceBlocksByType<T extends abstract new (...args: any) => any>(

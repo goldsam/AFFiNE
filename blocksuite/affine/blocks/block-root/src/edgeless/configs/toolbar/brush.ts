@@ -55,16 +55,18 @@ export const builtinBrushToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(BrushElementModel);
         if (!models.length) return null;
 
+        const field = 'color';
         const firstModel = models[0];
         const theme = ctx.themeProvider.edgelessTheme;
+        const originalColor = firstModel[field];
         const color =
           getMostCommonValue(
-            models.map(model => ({ color: resolveColor(model.color, theme) })),
-            'color'
+            models.map(model => ({
+              [field]: resolveColor(model[field], theme),
+            })),
+            field
           ) ?? resolveColor(DefaultTheme.black, theme);
         const onPick = (e: PickColorEvent) => {
-          const field = 'color';
-
           if (e.type === 'pick') {
             const color = e.detail.value;
             for (const model of models) {
@@ -88,7 +90,7 @@ export const builtinBrushToolbarConfig = {
             .pick=${onPick}
             .color=${color}
             .theme=${theme}
-            .originalColor=${firstModel.color}
+            .originalColor=${originalColor}
             .enableCustomColor=${ctx.std
               .get(FeatureFlagService)
               .getFlag('enable_color_picker')}
