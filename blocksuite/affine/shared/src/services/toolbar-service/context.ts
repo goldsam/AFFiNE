@@ -17,6 +17,7 @@ import type {
 } from '@blocksuite/store';
 
 import { DocModeProvider } from '../doc-mode-service';
+import { EditPropsStore } from '../edit-props-store';
 import { TelemetryProvider, type TelemetryService } from '../telemetry-service';
 import { ThemeProvider } from '../theme-service';
 import { ToolbarRegistryIdentifier } from './registry';
@@ -108,6 +109,10 @@ abstract class ToolbarContextBase {
 
   get theme() {
     return this.themeProvider.theme;
+  }
+
+  get settings() {
+    return this.std.get(EditPropsStore);
   }
 
   get toolbarRegistry() {
