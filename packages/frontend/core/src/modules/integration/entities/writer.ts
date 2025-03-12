@@ -1,3 +1,4 @@
+import { type DocProps } from '@affine/core/blocksuite/initialization';
 import { defaultBlockMarkdownAdapterMatchers } from '@blocksuite/affine/adapters';
 import { Container, type ServiceProvider } from '@blocksuite/affine/global/di';
 import {
@@ -12,6 +13,7 @@ import { Transformer } from '@blocksuite/affine/store';
 import { Entity } from '@toeverything/infra';
 
 import type { DocRecord, DocsService } from '../../doc';
+import type { EditorSettingService } from '../../editor-setting';
 import {
   getAFFiNEWorkspaceSchema,
   type WorkspaceService,
@@ -22,7 +24,8 @@ export class IntegrationWriter extends Entity {
 
   constructor(
     private readonly docsService: DocsService,
-    private readonly workspaceService: WorkspaceService
+    private readonly workspaceService: WorkspaceService,
+    private readonly editorSettingService: EditorSettingService
   ) {
     super();
   }
@@ -68,7 +71,15 @@ export class IntegrationWriter extends Entity {
 
     let doc: DocRecord;
     if (!docId) {
-      doc = this.docsService.createDoc();
+      // Only set title for new doc
+      const docProps: DocProps = {
+        note: this.editorSettingService.editorSetting.get('affine:note'),
+      };
+
+      doc = this.docsService.createDoc({
+        primaryMode: 'page',
+        docProps,
+      });
     } else {
       const existsDoc = this.docsService.list.doc$(docId).value;
       if (!existsDoc) {
@@ -78,7 +89,11 @@ export class IntegrationWriter extends Entity {
       doc = existsDoc;
     }
 
-    if (title) {
+    if (
+      title &&
+      doc.meta$.value.title !== title &&
+      (updateStrategy === 'override' || !doc.meta$.value.title)
+    ) {
       await this.docsService.changeDocTitle(doc.id, title);
     }
 
@@ -113,7 +128,9 @@ export class IntegrationWriter extends Entity {
     if (updateStrategy === 'append') {
       await transformer.snapshotToSlice(snapshot, bsDoc, bsDoc.root?.id);
     } else {
-      bsDoc.root?.children.forEach(child => bsDoc.deleteBlock(child));
+      bsDoc.root?.children.forEach(child => {
+        if (child.flavour === 'affine:page') bsDoc.deleteBlock(child);
+      });
       await transformer.snapshotToSlice(snapshot, bsDoc, bsDoc.root?.id);
     }
 

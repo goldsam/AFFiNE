@@ -1,23 +1,18 @@
 import type { I18nString } from '@affine/i18n';
 
-import type { DocIntegrationProperties } from '../db/schema/schema';
+import type { DocIntegrationRef } from '../db/schema/schema';
 
-export type IntegrationType = NonNullable<DocIntegrationProperties['type']>;
+export type IntegrationType = NonNullable<DocIntegrationRef['type']>;
 
-export type IntegrationMetaMap = {
-  readwise: ReadwiseIntegrationMeta;
+export type IntegrationDocPropertiesMap = {
+  readwise: ReadwiseDocProperties;
   zotero: never;
 };
 
 export type IntegrationProperty<T extends IntegrationType> = {
-  key: string;
+  key: keyof IntegrationDocPropertiesMap[T];
   label?: I18nString;
   type: 'link' | 'text' | 'date' | 'source';
-  /**
-   * Customize how to get the property value from the original meta
-   * @default `(meta) => originalMeta[key]`
-   */
-  get?: (meta: IntegrationMetaMap[T]) => any;
 };
 
 // ===============================
@@ -55,13 +50,16 @@ export interface ReadwiseHighlight {
   is_discard: boolean;
   readwise_url: string;
 }
+export type ReadwiseDocProperties = Omit<ReadwiseBook, 'highlights'> &
+  ReadwiseHighlight;
+
 export type ReadwiseBookMap = Record<
   ReadwiseBook['user_book_id'],
   Omit<ReadwiseBook, 'highlights'>
 >;
-export interface ReadwiseIntegrationMeta {
-  highlight: ReadwiseHighlight;
-  book: Omit<ReadwiseBook, 'highlights'>;
+export interface ReadwiseRefMeta {
+  highlightId: string;
+  updatedAt: string;
 }
 export interface ReadwiseConfig {
   /**

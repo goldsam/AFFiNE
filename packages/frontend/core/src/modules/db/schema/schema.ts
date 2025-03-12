@@ -6,6 +6,8 @@ import {
 } from '@toeverything/infra';
 import { nanoid } from 'nanoid';
 
+const integrationType = f.enum('readwise', 'zotero');
+
 export const AFFiNE_WORKSPACE_DB_SCHEMA = {
   folders: {
     id: f.string().primaryKey().optional().default(nanoid),
@@ -22,6 +24,7 @@ export const AFFiNE_WORKSPACE_DB_SCHEMA = {
     journal: f.string().optional(),
     pageWidth: f.string().optional(),
     isTemplate: f.boolean().optional(),
+    integrationType: integrationType.optional(),
   }),
   docCustomPropertyInfo: {
     id: f.string().primaryKey().optional().default(nanoid),
@@ -35,24 +38,24 @@ export const AFFiNE_WORKSPACE_DB_SCHEMA = {
     // we will keep deleted properties in the database, for override legacy data
   },
 
-  docIntegration: {
+  docIntegrationRef: {
     // docId as primary key
     id: f.string().primaryKey(),
-    type: f.enum('readwise', 'zotero').optional(),
+    type: integrationType,
     /**
      * Identify **affine user** and **integration type** and **integration account**
      * Used to quickly find user's all integrations
      */
     integrationId: f.string(),
     userId: f.string(),
-    meta: f.json(),
+    refMeta: f.json(),
   },
 } as const satisfies DBSchemaBuilder;
 export type AFFiNEWorkspaceDbSchema = typeof AFFiNE_WORKSPACE_DB_SCHEMA;
 
 export type DocProperties = ORMEntity<AFFiNEWorkspaceDbSchema['docProperties']>;
-export type DocIntegrationProperties = ORMEntity<
-  AFFiNEWorkspaceDbSchema['docIntegration']
+export type DocIntegrationRef = ORMEntity<
+  AFFiNEWorkspaceDbSchema['docIntegrationRef']
 >;
 export type DocCustomPropertyInfo = ORMEntity<
   AFFiNEWorkspaceDbSchema['docCustomPropertyInfo']

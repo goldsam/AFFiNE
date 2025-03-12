@@ -285,12 +285,12 @@ const HighlightTable = ({
 
   useEffect(() => {
     readwise
-      .getMetas()
-      .then(metas => {
+      .getRefs()
+      .then(refs => {
         setUpdatedMap(
-          metas.reduce(
-            (acc, meta) => {
-              acc[meta.highlight.id] = meta.highlight.updated_at;
+          refs.reduce(
+            (acc, ref) => {
+              acc[ref.refMeta.highlightId] = ref.refMeta.updatedAt;
               return acc;
             },
             {} as Record<string, string>

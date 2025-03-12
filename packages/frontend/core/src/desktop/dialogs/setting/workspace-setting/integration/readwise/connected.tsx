@@ -1,4 +1,4 @@
-import { Button, Modal, Skeleton } from '@affine/component';
+import { Button, Modal } from '@affine/component';
 import { IntegrationService } from '@affine/core/modules/integration';
 import { useI18n } from '@affine/i18n';
 import { useService } from '@toeverything/infra';
@@ -80,15 +80,6 @@ export const ConnectedActions = () => {
       >
         {t['com.affine.integration.readwise.disconnect']()}
       </Button>
-    </>
-  );
-};
-
-export const ConnectedVerifyingSkeleton = () => {
-  return (
-    <>
-      <Skeleton className={actionButton} />
-      <Skeleton className={actionButton} />
     </>
   );
 };
