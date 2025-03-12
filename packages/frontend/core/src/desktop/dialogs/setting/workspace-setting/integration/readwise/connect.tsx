@@ -18,11 +18,7 @@ import {
   inputErrorMsg,
 } from './index.css';
 
-const ConnectDialog = ({
-  onClose,
-}: {
-  onClose: (successToken?: string) => void;
-}) => {
+const ConnectDialog = ({ onClose }: { onClose: () => void }) => {
   const t = useI18n();
   const [status, setStatus] = useState<'idle' | 'verifying' | 'error'>('idle');
   const [token, setToken] = useState('');
@@ -47,7 +43,7 @@ const ConnectDialog = ({
   const handleResult = useCallback(
     (success: boolean, token: string) => {
       if (success) {
-        onClose(token);
+        readwise.updateSetting('token', token);
       } else {
         setStatus('error');
         notify.error({
@@ -58,7 +54,7 @@ const ConnectDialog = ({
         });
       }
     },
-    [onClose, t]
+    [readwise, t]
   );
 
   const handleConnect = useAsyncCallback(
@@ -133,21 +129,13 @@ const ConnectDialog = ({
   );
 };
 
-export const ConnectButton = ({
-  onConnected,
-}: {
-  onConnected: (token: string) => void;
-}) => {
+export const ConnectButton = () => {
   const t = useI18n();
   const [open, setOpen] = useState(false);
 
-  const handleClose = useCallback(
-    (token?: string) => {
-      setOpen(false);
-      if (token) onConnected(token);
-    },
-    [onConnected]
-  );
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
 
   const handleOpen = useCallback(() => {
     setOpen(true);

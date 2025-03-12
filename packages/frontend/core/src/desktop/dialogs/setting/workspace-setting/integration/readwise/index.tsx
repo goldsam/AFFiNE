@@ -4,7 +4,6 @@ import {
 } from '@affine/core/modules/integration';
 import { useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useCallback } from 'react';
 
 import {
   IntegrationCard,
@@ -22,14 +21,6 @@ export const ReadwiseIntegration = () => {
   const settings = useLiveData(readwise.settings$);
   const token = settings?.token;
 
-  const handleConnectFinished = useCallback(
-    (token: string) => {
-      if (!token) return;
-      readwise.updateSetting('token', token);
-    },
-    [readwise]
-  );
-
   return (
     <IntegrationCard>
       <IntegrationCardHeader icon={<IntegrationTypeIcon type="readwise" />} />
@@ -38,11 +29,7 @@ export const ReadwiseIntegration = () => {
         desc={t['com.affine.integration.readwise.desc']()}
       />
       <IntegrationCardFooter>
-        {token ? (
-          <ConnectedActions />
-        ) : (
-          <ConnectButton onConnected={handleConnectFinished} />
-        )}
+        {token ? <ConnectedActions /> : <ConnectButton />}
       </IntegrationCardFooter>
     </IntegrationCard>
   );
