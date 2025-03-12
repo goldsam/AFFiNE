@@ -359,13 +359,18 @@ const pageToolGroup: KeyboardToolPanelGroup = {
 
             const inlineEditor = getInlineEditorByModel(std.host, currentModel);
             // Wait for range to be updated
-            inlineEditor?.slots.inlineRangeSync.once(() => {
-              linkedDocWidget.show({
-                mode: 'mobile',
-                addTriggerKey: true,
-              });
-              closeToolPanel();
-            });
+            if (inlineEditor) {
+              const subscription = inlineEditor.slots.inlineRangeSync.subscribe(
+                () => {
+                  subscription.unsubscribe();
+                  linkedDocWidget.show({
+                    mode: 'mobile',
+                    addTriggerKey: true,
+                  });
+                  closeToolPanel();
+                }
+              );
+            }
           })
           .run();
       },

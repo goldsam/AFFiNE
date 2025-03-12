@@ -8,20 +8,29 @@ export function configureDefaultAuthProvider(framework: Framework) {
   framework.scope(ServerScope).override(AuthProvider, resolver => {
     const fetchService = resolver.get(FetchService);
     return {
-      async signInMagicLink(email: string, token: string) {
+      async signInMagicLink(
+        email: string,
+        token: string,
+        clientNonce?: string
+      ) {
         await fetchService.fetch('/api/auth/magic-link', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email, token }),
+          body: JSON.stringify({ email, token, client_nonce: clientNonce }),
         });
       },
 
-      async signInOauth(code: string, state: string, _provider: string) {
+      async signInOauth(
+        code: string,
+        state: string,
+        _provider: string,
+        clientNonce?: string
+      ) {
         const res = await fetchService.fetch('/api/oauth/callback', {
           method: 'POST',
-          body: JSON.stringify({ code, state }),
+          body: JSON.stringify({ code, state, client_nonce: clientNonce }),
           headers: {
             'content-type': 'application/json',
           },

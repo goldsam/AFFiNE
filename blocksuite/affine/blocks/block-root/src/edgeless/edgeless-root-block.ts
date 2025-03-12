@@ -182,7 +182,7 @@ export class EdgelessRootBlockComponent extends BlockComponent<
     });
 
     this._disposables.add(
-      this.gfx.layer.slots.layerUpdated.on(() => updateLayers())
+      this.gfx.layer.slots.layerUpdated.subscribe(() => updateLayers())
     );
   }
 
@@ -426,7 +426,7 @@ export class EdgelessRootBlockComponent extends BlockComponent<
           const dy = simulateHorizontalScroll ? 0 : e.deltaY / viewport.zoom;
 
           viewport.applyDeltaCenter(dx, dy);
-          viewport.viewportMoved.emit([dx, dy]);
+          viewport.viewportMoved.next([dx, dy]);
           e.stopPropagation();
         }
       })
@@ -520,14 +520,14 @@ export class EdgelessRootBlockComponent extends BlockComponent<
       this.gfx.tool.setTool('default');
     }
 
-    this.gfx.viewport.elementReady.emit(this.gfxViewportElm);
+    this.gfx.viewport.elementReady.next(this.gfxViewportElm);
 
     requestConnectedFrame(() => {
       this.requestUpdate();
     }, this);
 
     this._disposables.add(
-      this.gfx.viewport.viewportUpdated.on(() => {
+      this.gfx.viewport.viewportUpdated.subscribe(() => {
         this._refreshLayerViewport();
       })
     );

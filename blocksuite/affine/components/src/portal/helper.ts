@@ -1,5 +1,4 @@
 import { BlockSuiteError } from '@blocksuite/global/exceptions';
-import { Slot } from '@blocksuite/global/slot';
 import {
   autoUpdate,
   computePosition,
@@ -7,6 +6,7 @@ import {
 } from '@floating-ui/dom';
 import { cssVar } from '@toeverything/theme';
 import { render } from 'lit';
+import { Subject } from 'rxjs';
 
 import type { AdvancedPortalOptions, PortalOptions } from './types.js';
 
@@ -127,13 +127,13 @@ export function createLitPortal({
   positionStrategy = 'absolute',
   ...portalOptions
 }: AdvancedPortalOptions) {
-  let positionSlot = new Slot<ComputePositionReturn>();
+  let positionSlot = new Subject<ComputePositionReturn>();
   const template = portalOptions.template;
   const templateWithPosition =
     template instanceof Function
       ? ({ updatePortal }: { updatePortal: () => void }) => {
           // We need to create a new slot for each template, otherwise the slot may be used in the old template
-          positionSlot = new Slot<ComputePositionReturn>();
+          positionSlot = new Subject<ComputePositionReturn>();
           return template({ updatePortal, positionSlot });
         }
       : template;
@@ -199,7 +199,7 @@ export function createLitPortal({
         if (portalRoot.style.visibility === 'hidden') {
           portalRoot.style.visibility = visibility;
         }
-        positionSlot.emit(positionReturn);
+        positionSlot.next(positionReturn);
       })
       .catch(console.error);
   };

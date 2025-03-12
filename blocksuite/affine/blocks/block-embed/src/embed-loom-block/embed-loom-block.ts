@@ -82,7 +82,7 @@ export class EmbedLoomBlockComponent extends EmbedBlockComponent<
     }
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         this.requestUpdate();
         if (key === 'url') {
           this.refreshData();

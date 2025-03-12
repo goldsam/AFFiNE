@@ -65,7 +65,7 @@ export class MindmapSurfaceBlock extends BlockComponent<SurfaceBlockModel> {
 
   private _setupCenterEffect() {
     this._disposables.add(
-      this.mindmapService.requestCenter.on(() => {
+      this.mindmapService.requestCenter.subscribe(() => {
         let bound: Bound;
 
         this.model.elementModels.forEach(el => {
@@ -85,7 +85,7 @@ export class MindmapSurfaceBlock extends BlockComponent<SurfaceBlockModel> {
 
   private _setupRenderer() {
     this._disposables.add(
-      this.model.elementUpdated.on(() => {
+      this.model.elementUpdated.subscribe(() => {
         this.mindmapService.center();
       })
     );

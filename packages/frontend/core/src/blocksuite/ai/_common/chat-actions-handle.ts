@@ -441,7 +441,7 @@ const CREATE_AS_DOC = {
     newDoc.addBlock('affine:surface', {}, rootId);
     const noteId = newDoc.addBlock('affine:note', {}, rootId);
 
-    host.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.emit({
+    host.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.next({
       pageId: newDoc.id,
       host,
     });

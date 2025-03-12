@@ -62,7 +62,7 @@ export class BookmarkBlockComponent extends CaptionedBlockComponent<BookmarkBloc
     }
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'url') {
           this.refreshData();
         }

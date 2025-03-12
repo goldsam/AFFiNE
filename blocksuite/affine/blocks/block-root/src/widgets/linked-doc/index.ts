@@ -199,7 +199,7 @@ export class AffineLinkedDocWidget extends WidgetComponent<
   private _watchViewportChange() {
     const gfx = this.std.get(GfxControllerIdentifier);
     this.disposables.add(
-      gfx.viewport.viewportUpdated.on(() => {
+      gfx.viewport.viewportUpdated.subscribe(() => {
         this._updateInputRects();
       })
     );
@@ -273,7 +273,7 @@ export class AffineLinkedDocWidget extends WidgetComponent<
       });
     }
 
-    const disposable = inlineEditor.slots.renderComplete.on(() => {
+    const disposable = inlineEditor.slots.renderComplete.subscribe(() => {
       this._updateInputRects();
     });
     this._context = {
@@ -283,7 +283,7 @@ export class AffineLinkedDocWidget extends WidgetComponent<
       triggerKey: primaryTriggerKey,
       config: this.config,
       close: () => {
-        disposable.dispose();
+        disposable.unsubscribe();
         this._inputRects$.value = [];
         this._mode$.value = 'none';
         this._context = null;

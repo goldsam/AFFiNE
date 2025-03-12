@@ -6,16 +6,24 @@ export const textPropertyType = propertyType('text');
 
 export const textPropertyModelConfig = textPropertyType.modelConfig({
   name: 'Plain-Text',
-  valueSchema: zod.string().optional(),
-  type: () => t.string.instance(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) => value ?? '',
-  cellFromString: ({ value }) => {
-    return {
-      value: value,
-    };
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
   },
-  cellToJson: ({ value }) => value ?? null,
-  cellFromJson: ({ value }) => (typeof value !== 'string' ? undefined : value),
-  isEmpty: ({ value }) => value == null || value.length === 0,
+  jsonValue: {
+    schema: zod.string(),
+    type: () => t.string.instance(),
+    isEmpty: ({ value }) => !value,
+  },
+  rawValue: {
+    schema: zod.string(),
+    default: () => '',
+    toString: ({ value }) => value,
+    fromString: ({ value }) => {
+      return { value: value };
+    },
+    toJson: ({ value }) => value,
+    fromJson: ({ value }) => value,
+  },
+  hide: true,
 });

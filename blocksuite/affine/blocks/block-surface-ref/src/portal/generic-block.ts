@@ -30,7 +30,7 @@ export class SurfaceRefGenericBlockPortal extends WithDisposable(
 
   override firstUpdated() {
     this.disposables.add(
-      this.model.propsUpdated.on(() => this.requestUpdate())
+      this.model.propsUpdated.subscribe(() => this.requestUpdate())
     );
   }
 

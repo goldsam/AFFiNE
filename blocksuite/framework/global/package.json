@@ -17,7 +17,7 @@
     "./di": "./src/di/index.ts",
     "./types": "./src/types/index.ts",
     "./gfx": "./src/gfx/index.ts",
-    "./slot": "./src/slot/index.ts",
+    "./disposable": "./src/disposable/index.ts",
     "./lit": "./src/lit/index.ts"
   },
   "typesVersions": {
@@ -40,8 +40,8 @@
       "gfx": [
         "dist/gfx/index.d.ts"
       ],
-      "slot": [
-        "dist/slot/index.d.ts"
+      "disposable": [
+        "dist/disposable/index.d.ts"
       ],
       "lit": [
         "dist/lit/index.d.ts"
@@ -61,6 +61,7 @@
     "@preact/signals-core": "^1.8.0",
     "lib0": "^0.2.97",
     "lit": "^3.2.0",
+    "rxjs": "^7.8.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {

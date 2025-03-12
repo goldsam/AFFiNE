@@ -8,7 +8,8 @@ import type { Cell } from './cell.js';
 import type { SingleView } from './single-view.js';
 
 export interface Property<
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
   Data extends Record<string, unknown> = Record<string, unknown>,
 > {
   readonly id: string;
@@ -28,7 +29,7 @@ export interface Property<
   readonly duplicate?: () => void;
   get canDuplicate(): boolean;
 
-  cellGet(rowId: string): Cell<Value>;
+  cellGet(rowId: string): Cell<RawValue, JsonValue, Data>;
 
   readonly data$: ReadonlySignal<Data>;
   dataUpdate(updater: PropertyDataUpdater<Data>): void;
@@ -44,17 +45,18 @@ export interface Property<
   hideSet(hide: boolean): void;
   get hideCanSet(): boolean;
 
-  valueGet(rowId: string): Value | undefined;
-  valueSet(rowId: string, value: Value | undefined): void;
+  valueGet(rowId: string): RawValue | undefined;
+  valueSet(rowId: string, value: RawValue | undefined): void;
 
   stringValueGet(rowId: string): string;
   valueSetFromString(rowId: string, value: string): void;
 }
 
 export abstract class PropertyBase<
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
   Data extends Record<string, unknown> = Record<string, unknown>,
-> implements Property<Value, Data>
+> implements Property<RawValue, JsonValue, Data>
 {
   cells$ = computed(() => {
     return this.view.rows$.value.map(id => this.cellGet(id));
@@ -141,8 +143,8 @@ export abstract class PropertyBase<
     return this.view.propertyCanHide(this.id);
   }
 
-  cellGet(rowId: string): Cell<Value> {
-    return this.view.cellGet(rowId, this.id) as Cell<Value>;
+  cellGet(rowId: string): Cell<RawValue, JsonValue, Data> {
+    return this.view.cellGet(rowId, this.id) as Cell<RawValue, JsonValue, Data>;
   }
 
   dataUpdate(updater: PropertyDataUpdater<Data>): void {
@@ -165,11 +167,11 @@ export abstract class PropertyBase<
     return this.cellGet(rowId).stringValue$.value;
   }
 
-  valueGet(rowId: string): Value | undefined {
+  valueGet(rowId: string): RawValue | undefined {
     return this.cellGet(rowId).value$.value;
   }
 
-  valueSet(rowId: string, value: Value | undefined): void {
+  valueSet(rowId: string, value: RawValue | undefined): void {
     return this.cellGet(rowId).valueSet(value);
   }
 
@@ -181,6 +183,6 @@ export abstract class PropertyBase<
     if (data.data) {
       this.dataUpdate(() => data.data as Data);
     }
-    this.valueSet(rowId, data.value as Value);
+    this.valueSet(rowId, data.value as RawValue);
   }
 }

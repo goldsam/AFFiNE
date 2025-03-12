@@ -1,11 +1,12 @@
 import { ColorSchema } from '@blocksuite/affine-model';
 import { type BlockStdScope, LifeCycleWatcher } from '@blocksuite/block-std';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import type { DeepPartial } from '@blocksuite/global/utils';
 import { computed, type Signal, signal } from '@preact/signals-core';
 import clonedeep from 'lodash-es/cloneDeep';
 import mergeWith from 'lodash-es/mergeWith';
+import { Subject } from 'rxjs';
 import * as Y from 'yjs';
 import { z } from 'zod';
 
@@ -79,7 +80,7 @@ export class EditPropsStore extends LifeCycleWatcher {
   lastProps$: Signal<LastProps>;
 
   slots = {
-    storageUpdated: new Slot<{
+    storageUpdated: new Subject<{
       key: StoragePropsKey;
       value: StorageProps[StoragePropsKey];
     }>(),
@@ -198,7 +199,7 @@ export class EditPropsStore extends LifeCycleWatcher {
       JSON.stringify(value)
     );
     if (oldValue === value) return;
-    this.slots.storageUpdated.emit({ key, value });
+    this.slots.storageUpdated.next({ key, value });
   }
 
   override unmounted() {

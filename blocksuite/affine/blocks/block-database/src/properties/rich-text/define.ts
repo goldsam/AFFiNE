@@ -19,51 +19,59 @@ export const toYText = (text?: RichTextCellType): undefined | Text['yText'] => {
 
 export const richTextPropertyModelConfig = richTextColumnType.modelConfig({
   name: 'Text',
-  valueSchema: zod
-    .custom<RichTextCellType>(
-      data => data instanceof Text || data instanceof Y.Text
-    )
-    .optional(),
-  type: () => t.richText.instance(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) => value?.toString() ?? '',
-  cellFromString: ({ value }) => {
-    return {
-      value: new Text(value),
-    };
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
   },
-  cellToJson: ({ value, dataSource }) => {
-    if (!value) return null;
-    const host = dataSource.contextGet(HostContextKey);
-    if (host) {
-      const collection = host.std.workspace;
+  jsonValue: {
+    schema: zod.string(),
+    type: () => t.richText.instance(),
+    isEmpty: ({ value }) => !value,
+  },
+  rawValue: {
+    schema: zod
+      .custom<RichTextCellType>(
+        data => data instanceof Text || data instanceof Y.Text
+      )
+      .optional(),
+    default: () => undefined,
+    toString: ({ value }) => value?.toString() ?? '',
+    fromString: ({ value }) => {
+      return {
+        value: new Text(value),
+      };
+    },
+    toJson: ({ value, dataSource }) => {
+      if (!value) return null;
+      const host = dataSource.contextGet(HostContextKey);
+      if (host) {
+        const collection = host.std.workspace;
+        const yText = toYText(value);
+        const deltas = yText?.toDelta();
+        const text = deltas
+          .map((delta: DeltaInsert<AffineTextAttributes>) => {
+            if (isLinkedDoc(delta)) {
+              const linkedDocId = delta.attributes?.reference?.pageId as string;
+              return collection.getDoc(linkedDocId)?.meta?.title;
+            }
+            return delta.insert;
+          })
+          .join('');
+        return text;
+      }
+      return value?.toString() ?? null;
+    },
+    fromJson: ({ value }) =>
+      typeof value !== 'string' ? undefined : new Text(value),
+    onUpdate: ({ value, callback }) => {
       const yText = toYText(value);
-      const deltas = yText?.toDelta();
-      const text = deltas
-        .map((delta: DeltaInsert<AffineTextAttributes>) => {
-          if (isLinkedDoc(delta)) {
-            const linkedDocId = delta.attributes?.reference?.pageId as string;
-            return collection.getDoc(linkedDocId)?.meta?.title;
-          }
-          return delta.insert;
-        })
-        .join('');
-      return text;
-    }
-    return value?.toString() ?? null;
+      yText?.observe(callback);
+      callback();
+      return {
+        dispose: () => {
+          yText?.unobserve(callback);
+        },
+      };
+    },
   },
-  cellFromJson: ({ value }) =>
-    typeof value !== 'string' ? undefined : new Text(value),
-  onUpdate: ({ value, callback }) => {
-    const yText = toYText(value);
-    yText?.observe(callback);
-    callback();
-    return {
-      dispose: () => {
-        yText?.unobserve(callback);
-      },
-    };
-  },
-  isEmpty: ({ value }) => value == null || value.length === 0,
-  values: ({ value }) => (value?.toString() ? [value.toString()] : []),
 });

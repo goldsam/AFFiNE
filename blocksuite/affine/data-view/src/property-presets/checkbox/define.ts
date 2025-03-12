@@ -25,20 +25,20 @@ export const checkboxPropertyModelConfig = checkboxPropertyType.modelConfig({
     schema: zod.object({}),
     default: () => ({}),
   },
-  cellValue: {
+  jsonValue: {
+    schema: zod.boolean(),
+    isEmpty: () => false,
+    type: () => t.boolean.instance(),
+  },
+  rawValue: {
     schema: zod.boolean(),
     default: () => false,
-    type: () => t.boolean.instance(),
-    toString: ({ value }) => (value ? 'True' : 'False'),
     fromString: ({ value }) => ({
       value: !FALSE_VALUES.has((value?.trim() ?? '').toLowerCase()),
     }),
-    toJSON: ({ value }) => value ?? null,
-    fromJSON: ({ value }) => (typeof value !== 'boolean' ? undefined : value),
-    isEmpty: () => false,
-  },
-  jsonValue: {
-    schema: zod.boolean(),
+    toString: ({ value }) => (value ? 'True' : 'False'),
+    toJson: ({ value }) => value,
+    fromJson: ({ value }) => value,
   },
   minWidth: 34,
 });

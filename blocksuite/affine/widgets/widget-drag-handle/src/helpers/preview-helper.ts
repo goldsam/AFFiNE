@@ -144,7 +144,7 @@ export class PreviewHelper {
             return;
           }
 
-          this.std.view.viewUpdated.on(payload => {
+          this.std.view.viewUpdated.subscribe(payload => {
             if (payload.type !== 'block') return;
 
             if (payload.view.model.flavour === 'affine:page') {

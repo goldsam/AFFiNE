@@ -1,8 +1,8 @@
 import { ShapeStyle } from '@blocksuite/affine-model';
-import { Slot } from '@blocksuite/global/slot';
 import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
+import { Subject } from 'rxjs';
 
 import type { ShapeTool } from '../../gfx-tool/shape-tool.js';
 import { ShapeComponentConfig } from '../toolbar/shape/shape-menu-config.js';
@@ -18,16 +18,16 @@ export class EdgelessShapePanel extends LitElement {
   `;
 
   slots = {
-    select: new Slot<ShapeTool['activatedOption']['shapeName']>(),
+    select: new Subject<ShapeTool['activatedOption']['shapeName']>(),
   };
 
   private _onSelect(value: ShapeTool['activatedOption']['shapeName']) {
     this.selectedShape = value;
-    this.slots.select.emit(value);
+    this.slots.select.next(value);
   }
 
   override disconnectedCallback(): void {
-    this.slots.select.dispose();
+    this.slots.select.complete();
     super.disconnectedCallback();
   }
 

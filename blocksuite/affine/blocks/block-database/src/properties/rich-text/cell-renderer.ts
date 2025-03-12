@@ -81,7 +81,7 @@ function toggleStyle(
   inlineEditor.syncInlineRange();
 }
 
-export class RichTextCell extends BaseCellRenderer<Text> {
+export class RichTextCell extends BaseCellRenderer<Text, string> {
   inlineEditor$ = computed(() => {
     return this.richText$.value?.inlineEditor;
   });
@@ -339,8 +339,10 @@ export class RichTextCell extends BaseCellRenderer<Text> {
       effect(() => {
         const editor = this.inlineEditor$.value;
         if (editor) {
-          const disposable = editor.slots.keydown.on(this._handleKeyDown);
-          return () => disposable.dispose();
+          const disposable = editor.slots.keydown.subscribe(
+            this._handleKeyDown
+          );
+          return () => disposable.unsubscribe();
         }
         return;
       })

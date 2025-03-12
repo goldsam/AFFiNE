@@ -50,7 +50,7 @@ export function setupEdgelessElementToolbarAIEntry(
             aiPanel.hide();
             extractSelectedContent(edgeless.host)
               .then(context => {
-                AIProvider.slots.requestSendWithChat.emit({
+                AIProvider.slots.requestSendWithChat.next({
                   input,
                   context,
                   host: edgeless.host,

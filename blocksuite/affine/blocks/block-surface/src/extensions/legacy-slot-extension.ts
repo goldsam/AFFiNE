@@ -1,40 +1,39 @@
 import type { FrameBlockModel } from '@blocksuite/affine-model';
 import { createIdentifier } from '@blocksuite/global/di';
-import { Slot } from '@blocksuite/global/slot';
 import type { ExtensionType } from '@blocksuite/store';
-
+import { Subject } from 'rxjs';
 export const EdgelessLegacySlotIdentifier = createIdentifier<{
-  readonlyUpdated: Slot<boolean>;
-  navigatorSettingUpdated: Slot<{
+  readonlyUpdated: Subject<boolean>;
+  navigatorSettingUpdated: Subject<{
     hideToolbar?: boolean;
     blackBackground?: boolean;
     fillScreen?: boolean;
   }>;
-  navigatorFrameChanged: Slot<FrameBlockModel>;
-  fullScreenToggled: Slot;
+  navigatorFrameChanged: Subject<FrameBlockModel>;
+  fullScreenToggled: Subject<void>;
 
-  elementResizeStart: Slot;
-  elementResizeEnd: Slot;
-  toggleNoteSlicer: Slot;
+  elementResizeStart: Subject<void>;
+  elementResizeEnd: Subject<void>;
+  toggleNoteSlicer: Subject<void>;
 
-  toolbarLocked: Slot<boolean>;
+  toolbarLocked: Subject<boolean>;
 }>('AffineEdgelessLegacySlotService');
 
 export const EdgelessLegacySlotExtension: ExtensionType = {
   setup: di => {
     di.addImpl(EdgelessLegacySlotIdentifier, () => ({
-      readonlyUpdated: new Slot<boolean>(),
-      navigatorSettingUpdated: new Slot<{
+      readonlyUpdated: new Subject<boolean>(),
+      navigatorSettingUpdated: new Subject<{
         hideToolbar?: boolean;
         blackBackground?: boolean;
         fillScreen?: boolean;
       }>(),
-      navigatorFrameChanged: new Slot<FrameBlockModel>(),
-      fullScreenToggled: new Slot(),
-      elementResizeStart: new Slot(),
-      elementResizeEnd: new Slot(),
-      toggleNoteSlicer: new Slot(),
-      toolbarLocked: new Slot<boolean>(),
+      navigatorFrameChanged: new Subject<FrameBlockModel>(),
+      fullScreenToggled: new Subject(),
+      elementResizeStart: new Subject(),
+      elementResizeEnd: new Subject(),
+      toggleNoteSlicer: new Subject(),
+      toolbarLocked: new Subject<boolean>(),
     }));
   },
 };

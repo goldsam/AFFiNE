@@ -48,6 +48,14 @@ export class AuthStore extends Store {
     this.globalState.set(`${this.serverService.server.id}-auth`, session);
   }
 
+  getClientNonce() {
+    return this.globalState.get<string>('auth-client-nonce');
+  }
+
+  setClientNonce(nonce: string) {
+    this.globalState.set('auth-client-nonce', nonce);
+  }
+
   async fetchSession() {
     const url = `/api/auth/session`;
     const options: RequestInit = {
@@ -66,11 +74,20 @@ export class AuthStore extends Store {
   }
 
   async signInMagicLink(email: string, token: string) {
-    await this.authProvider.signInMagicLink(email, token);
+    await this.authProvider.signInMagicLink(
+      email,
+      token,
+      this.getClientNonce()
+    );
   }
 
   async signInOauth(code: string, state: string, provider: string) {
-    return await this.authProvider.signInOauth(code, state, provider);
+    return await this.authProvider.signInOauth(
+      code,
+      state,
+      provider,
+      this.getClientNonce()
+    );
   }
 
   async signInPassword(credential: {

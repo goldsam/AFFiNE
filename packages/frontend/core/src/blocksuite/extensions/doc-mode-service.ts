@@ -44,9 +44,7 @@ export function patchDocModeService(
         ? docsService.list.primaryMode$(id)
         : docService.doc.primaryMode$;
       const sub = mode$.subscribe(m => handler((m || DEFAULT_MODE) as DocMode));
-      return {
-        dispose: sub.unsubscribe,
-      };
+      return sub;
     };
   }
 

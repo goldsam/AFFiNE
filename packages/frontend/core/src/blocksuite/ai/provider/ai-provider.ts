@@ -1,6 +1,6 @@
 import type { EditorHost } from '@blocksuite/affine/block-std';
-import { Slot } from '@blocksuite/affine/global/slot';
 import { captureException } from '@sentry/react';
+import { Subject } from 'rxjs';
 
 import type { ChatContextValue } from '../chat-panel/chat-context';
 import {
@@ -123,22 +123,24 @@ export class AIProvider {
   private readonly slots = {
     // use case: when user selects "continue in chat" in an ask ai result panel
     // do we need to pass the context to the chat panel?
-    requestOpenWithChat: new Slot<AIChatParams>(),
-    requestSendWithChat: new Slot<AISendParams>(),
-    requestInsertTemplate: new Slot<{
+    /* eslint-disable rxjs/finnish */
+    requestOpenWithChat: new Subject<AIChatParams>(),
+    requestSendWithChat: new Subject<AISendParams>(),
+    requestInsertTemplate: new Subject<{
       template: string;
       mode: 'page' | 'edgeless';
     }>(),
-    requestLogin: new Slot<{ host: EditorHost }>(),
-    requestUpgradePlan: new Slot<{ host: EditorHost }>(),
+    requestLogin: new Subject<{ host: EditorHost }>(),
+    requestUpgradePlan: new Subject<{ host: EditorHost }>(),
     // stream of AI actions triggered by users
-    actions: new Slot<{
+    actions: new Subject<{
       action: keyof BlockSuitePresets.AIActions;
       options: BlockSuitePresets.AITextActionOptions;
       event: ActionEventType;
     }>(),
     // downstream can emit this slot to notify ai presets that user info has been updated
-    userInfo: new Slot<AIUserInfo | null>(),
+    userInfo: new Subject<AIUserInfo | null>(),
+    /* eslint-enable rxjs/finnish */
   };
 
   // track the history of triggered actions (in memory only)
@@ -162,7 +164,7 @@ export class AIProvider {
     ) => {
       const options = args[0];
       const slots = this.slots;
-      slots.actions.emit({
+      slots.actions.next({
         action: id,
         options,
         event: 'started',
@@ -186,31 +188,31 @@ export class AIProvider {
             try {
               user = await AIProvider.userInfo;
               yield* result;
-              slots.actions.emit({
+              slots.actions.next({
                 action: id,
                 options,
                 event: 'finished',
               });
             } catch (err) {
-              slots.actions.emit({
+              slots.actions.next({
                 action: id,
                 options,
                 event: 'error',
               });
               if (err instanceof PaymentRequiredError) {
-                slots.actions.emit({
+                slots.actions.next({
                   action: id,
                   options,
                   event: 'aborted:paywall',
                 });
               } else if (err instanceof UnauthorizedError) {
-                slots.actions.emit({
+                slots.actions.next({
                   action: id,
                   options,
                   event: 'aborted:login-required',
                 });
               } else {
-                slots.actions.emit({
+                slots.actions.next({
                   action: id,
                   options,
                   event: 'aborted:server-error',
@@ -232,7 +234,7 @@ export class AIProvider {
         return result
           .then(async result => {
             user = await AIProvider.userInfo;
-            slots.actions.emit({
+            slots.actions.next({
               action: id,
               options,
               event: 'finished',
@@ -240,13 +242,13 @@ export class AIProvider {
             return result;
           })
           .catch(err => {
-            slots.actions.emit({
+            slots.actions.next({
               action: id,
               options,
               event: 'error',
             });
             if (err instanceof PaymentRequiredError) {
-              slots.actions.emit({
+              slots.actions.next({
                 action: id,
                 options,
                 event: 'aborted:paywall',

@@ -22,9 +22,9 @@ export class SurfaceBlockService extends BlockService {
     this.surface = surface!;
 
     if (!this.surface) {
-      const disposable = this.doc.slots.blockUpdated.on(payload => {
+      const disposable = this.doc.slots.blockUpdated.subscribe(payload => {
         if (payload.flavour === 'affine:surface') {
-          disposable.dispose();
+          disposable.unsubscribe();
           const surface = this.doc.getBlockById(
             payload.id
           ) as SurfaceBlockModel | null;

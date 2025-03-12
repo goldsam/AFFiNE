@@ -14,7 +14,7 @@ import type {
   Container,
   ServiceIdentifier,
 } from '@blocksuite/affine/global/di';
-import { DisposableGroup } from '@blocksuite/affine/global/slot';
+import { DisposableGroup } from '@blocksuite/affine/global/disposable';
 import {
   type ReferenceNodeConfig,
   ReferenceNodeConfigIdentifier,

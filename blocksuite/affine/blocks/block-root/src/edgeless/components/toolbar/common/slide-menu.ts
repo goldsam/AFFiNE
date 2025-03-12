@@ -121,7 +121,7 @@ export class EdgelessSlideMenu extends WithDisposable(LitElement) {
       this._toggleSlideButton();
     });
     this._disposables.add(
-      this.toolbarSlots.resize.on(() => this._toggleSlideButton())
+      this.toolbarSlots.resize.subscribe(() => this._toggleSlideButton())
     );
   }
 

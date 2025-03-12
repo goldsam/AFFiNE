@@ -15,7 +15,7 @@ import { AffineLitIcon, UniAnyRender, UniLit } from './core/index.js';
 import { AnyRender } from './core/utils/uni-component/render-template.js';
 import { CheckboxCell } from './property-presets/checkbox/cell-renderer.js';
 import { DateCell } from './property-presets/date/cell-renderer.js';
-import { TextCell as ImageTextCell } from './property-presets/image/cell-renderer.js';
+import { ImageCell } from './property-presets/image/cell-renderer.js';
 import { MultiSelectCell } from './property-presets/multi-select/cell-renderer.js';
 import { NumberCell } from './property-presets/number/cell-renderer.js';
 import { ProgressCell } from './property-presets/progress/cell-renderer.js';
@@ -74,7 +74,7 @@ export function effects() {
   customElements.define('mobile-table-cell', MobileTableCell);
   customElements.define('affine-data-view-renderer', DataViewRenderer);
   customElements.define('any-render', AnyRender);
-  customElements.define('affine-database-image-cell', ImageTextCell);
+  customElements.define('affine-database-image-cell', ImageCell);
   customElements.define('affine-database-date-cell', DateCell);
   customElements.define(
     'data-view-properties-setting',

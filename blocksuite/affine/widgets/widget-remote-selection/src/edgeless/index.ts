@@ -184,27 +184,31 @@ export class EdgelessRemoteSelectionWidget extends WidgetComponent<RootBlockMode
 
     if (this.surface) {
       _disposables.add(
-        this.surface.elementAdded.on(this._updateOnElementChange)
+        this.surface.elementAdded.subscribe(this._updateOnElementChange)
       );
       _disposables.add(
-        this.surface.elementRemoved.on(this._updateOnElementChange)
+        this.surface.elementRemoved.subscribe(this._updateOnElementChange)
       );
       _disposables.add(
-        this.surface.elementUpdated.on(this._updateOnElementChange)
+        this.surface.elementUpdated.subscribe(this._updateOnElementChange)
       );
     }
 
-    _disposables.add(doc.slots.blockUpdated.on(this._updateOnElementChange));
-
     _disposables.add(
-      this.selection.slots.remoteUpdated.on(this._updateRemoteRects)
-    );
-    _disposables.add(
-      this.selection.slots.remoteCursorUpdated.on(this._updateRemoteCursor)
+      doc.slots.blockUpdated.subscribe(this._updateOnElementChange)
     );
 
     _disposables.add(
-      this.gfx.viewport.viewportUpdated.on(() => {
+      this.selection.slots.remoteUpdated.subscribe(this._updateRemoteRects)
+    );
+    _disposables.add(
+      this.selection.slots.remoteCursorUpdated.subscribe(
+        this._updateRemoteCursor
+      )
+    );
+
+    _disposables.add(
+      this.gfx.viewport.viewportUpdated.subscribe(() => {
         this._updateTransform();
       })
     );

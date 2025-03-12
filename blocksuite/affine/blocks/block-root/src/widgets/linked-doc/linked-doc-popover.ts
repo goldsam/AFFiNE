@@ -183,9 +183,11 @@ export class LinkedDocPopover extends SignalWatcher(
         if (isComposition) {
           this._updateLinkedDocGroup().catch(console.error);
         } else {
-          this.context.inlineEditor.slots.renderComplete.once(
-            this._updateLinkedDocGroup
-          );
+          const subscription =
+            this.context.inlineEditor.slots.renderComplete.subscribe(() => {
+              subscription.unsubscribe();
+              this._updateLinkedDocGroup().catch(console.error);
+            });
         }
       },
       onPaste: () => {
@@ -201,9 +203,11 @@ export class LinkedDocPopover extends SignalWatcher(
         if (curRange.index < this.context.startRange.index) {
           this.context.close();
         }
-        this.context.inlineEditor.slots.renderComplete.once(
-          this._updateLinkedDocGroup
-        );
+        const subscription =
+          this.context.inlineEditor.slots.renderComplete.subscribe(() => {
+            subscription.unsubscribe();
+            this._updateLinkedDocGroup().catch(console.error);
+          });
       },
       onMove: step => {
         const itemLen = this._flattenActionList.length;
@@ -332,7 +336,9 @@ export class LinkedDocPopover extends SignalWatcher(
       }
 
       const gfx = this.context.std.get(GfxControllerIdentifier);
-      this.disposables.add(gfx.viewport.viewportUpdated.on(updatePosition));
+      this.disposables.add(
+        gfx.viewport.viewportUpdated.subscribe(updatePosition)
+      );
 
       updatePosition();
     }

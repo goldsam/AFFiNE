@@ -42,13 +42,13 @@ export class EdgelessNavigatorBlackBackgroundWidget extends WidgetComponent<Root
   override firstUpdated() {
     const { _disposables, gfx } = this;
     _disposables.add(
-      this._slots.navigatorFrameChanged.on(frame => {
+      this._slots.navigatorFrameChanged.subscribe(frame => {
         this.frame = frame;
       })
     );
 
     _disposables.add(
-      this._slots.navigatorSettingUpdated.on(({ blackBackground }) => {
+      this._slots.navigatorSettingUpdated.subscribe(({ blackBackground }) => {
         if (blackBackground !== undefined) {
           this.std
             .get(EditPropsStore)
@@ -76,7 +76,7 @@ export class EdgelessNavigatorBlackBackgroundWidget extends WidgetComponent<Root
     );
 
     _disposables.add(
-      this._slots.fullScreenToggled.on(
+      this._slots.fullScreenToggled.subscribe(
         () =>
           setTimeout(() => {
             this.requestUpdate();

@@ -932,6 +932,36 @@ export const leaveWorkspaceMutation = {
 }`,
 };
 
+export const listNotificationsQuery = {
+  id: 'listNotificationsQuery' as const,
+  op: 'listNotifications',
+  query: `query listNotifications($pagination: PaginationInput!) {
+  currentUser {
+    notifications(pagination: $pagination) {
+      totalCount
+      edges {
+        cursor
+        node {
+          id
+          type
+          level
+          read
+          createdAt
+          updatedAt
+          body
+        }
+      }
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+}`,
+};
+
 export const listUsersQuery = {
   id: 'listUsersQuery' as const,
   op: 'listUsers',
@@ -944,6 +974,16 @@ export const listUsersQuery = {
     hasPassword
     emailVerified
     avatarUrl
+  }
+}`,
+};
+
+export const notificationCountQuery = {
+  id: 'notificationCountQuery' as const,
+  op: 'notificationCount',
+  query: `query notificationCount {
+  currentUser {
+    notificationCount
   }
 }`,
 };
@@ -1002,6 +1042,14 @@ export const quotaQuery = {
   deprecations: [
     "'storageQuota' is deprecated: use `UserQuotaType['usedStorageQuota']` instead",
   ],
+};
+
+export const readNotificationMutation = {
+  id: 'readNotificationMutation' as const,
+  op: 'readNotification',
+  query: `mutation readNotification($id: String!) {
+  readNotification(id: $id)
+}`,
 };
 
 export const recoverDocMutation = {

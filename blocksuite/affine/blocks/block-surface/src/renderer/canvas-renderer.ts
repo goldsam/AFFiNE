@@ -6,10 +6,11 @@ import type {
   SurfaceBlockModel,
   Viewport,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { IBound } from '@blocksuite/global/gfx';
 import { getBoundWithRotation, intersects } from '@blocksuite/global/gfx';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import last from 'lodash-es/last';
+import { Subject } from 'rxjs';
 
 import type { SurfaceElementModel } from '../element-model/base.js';
 import { RoughCanvas } from '../utils/rough/canvas.js';
@@ -58,7 +59,7 @@ export class CanvasRenderer {
 
   provider: Partial<EnvProvider>;
 
-  stackingCanvasUpdated = new Slot<{
+  stackingCanvasUpdated = new Subject<{
     canvases: HTMLCanvasElement[];
     added: HTMLCanvasElement[];
     removed: HTMLCanvasElement[];
@@ -175,14 +176,14 @@ export class CanvasRenderer {
           payload.removed = currentCanvases.slice(diff);
         }
 
-        this.stackingCanvasUpdated.emit(payload);
+        this.stackingCanvasUpdated.next(payload);
       }
 
       this.refresh();
     };
 
     this._disposables.add(
-      this.layerManager.slots.layerUpdated.on(() => {
+      this.layerManager.slots.layerUpdated.subscribe(() => {
         updateStackingCanvas();
       })
     );
@@ -194,13 +195,13 @@ export class CanvasRenderer {
     let sizeUpdatedRafId: number | null = null;
 
     this._disposables.add(
-      this.viewport.viewportUpdated.on(() => {
+      this.viewport.viewportUpdated.subscribe(() => {
         this.refresh();
       })
     );
 
     this._disposables.add(
-      this.viewport.sizeUpdated.on(() => {
+      this.viewport.sizeUpdated.subscribe(() => {
         if (sizeUpdatedRafId) return;
         sizeUpdatedRafId = requestConnectedFrame(() => {
           sizeUpdatedRafId = null;
@@ -319,20 +320,24 @@ export class CanvasRenderer {
   }
 
   private _watchSurface(surfaceModel: SurfaceBlockModel) {
-    const slots = [
-      'elementAdded',
-      'elementRemoved',
-      'localElementAdded',
-      'localElementDeleted',
-      'localElementUpdated',
-    ] as const;
-
-    slots.forEach(slotName => {
-      this._disposables.add(surfaceModel[slotName].on(() => this.refresh()));
-    });
+    this._disposables.add(
+      surfaceModel.elementAdded.subscribe(() => this.refresh())
+    );
+    this._disposables.add(
+      surfaceModel.elementRemoved.subscribe(() => this.refresh())
+    );
+    this._disposables.add(
+      surfaceModel.localElementAdded.subscribe(() => this.refresh())
+    );
+    this._disposables.add(
+      surfaceModel.localElementDeleted.subscribe(() => this.refresh())
+    );
+    this._disposables.add(
+      surfaceModel.localElementUpdated.subscribe(() => this.refresh())
+    );
 
     this._disposables.add(
-      surfaceModel.elementUpdated.on(payload => {
+      surfaceModel.elementUpdated.subscribe(payload => {
         // ignore externalXYWH update cause it's updated by the renderer
         if (payload.props['externalXYWH']) return;
         this.refresh();

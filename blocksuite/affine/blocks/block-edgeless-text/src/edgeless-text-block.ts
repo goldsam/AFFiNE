@@ -92,7 +92,7 @@ export class EdgelessTextBlockComponent extends GfxBlockComponent<EdgelessTextBl
     super.connectedCallback();
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         this.updateComplete
           .then(() => {
             const command = this.std.command;
@@ -137,7 +137,7 @@ export class EdgelessTextBlockComponent extends GfxBlockComponent<EdgelessTextBl
     const edgelessSelection = this.gfx.selection;
 
     disposables.add(
-      edgelessSelection.slots.updated.on(() => {
+      edgelessSelection.slots.updated.subscribe(() => {
         if (edgelessSelection.has(this.model.id) && edgelessSelection.editing) {
           this._editing = true;
         } else {

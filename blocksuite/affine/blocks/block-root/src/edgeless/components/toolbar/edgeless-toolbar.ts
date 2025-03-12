@@ -16,7 +16,6 @@ import {
 import { stopPropagation } from '@blocksuite/affine-shared/utils';
 import { WidgetComponent } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
-import { Slot } from '@blocksuite/global/slot';
 import {
   ArrowLeftSmallIcon,
   ArrowRightSmallIcon,
@@ -30,6 +29,7 @@ import { css, html, nothing, unsafeCSS } from 'lit';
 import { query, state } from 'lit/decorators.js';
 import { cache } from 'lit/directives/cache.js';
 import debounce from 'lodash-es/debounce';
+import { Subject } from 'rxjs';
 
 import type { EdgelessRootBlockComponent } from '../../edgeless-root-block.js';
 import type { MenuPopper } from './common/create-popper.js';
@@ -238,7 +238,7 @@ export class EdgelessToolbarWidget extends WidgetComponent<
     ({ w }: { w: number }) => {
       if (!this.isConnected) return;
 
-      this.slots.resize.emit({ w, h: TOOLBAR_HEIGHT });
+      this.slots.resize.next({ w, h: TOOLBAR_HEIGHT });
       this.containerWidth = w;
 
       if (this._denseSeniorTools) {
@@ -273,7 +273,7 @@ export class EdgelessToolbarWidget extends WidgetComponent<
 
   private readonly _slotsProvider = new ContextProvider(this, {
     context: edgelessToolbarSlotsContext,
-    initialValue: { resize: new Slot() } satisfies EdgelessToolbarSlots,
+    initialValue: { resize: new Subject() } satisfies EdgelessToolbarSlots,
   });
 
   private readonly _themeProvider = new ContextProvider(this, {
@@ -605,22 +605,22 @@ export class EdgelessToolbarWidget extends WidgetComponent<
     const { _disposables, block, gfx } = this;
 
     _disposables.add(
-      gfx.viewport.viewportUpdated.on(() => this.requestUpdate())
+      gfx.viewport.viewportUpdated.subscribe(() => this.requestUpdate())
     );
     _disposables.add(
-      block.slots.readonlyUpdated.on(() => {
+      block.slots.readonlyUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );
     _disposables.add(
-      block.slots.toolbarLocked.on(disabled => {
+      block.slots.toolbarLocked.subscribe(disabled => {
         this.toggleAttribute('disabled', disabled);
       })
     );
     // This state from `editPropsStore` is not reactive,
     // if the value is updated outside of this component, it will not be reflected.
     _disposables.add(
-      this.std.get(EditPropsStore).slots.storageUpdated.on(({ key }) => {
+      this.std.get(EditPropsStore).slots.storageUpdated.subscribe(({ key }) => {
         if (key === 'presentHideToolbar') {
           this.requestUpdate();
         }

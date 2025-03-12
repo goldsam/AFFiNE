@@ -204,7 +204,7 @@ export function showPopFilterableList({
   createLitPortal({
     closeOnClickAway: true,
     template: ({ positionSlot }) => {
-      positionSlot.on(({ placement }) => {
+      positionSlot.subscribe(({ placement }) => {
         list.placement = placement;
       });
 

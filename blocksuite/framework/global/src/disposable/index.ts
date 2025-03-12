@@ -1,15 +1,19 @@
+import { Subject, Subscription } from 'rxjs';
+
 type DisposeCallback = () => void;
 
 export interface Disposable {
   dispose: DisposeCallback;
 }
 
-export interface DisposableManager extends Disposable {
-  add(d: Disposable | DisposeCallback): void;
-}
+export type DisposableMember =
+  | Disposable
+  | Subscription
+  | Subject<any>
+  | DisposeCallback;
 
-export class DisposableGroup implements DisposableManager {
-  private _disposables: Disposable[] = [];
+export class DisposableGroup {
+  private _disposables: DisposableMember[] = [];
 
   private _disposed = false;
 
@@ -21,14 +25,12 @@ export class DisposableGroup implements DisposableManager {
    * Add to group to be disposed with others.
    * This will be immediately disposed if this group has already been disposed.
    */
-  add(d: Disposable | DisposeCallback) {
-    if (typeof d === 'function') {
-      if (this._disposed) d();
-      else this._disposables.push({ dispose: d });
-    } else {
-      if (this._disposed) d.dispose();
-      else this._disposables.push(d);
+  add(d: DisposableMember) {
+    if (this._disposed) {
+      disposeMember(d);
+      return;
     }
+    this._disposables.push(d);
   }
 
   addFromEvent<N extends keyof WindowEventMap>(
@@ -83,18 +85,22 @@ export class DisposableGroup implements DisposableManager {
   }
 }
 
-export function flattenDisposables(disposables: Disposable[]): Disposable {
-  return {
-    dispose: () => disposeAll(disposables),
-  };
+export function disposeMember(disposable: DisposableMember) {
+  try {
+    if (disposable instanceof Subscription) {
+      disposable.unsubscribe();
+    } else if (disposable instanceof Subject) {
+      disposable.complete();
+    } else if (typeof disposable === 'function') {
+      disposable();
+    } else {
+      disposable.dispose();
+    }
+  } catch (e) {
+    console.error(e);
+  }
 }
 
-function disposeAll(disposables: Disposable[]) {
-  for (const disposable of disposables) {
-    try {
-      disposable.dispose();
-    } catch (err) {
-      console.error(err);
-    }
-  }
+function disposeAll(disposables: DisposableMember[]) {
+  disposables.forEach(disposeMember);
 }

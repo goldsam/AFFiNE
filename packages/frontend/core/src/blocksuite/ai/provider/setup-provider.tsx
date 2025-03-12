@@ -228,6 +228,8 @@ export function setupAIProvider(
       client,
       content: options.input,
       promptName: 'workflow:brainstorm',
+      // 3 minutes
+      timeout: 180000,
       workflow: true,
     });
   });
@@ -331,6 +333,8 @@ Could you make a new website based on these notes and send back just the html fi
       client,
       content: options.input,
       promptName: 'workflow:presentation',
+      // 3 minutes
+      timeout: 180000,
       workflow: true,
       postfix,
     });
@@ -358,7 +362,7 @@ Could you make a new website based on these notes and send back just the html fi
       ...options,
       client,
       content: options.input,
-      timeout: 120000,
+      timeout: 180000,
       promptName: promptName as PromptKey,
       workflow: !!promptName?.startsWith('workflow:'),
     });
@@ -373,7 +377,7 @@ Could you make a new website based on these notes and send back just the html fi
       ...options,
       client,
       content: options.input,
-      timeout: 120000,
+      timeout: 180000,
       promptName,
     });
   });
@@ -527,13 +531,15 @@ Could you make a new website based on these notes and send back just the html fi
     return client.forkSession(options);
   });
 
-  const disposeRequestLoginHandler = AIProvider.slots.requestLogin.on(() => {
-    globalDialogService.open('sign-in', {});
-  });
+  const disposeRequestLoginHandler = AIProvider.slots.requestLogin.subscribe(
+    () => {
+      globalDialogService.open('sign-in', {});
+    }
+  );
 
   setupTracker();
 
   return () => {
-    disposeRequestLoginHandler.dispose();
+    disposeRequestLoginHandler.unsubscribe();
   };
 }

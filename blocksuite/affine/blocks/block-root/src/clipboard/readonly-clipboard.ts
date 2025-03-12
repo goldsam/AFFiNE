@@ -14,7 +14,7 @@ import {
   getSelectedModelsCommand,
 } from '@blocksuite/affine-shared/commands';
 import type { BlockComponent, UIEventHandler } from '@blocksuite/block-std';
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 
 import { ClipboardAdapter } from './adapter.js';
 

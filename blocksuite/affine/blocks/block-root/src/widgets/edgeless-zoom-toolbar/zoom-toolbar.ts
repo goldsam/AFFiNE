@@ -130,12 +130,12 @@ export class EdgelessZoomToolbar extends WithDisposable(LitElement) {
   override firstUpdated() {
     const { disposables } = this;
     disposables.add(
-      this.edgeless.service.viewport.viewportUpdated.on(() =>
+      this.edgeless.service.viewport.viewportUpdated.subscribe(() =>
         this.requestUpdate()
       )
     );
     disposables.add(
-      this.edgeless.slots.readonlyUpdated.on(() => {
+      this.edgeless.slots.readonlyUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );

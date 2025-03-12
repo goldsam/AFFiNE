@@ -304,7 +304,7 @@ export class EdgelessAlignButton extends WithDisposable(LitElement) {
 
   override firstUpdated() {
     this._disposables.add(
-      this.edgeless.service.selection.slots.updated.on(() =>
+      this.edgeless.service.selection.slots.updated.subscribe(() =>
         this.requestUpdate()
       )
     );

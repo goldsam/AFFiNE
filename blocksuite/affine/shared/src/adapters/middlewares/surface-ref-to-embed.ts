@@ -5,12 +5,12 @@ export const surfaceRefToEmbed =
   (std: BlockStdScope): TransformerMiddleware =>
   ({ slots }) => {
     let pageId: string | null = null;
-    slots.beforeImport.on(payload => {
+    slots.beforeImport.subscribe(payload => {
       if (payload.type === 'slice') {
         pageId = payload.snapshot.pageId;
       }
     });
-    slots.beforeImport.on(payload => {
+    slots.beforeImport.subscribe(payload => {
       if (
         pageId &&
         payload.type === 'block' &&

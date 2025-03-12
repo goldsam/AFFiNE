@@ -1,4 +1,4 @@
-import type { Disposable } from '@blocksuite/global/slot';
+import type { Disposable } from '@blocksuite/global/disposable';
 import type { ZodType } from 'zod';
 
 import type { DataSource } from '../data-source/base.js';
@@ -8,9 +8,11 @@ export type WithCommonPropertyConfig<T = {}> = T & {
   dataSource: DataSource;
 };
 export type GetPropertyDataFromConfig<T> =
-  T extends PropertyConfig<infer R, any> ? R : never;
-export type GetCellDataFromConfig<T> =
-  T extends PropertyConfig<any, infer R> ? R : never;
+  T extends PropertyConfig<infer R, any, any> ? R : never;
+export type GetRawValueFromConfig<T> =
+  T extends PropertyConfig<any, infer R, any> ? R : never;
+export type GetJsonValueFromConfig<T> =
+  T extends PropertyConfig<any, any, infer R> ? R : never;
 export type PropertyConfig<Data, RawValue = unknown, JsonValue = unknown> = {
   name: string;
   hide?: boolean;
@@ -21,11 +23,6 @@ export type PropertyConfig<Data, RawValue = unknown, JsonValue = unknown> = {
   rawValue: {
     schema: ZodType<RawValue>;
     default: () => RawValue;
-    type: (
-      config: WithCommonPropertyConfig<{
-        data: Data;
-      }>
-    ) => TypeInstance;
     toString: (config: { value: RawValue; data: Data }) => string;
     fromString: (
       config: WithCommonPropertyConfig<{
@@ -38,7 +35,7 @@ export type PropertyConfig<Data, RawValue = unknown, JsonValue = unknown> = {
     };
     toJson: (
       config: WithCommonPropertyConfig<{
-        value?: RawValue;
+        value: RawValue;
         data: Data;
       }>
     ) => JsonValue;
@@ -66,9 +63,14 @@ export type PropertyConfig<Data, RawValue = unknown, JsonValue = unknown> = {
   };
   jsonValue: {
     schema: ZodType<JsonValue>;
+    type: (
+      config: WithCommonPropertyConfig<{
+        data: Data;
+      }>
+    ) => TypeInstance;
     isEmpty: (
       config: WithCommonPropertyConfig<{
-        value?: JsonValue;
+        value: JsonValue;
       }>
     ) => boolean;
   };

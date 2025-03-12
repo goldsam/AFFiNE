@@ -1,4 +1,4 @@
-import { Slot } from '@blocksuite/global/slot';
+import { Subject } from 'rxjs';
 import type * as Y from 'yjs';
 
 import type {
@@ -45,15 +45,15 @@ export class TestMeta implements WorkspaceMeta {
     DocCollectionMetaState[keyof DocCollectionMetaState]
   >;
 
-  commonFieldsUpdated = new Slot();
+  commonFieldsUpdated = new Subject<void>();
 
   readonly doc: Y.Doc;
 
-  docMetaAdded = new Slot<string>();
+  docMetaAdded = new Subject<string>();
 
-  docMetaRemoved = new Slot<string>();
+  docMetaRemoved = new Subject<string>();
 
-  docMetaUpdated = new Slot();
+  docMetaUpdated = new Subject<void>();
 
   readonly id: string = 'meta';
 
@@ -103,7 +103,7 @@ export class TestMeta implements WorkspaceMeta {
   }
 
   private _handleCommonFieldsEvent() {
-    this.commonFieldsUpdated.emit();
+    this.commonFieldsUpdated.next();
   }
 
   private _handleDocMetaEvent() {
@@ -113,7 +113,7 @@ export class TestMeta implements WorkspaceMeta {
 
     docMetas.forEach(docMeta => {
       if (!_prevDocs.has(docMeta.id)) {
-        this.docMetaAdded.emit(docMeta.id);
+        this.docMetaAdded.next(docMeta.id);
       }
       newDocs.add(docMeta.id);
     });
@@ -121,13 +121,13 @@ export class TestMeta implements WorkspaceMeta {
     _prevDocs.forEach(prevDocId => {
       const isRemoved = newDocs.has(prevDocId) === false;
       if (isRemoved) {
-        this.docMetaRemoved.emit(prevDocId);
+        this.docMetaRemoved.next(prevDocId);
       }
     });
 
     this._prevDocs = newDocs;
 
-    this.docMetaUpdated.emit();
+    this.docMetaUpdated.next();
   }
 
   addDocMeta(doc: DocMeta, index?: number) {
@@ -204,6 +204,6 @@ export class TestMeta implements WorkspaceMeta {
 
   setProperties(meta: DocsPropertiesMeta) {
     this._proxy.properties = meta;
-    this.docMetaUpdated.emit();
+    this.docMetaUpdated.next();
   }
 }

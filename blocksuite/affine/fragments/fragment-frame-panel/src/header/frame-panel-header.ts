@@ -7,8 +7,8 @@ import {
 import { createButtonPopper } from '@blocksuite/affine-shared/utils';
 import type { EditorHost } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { WithDisposable } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { PresentationIcon, SettingsIcon } from '@blocksuite/icons/lit';
 import { css, html, LitElement, type PropertyValues } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
@@ -143,7 +143,7 @@ export class FramePanelHeader extends WithDisposable(LitElement) {
     this._clearEdgelessDisposables();
     this._edgelessDisposables = new DisposableGroup();
     this._edgelessDisposables.add(
-      slots.navigatorSettingUpdated.on(({ fillScreen }) => {
+      slots.navigatorSettingUpdated.subscribe(({ fillScreen }) => {
         this._navigatorMode = fillScreen ? 'fill' : 'fit';
       })
     );

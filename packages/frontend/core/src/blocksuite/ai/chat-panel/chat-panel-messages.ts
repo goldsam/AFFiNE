@@ -316,7 +316,7 @@ export class ChatPanelMessages extends WithDisposable(ShadowlessElement) {
       .catch(console.error);
 
     disposables.add(
-      AIProvider.slots.userInfo.on(userInfo => {
+      AIProvider.slots.userInfo.subscribe(userInfo => {
         const { status, error } = this.chatContextValue;
         this.avatarUrl = userInfo?.avatarUrl ?? '';
         if (
@@ -329,7 +329,7 @@ export class ChatPanelMessages extends WithDisposable(ShadowlessElement) {
       })
     );
     disposables.add(
-      this.host.selection.slots.changed.on(() => {
+      this.host.selection.slots.changed.subscribe(() => {
         this._selectionValue = this.host.selection.value;
       })
     );

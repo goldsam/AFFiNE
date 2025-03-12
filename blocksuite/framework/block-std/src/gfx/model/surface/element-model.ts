@@ -1,3 +1,4 @@
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import {
   Bound,
   deserializeXYWH,
@@ -13,9 +14,9 @@ import {
   type SerializedXYWH,
   type XYWH,
 } from '@blocksuite/global/gfx';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { createMutex } from 'lib0/mutex';
 import isEqual from 'lodash-es/isEqual';
+import { Subject } from 'rxjs';
 import * as Y from 'yjs';
 
 import {
@@ -86,7 +87,7 @@ export abstract class GfxPrimitiveElementModel<
 
   protected _stashed: Map<keyof Props | string, unknown>;
 
-  propsUpdated = new Slot<{ key: string }>();
+  propsUpdated = new Subject<{ key: string }>();
 
   abstract rotate: number;
 
@@ -262,7 +263,7 @@ export abstract class GfxPrimitiveElementModel<
 
   onDestroyed() {
     this._disposable.dispose();
-    this.propsUpdated.dispose();
+    this.propsUpdated.complete();
   }
 
   pop(prop: keyof Props | string) {

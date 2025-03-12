@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Transactional } from '@nestjs-cls/transactional';
 import { type ConnectedAccount, Prisma, type User } from '@prisma/client';
+import { omit } from 'lodash-es';
 
 import {
   CryptoHelper,
@@ -49,6 +51,10 @@ declare global {
   }
 }
 
+interface UserFilter {
+  withDisabled?: boolean;
+}
+
 export type PublicUser = Pick<User, keyof typeof publicUserSelect>;
 export type WorkspaceUser = Pick<User, keyof typeof workspaceUserSelect>;
 export type { ConnectedAccount, User };
@@ -62,52 +68,49 @@ export class UserModel extends BaseModel {
     super();
   }
 
-  async get(id: string) {
+  async get(id: string, filter: UserFilter = {}) {
     return this.db.user.findUnique({
-      where: { id },
+      where: { id, disabled: filter.withDisabled ? undefined : false },
     });
-  }
-
-  async exists(id: string) {
-    const count = await this.db.user.count({
-      where: { id },
-    });
-    return count > 0;
   }
 
   async getPublicUser(id: string): Promise<PublicUser | null> {
     return this.db.user.findUnique({
       select: publicUserSelect,
-      where: { id },
+      where: { id, disabled: false },
     });
   }
 
   async getPublicUsers(ids: string[]): Promise<PublicUser[]> {
     return this.db.user.findMany({
       select: publicUserSelect,
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, disabled: false },
     });
   }
 
   async getWorkspaceUser(id: string): Promise<WorkspaceUser | null> {
     return this.db.user.findUnique({
       select: workspaceUserSelect,
-      where: { id },
+      where: { id, disabled: false },
     });
   }
 
   async getWorkspaceUsers(ids: string[]): Promise<WorkspaceUser[]> {
     return this.db.user.findMany({
       select: workspaceUserSelect,
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, disabled: false },
     });
   }
 
-  async getUserByEmail(email: string): Promise<User | null> {
+  async getUserByEmail(
+    email: string,
+    filter: UserFilter = {}
+  ): Promise<User | null> {
     const rows = await this.db.$queryRaw<User[]>`
       SELECT id, name, email, password, registered, email_verified as emailVerifiedAt, avatar_url as avatarUrl, registered, created_at as createdAt
       FROM "users"
       WHERE lower("email") = lower(${email})
+      ${Prisma.raw(filter.withDisabled ? '' : 'AND disabled = false')}
     `;
 
     return rows[0] ?? null;
@@ -141,23 +144,14 @@ export class UserModel extends BaseModel {
       SELECT id, name, avatar_url as avatarUrl
       FROM "users"
       WHERE lower("email") = lower(${email})
-    `;
-
-    return rows[0] ?? null;
-  }
-
-  async getWorkspaceUserByEmail(email: string): Promise<WorkspaceUser | null> {
-    const rows = await this.db.$queryRaw<WorkspaceUser[]>`
-      SELECT id, name, email, avatar_url as avatarUrl
-      FROM "users"
-      WHERE lower("email") = lower(${email})
+      AND disabled = false
     `;
 
     return rows[0] ?? null;
   }
 
   async create(data: CreateUserInput) {
-    let user = await this.getUserByEmail(data.email);
+    let user = await this.getUserByEmail(data.email, { withDisabled: true });
 
     if (user) {
       throw new EmailAlreadyUsed();
@@ -183,13 +177,27 @@ export class UserModel extends BaseModel {
     return user;
   }
 
+  async importUsers(inputs: CreateUserInput[]) {
+    return await Promise.allSettled(
+      inputs.map(async input => {
+        return await this.create({
+          ...input,
+          registered: true,
+        });
+      })
+    );
+  }
+
+  @Transactional()
   async update(id: string, data: UpdateUserInput) {
     if (data.password) {
       data.password = await this.crypto.encryptPassword(data.password);
     }
 
     if (data.email) {
-      const user = await this.getUserByEmail(data.email);
+      const user = await this.getUserByEmail(data.email, {
+        withDisabled: true,
+      });
       if (user && user.id !== id) {
         throw new EmailAlreadyUsed();
       }
@@ -211,7 +219,7 @@ export class UserModel extends BaseModel {
    * When user created by others invitation, we will leave it as unregistered.
    */
   async fulfill(email: string, data: Omit<UpdateUserInput, 'email'> = {}) {
-    const user = await this.getUserByEmail(email);
+    const user = await this.getUserByEmail(email, { withDisabled: true });
 
     if (!user) {
       return this.create({
@@ -256,6 +264,30 @@ export class UserModel extends BaseModel {
     });
 
     return user;
+  }
+
+  async ban(id: string) {
+    // ban an user barely share the same logic with delete an user,
+    // but keep the record with `disabled` flag
+    // we delete the account and create it again to trigger all cleanups
+    let user = await this.delete(id);
+    user = await this.db.user.create({
+      data: {
+        ...omit(user, 'id'),
+        disabled: true,
+      },
+    });
+
+    await this.event.emitAsync('user.postCreated', user);
+
+    return user;
+  }
+
+  async enable(id: string) {
+    return await this.db.user.update({
+      where: { id },
+      data: { disabled: false },
+    });
   }
 
   async pagination(skip: number = 0, take: number = 20, after?: Date) {

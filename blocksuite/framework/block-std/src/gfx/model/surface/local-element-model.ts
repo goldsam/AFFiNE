@@ -142,7 +142,7 @@ export abstract class GfxLocalElementModel implements GfxCompatibleInterface {
 
         if (surfaceModel.localElementModels.has(p)) {
           this._mutex(() => {
-            surfaceModel.localElementUpdated.emit({
+            surfaceModel.localElementUpdated.next({
               model: p,
               props: {
                 [prop as string]: value,

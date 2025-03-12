@@ -9,7 +9,7 @@ import type { SlotBlockPayload, TemplateJob } from './template.js';
 export const replaceIdMiddleware = (job: TemplateJob) => {
   const regeneratedIdMap = new Map<string, string>();
 
-  job.slots.beforeInsert.on(payload => {
+  job.slots.beforeInsert.subscribe(payload => {
     switch (payload.type) {
       case 'block':
         regenerateBlockId(payload.data);
@@ -134,7 +134,7 @@ export const createInsertPlaceMiddleware = (targetPlace: Bound) => {
       y: number;
     };
 
-    job.slots.beforeInsert.on(blockData => {
+    job.slots.beforeInsert.subscribe(blockData => {
       if (blockData.type === 'template') {
         templateBound = blockData.bound;
 
@@ -211,7 +211,7 @@ export const createStickerMiddleware = (
   getIndex: () => string
 ) => {
   return (job: TemplateJob) => {
-    job.slots.beforeInsert.on(blockData => {
+    job.slots.beforeInsert.subscribe(blockData => {
       if (blockData.type === 'block') {
         changeInserPosition(blockData.data.blockJson);
       }
@@ -238,7 +238,7 @@ export const createRegenerateIndexMiddleware = (
   generateIndex: () => string
 ) => {
   return (job: TemplateJob) => {
-    job.slots.beforeInsert.on(blockData => {
+    job.slots.beforeInsert.subscribe(blockData => {
       if (blockData.type === 'template') {
         generateIndexMap();
       }

@@ -9,7 +9,7 @@ export const newIdCrossDoc =
     let samePage = false;
     const oldToNewIdMap = new Map<string, string>();
 
-    slots.beforeImport.on(payload => {
+    slots.beforeImport.subscribe(payload => {
       if (payload.type === 'slice') {
         samePage = payload.snapshot.pageId === std.store.id;
       }
@@ -21,7 +21,7 @@ export const newIdCrossDoc =
       }
     });
 
-    slots.afterImport.on(payload => {
+    slots.afterImport.subscribe(payload => {
       if (
         !samePage &&
         payload.type === 'block' &&

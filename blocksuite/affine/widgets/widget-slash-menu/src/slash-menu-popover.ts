@@ -233,8 +233,11 @@ export class SlashMenu extends WithDisposable(LitElement) {
         if (isComposition) {
           this._updateFilteredItems();
         } else {
-          this.inlineEditor.slots.renderComplete.once(
-            this._updateFilteredItems
+          const subscription = this.inlineEditor.slots.renderComplete.subscribe(
+            () => {
+              subscription.unsubscribe();
+              this._updateFilteredItems();
+            }
           );
         }
       },
@@ -251,7 +254,12 @@ export class SlashMenu extends WithDisposable(LitElement) {
         if (curRange.index < this._startRange.index) {
           this.abortController.abort();
         }
-        this.inlineEditor.slots.renderComplete.once(this._updateFilteredItems);
+        const subscription = this.inlineEditor.slots.renderComplete.subscribe(
+          () => {
+            subscription.unsubscribe();
+            this._updateFilteredItems();
+          }
+        );
       },
       onAbort: () => this.abortController.abort(),
     });

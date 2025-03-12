@@ -355,7 +355,10 @@ describe('stash/pop', () => {
     elementModel.stash('strokeWidth');
 
     const onchange = vi.fn();
-    model.elementUpdated.once(({ id }) => onchange(id));
+    const subscription = model.elementUpdated.subscribe(({ id }) => {
+      subscription.unsubscribe();
+      onchange(id);
+    });
 
     elementModel.strokeWidth = 10;
     expect(onchange).toHaveBeenCalledWith(id);
@@ -449,7 +452,10 @@ describe('local decorator', () => {
 
     const onchange = vi.fn();
 
-    model.elementUpdated.once(({ id }) => onchange(id));
+    const subscription = model.elementUpdated.subscribe(({ id }) => {
+      subscription.unsubscribe();
+      onchange(id);
+    });
     elementModel.display = false;
 
     expect(elementModel.display).toBe(false);

@@ -1,6 +1,6 @@
 import type { LitElement } from 'lit';
 
-import { DisposableGroup } from '../slot/disposable.js';
+import { DisposableGroup } from '../disposable/index.js';
 import type { Constructor } from '../utils/types.js';
 
 // See https://lit.dev/docs/composition/mixins/#mixins-in-typescript

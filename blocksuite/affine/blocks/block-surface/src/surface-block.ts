@@ -7,9 +7,9 @@ import {
   type Viewport,
 } from '@blocksuite/block-std/gfx';
 import { Bound } from '@blocksuite/global/gfx';
-import type { Slot } from '@blocksuite/global/slot';
 import { css, html } from 'lit';
 import { query } from 'lit/decorators.js';
+import type { Subject } from 'rxjs';
 
 import { ConnectorElementModel } from './element-model/index.js';
 import { CanvasRenderer } from './renderer/canvas-renderer.js';
@@ -28,7 +28,7 @@ export interface SurfaceContext {
   selection: {
     selectedIds: string[];
     slots: {
-      updated: Slot<SurfaceSelection[]>;
+      updated: Subject<SurfaceSelection[]>;
     };
   };
 }
@@ -191,7 +191,7 @@ export class SurfaceBlockComponent extends BlockComponent<
       this._renderer.dispose();
     });
     this._disposables.add(
-      this._renderer.stackingCanvasUpdated.on(payload => {
+      this._renderer.stackingCanvasUpdated.subscribe(payload => {
         if (payload.added.length) {
           this._surfaceContainer.append(...payload.added);
         }
@@ -204,7 +204,7 @@ export class SurfaceBlockComponent extends BlockComponent<
       })
     );
     this._disposables.add(
-      gfx.selection.slots.updated.on(() => {
+      gfx.selection.slots.updated.subscribe(() => {
         this._renderer.refresh();
       })
     );

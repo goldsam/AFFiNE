@@ -1,14 +1,15 @@
 import { BlockService } from '@blocksuite/affine/block-std';
-import { Slot } from '@blocksuite/affine/global/slot';
 import { RootBlockSchema } from '@blocksuite/affine/model';
+import { Subject } from 'rxjs';
 
 export class MindmapService extends BlockService {
   static override readonly flavour = RootBlockSchema.model.flavour;
 
-  requestCenter = new Slot();
+  // eslint-disable-next-line rxjs/finnish
+  requestCenter = new Subject<void>();
 
   center() {
-    this.requestCenter.emit();
+    this.requestCenter.next();
   }
 
   override mounted(): void {}

@@ -1,4 +1,4 @@
-import { Slot } from '@blocksuite/global/slot';
+import { Subject } from 'rxjs';
 
 import { LifeCycleWatcher } from '../extension/index.js';
 import type { BlockComponent, WidgetComponent } from './element/index.js';
@@ -24,7 +24,7 @@ export class ViewStore extends LifeCycleWatcher {
 
   private readonly _blockMap = new Map<string, BlockComponent>();
 
-  viewUpdated: Slot<ViewUpdatePayload> = new Slot();
+  viewUpdated: Subject<ViewUpdatePayload> = new Subject();
 
   get views() {
     return Array.from(this._blockMap.values());
@@ -44,7 +44,7 @@ export class ViewStore extends LifeCycleWatcher {
 
   deleteBlock = (node: BlockComponent) => {
     this._blockMap.delete(node.model.id);
-    this.viewUpdated.emit({
+    this.viewUpdated.next({
       id: node.model.id,
       method: 'delete',
       type: 'block',
@@ -56,7 +56,7 @@ export class ViewStore extends LifeCycleWatcher {
     const id = node.dataset.widgetId as string;
     const widgetIndex = `${node.model.id}|${id}`;
     this._widgetMap.delete(widgetIndex);
-    this.viewUpdated.emit({
+    this.viewUpdated.next({
       id: node.model.id,
       method: 'delete',
       type: 'widget',
@@ -81,7 +81,7 @@ export class ViewStore extends LifeCycleWatcher {
       this.deleteBlock(node);
     }
     this._blockMap.set(node.model.id, node);
-    this.viewUpdated.emit({
+    this.viewUpdated.next({
       id: node.model.id,
       method: 'add',
       type: 'block',
@@ -93,7 +93,7 @@ export class ViewStore extends LifeCycleWatcher {
     const id = node.dataset.widgetId as string;
     const widgetIndex = `${node.model.id}|${id}`;
     this._widgetMap.set(widgetIndex, node);
-    this.viewUpdated.emit({
+    this.viewUpdated.next({
       id: node.model.id,
       method: 'add',
       type: 'widget',
@@ -140,5 +140,6 @@ export class ViewStore extends LifeCycleWatcher {
   override unmounted() {
     this._blockMap.clear();
     this._widgetMap.clear();
+    this.viewUpdated.complete();
   }
 }

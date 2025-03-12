@@ -60,7 +60,7 @@ export class ImageBlockComponent extends CaptionedBlockComponent<ImageBlockModel
     this.refreshData();
     this.contentEditable = 'false';
     this._disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'sourceId') {
           this.refreshData();
         }

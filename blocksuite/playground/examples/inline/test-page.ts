@@ -128,7 +128,7 @@ export class TestRichText extends ShadowlessElement {
     this.style.outline = 'none';
     this.inlineEditor.mount(this._container, this);
 
-    this.inlineEditor.slots.textChange.on(() => {
+    this.inlineEditor.slots.textChange.subscribe(() => {
       const el = this.querySelector('.y-text');
       if (el) {
         const text = this.inlineEditor.yText.toDelta();

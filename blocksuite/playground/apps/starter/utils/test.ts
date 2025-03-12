@@ -9,7 +9,12 @@ export async function prepareTestApp(collection: Workspace) {
   const store = await getStore(collection, noInit);
   store.load();
   if (!store.root) {
-    await new Promise(resolve => store.slots.rootAdded.once(resolve));
+    await new Promise(resolve => {
+      const subscription = store.slots.rootAdded.subscribe(value => {
+        subscription.unsubscribe();
+        resolve(value);
+      });
+    });
   }
 
   await createTestApp(store, collection);
@@ -34,7 +39,7 @@ async function getStore(
   }
 
   const { resolve, reject, promise } = Promise.withResolvers<Store>();
-  collection.slots.docListUpdated.on(() => {
+  collection.slots.docListUpdated.subscribe(() => {
     const doc = collection.docs.values().next().value;
     const firstDoc = doc?.getStore();
     if (!firstDoc) {

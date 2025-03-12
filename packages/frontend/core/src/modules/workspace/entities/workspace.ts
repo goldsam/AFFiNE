@@ -73,9 +73,11 @@ export class Workspace extends Entity {
   name$ = LiveData.from<string | undefined>(
     new Observable(subscriber => {
       subscriber.next(this.docCollection.meta.name);
-      return this.docCollection.meta.commonFieldsUpdated.on(() => {
-        subscriber.next(this.docCollection.meta.name);
-      }).dispose;
+      const subscription =
+        this.docCollection.meta.commonFieldsUpdated.subscribe(() => {
+          subscriber.next(this.docCollection.meta.name);
+        });
+      return subscription.unsubscribe.bind(subscription);
     }),
     undefined
   );
@@ -83,9 +85,11 @@ export class Workspace extends Entity {
   avatar$ = LiveData.from<string | undefined>(
     new Observable(subscriber => {
       subscriber.next(this.docCollection.meta.avatar);
-      return this.docCollection.meta.commonFieldsUpdated.on(() => {
-        subscriber.next(this.docCollection.meta.avatar);
-      }).dispose;
+      const subscription =
+        this.docCollection.meta.commonFieldsUpdated.subscribe(() => {
+          subscriber.next(this.docCollection.meta.avatar);
+        });
+      return subscription.unsubscribe.bind(subscription);
     }),
     undefined
   );

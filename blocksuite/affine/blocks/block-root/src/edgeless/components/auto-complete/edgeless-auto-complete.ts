@@ -25,10 +25,10 @@ import {
 import { handleNativeRangeAtPoint } from '@blocksuite/affine-shared/utils';
 import { type BlockStdScope, stdContext } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { Bound, IVec } from '@blocksuite/global/gfx';
 import { Vec } from '@blocksuite/global/gfx';
 import { WithDisposable } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import {
   ArrowUpBigIcon,
   PlusIcon,
@@ -670,7 +670,7 @@ export class EdgelessAutoComplete extends WithDisposable(LitElement) {
     const { _disposables, edgeless } = this;
 
     _disposables.add(
-      this.gfx.selection.slots.updated.on(() => {
+      this.gfx.selection.slots.updated.subscribe(() => {
         this._autoCompleteOverlay.linePoints = [];
         this._autoCompleteOverlay.renderShape = null;
       })

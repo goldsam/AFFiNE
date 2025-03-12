@@ -29,7 +29,7 @@ import {
   titleRichTextStyle,
 } from './cell-renderer.css.js';
 
-export class HeaderAreaTextCell extends BaseCellRenderer<Text> {
+export class HeaderAreaTextCell extends BaseCellRenderer<Text, string> {
   activity = true;
 
   docId$ = signal<string>();

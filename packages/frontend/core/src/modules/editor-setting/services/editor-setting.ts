@@ -17,7 +17,7 @@ export class EditorSettingService extends Service {
   onWorkspaceInitialized(workspace: Workspace) {
     // set default mode for new doc
 
-    workspace.docCollection.slots.docCreated.on(docId => {
+    workspace.docCollection.slots.docCreated.subscribe(docId => {
       const preferMode = this.editorSetting.settings$.value.newDocDefaultMode;
       const docsService = workspace.scope.get(DocsService);
       const mode = preferMode === 'ask' ? 'page' : preferMode;

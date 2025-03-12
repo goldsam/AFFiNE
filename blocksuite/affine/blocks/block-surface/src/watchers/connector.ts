@@ -37,7 +37,7 @@ export const connectorWatcher: SurfaceMiddleware = (
   };
 
   const disposables = [
-    surface.elementAdded.on(({ id }) => {
+    surface.elementAdded.subscribe(({ id }) => {
       const element = elementGetter(id);
 
       if (!element) return;
@@ -48,7 +48,7 @@ export const connectorWatcher: SurfaceMiddleware = (
         surface.getConnectors(id).forEach(addToUpdateList);
       }
     }),
-    surface.elementUpdated.on(({ id, props }) => {
+    surface.elementUpdated.subscribe(({ id, props }) => {
       const element = elementGetter(id);
 
       if (props['xywh'] || props['rotate']) {
@@ -66,7 +66,7 @@ export const connectorWatcher: SurfaceMiddleware = (
         addToUpdateList(element as ConnectorElementModel);
       }
     }),
-    surface.doc.slots.blockUpdated.on(payload => {
+    surface.doc.slots.blockUpdated.subscribe(payload => {
       if (
         payload.type === 'add' ||
         (payload.type === 'update' && payload.props.key === 'xywh')
@@ -83,6 +83,6 @@ export const connectorWatcher: SurfaceMiddleware = (
     );
 
   return () => {
-    disposables.forEach(d => d.dispose());
+    disposables.forEach(d => d.unsubscribe());
   };
 };

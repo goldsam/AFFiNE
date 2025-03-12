@@ -30,13 +30,13 @@ function handleGfxConnection(instance: GfxBlockComponent) {
   instance.style.position = 'absolute';
 
   instance.disposables.add(
-    instance.gfx.viewport.viewportUpdated.on(() => {
+    instance.gfx.viewport.viewportUpdated.subscribe(() => {
       updateTransform(instance);
     })
   );
 
   instance.disposables.add(
-    instance.doc.slots.blockUpdated.on(({ type, id }) => {
+    instance.doc.slots.blockUpdated.subscribe(({ type, id }) => {
       if (id === instance.model.id && type === 'update') {
         updateTransform(instance);
       }

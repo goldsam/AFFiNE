@@ -13,6 +13,7 @@ import {
   isGfxGroupCompatibleModel,
   renderableInEdgeless,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import {
   Bound,
@@ -20,7 +21,6 @@ import {
   type IVec,
   type SerializedXYWH,
 } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { type BlockModel, Text } from '@blocksuite/store';
 import * as Y from 'yjs';
 
@@ -98,11 +98,12 @@ export class FrameOverlay extends Overlay {
     if (highlightOutline) this._frame = frame;
     if (highlightElementsInBound) this._innerElements = innerElements;
 
-    this._disposable.add(
-      frame.deleted.once(() => {
-        this.clear();
-      })
-    );
+    const subscription = frame.deleted.subscribe(() => {
+      subscription.unsubscribe();
+      this.clear();
+    });
+
+    this._disposable.add(subscription);
     this._renderer?.refresh();
   }
 
@@ -223,7 +224,7 @@ export class EdgelessFrameManager extends GfxExtension {
     const { surface: surfaceModel, doc } = this.gfx;
 
     this._disposable.add(
-      surfaceModel.elementAdded.on(({ id, local }) => {
+      surfaceModel.elementAdded.subscribe(({ id, local }) => {
         const element = surfaceModel.getElementById(id);
         if (element && local) {
           const frame = this.getFrameFromPoint(element.elementBound.center);
@@ -249,7 +250,7 @@ export class EdgelessFrameManager extends GfxExtension {
     );
 
     this._disposable.add(
-      doc.slots.blockUpdated.on(payload => {
+      doc.slots.blockUpdated.subscribe(payload => {
         if (
           payload.type === 'add' &&
           payload.model instanceof GfxBlockElementModel &&

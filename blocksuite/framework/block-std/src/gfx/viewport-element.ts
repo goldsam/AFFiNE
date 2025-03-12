@@ -131,10 +131,10 @@ export class GfxViewportElement extends WithDisposable(ShadowlessElement) {
 
     this._hideOutsideBlock();
     this.disposables.add(
-      this.viewport.viewportUpdated.on(() => viewportUpdateCallback())
+      this.viewport.viewportUpdated.subscribe(() => viewportUpdateCallback())
     );
     this.disposables.add(
-      this.viewport.sizeUpdated.on(() => viewportUpdateCallback())
+      this.viewport.sizeUpdated.subscribe(() => viewportUpdateCallback())
     );
   }
 

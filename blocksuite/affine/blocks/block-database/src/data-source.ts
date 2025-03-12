@@ -119,7 +119,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     return this._model.doc;
   }
 
-  allPropertyMetas$ = computed<PropertyMetaConfig<any, any, any>[]>(() => {
+  allPropertyMetas$ = computed<PropertyMetaConfig<any, any, any, any>[]>(() => {
     return DatabaseBlockDataSource.propertiesList.value;
   });
 
@@ -166,23 +166,27 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     if (type == null) {
       return;
     }
-    const update = this.propertyMetaGet(type).config.valueUpdate;
-    let newValue = value;
-    if (update) {
-      const old = this.cellValueGet(rowId, propertyId);
-      newValue = update({
-        value: old,
-        data: this.propertyDataGet(propertyId),
-        dataSource: this,
-        newValue: value,
+    const update = this.propertyMetaGet(type)?.config.rawValue.setValue;
+    const old = this.cellValueGet(rowId, propertyId);
+    const updateFn =
+      update ??
+      (({ setValue, newValue }) => {
+        setValue(newValue);
       });
-    }
-    if (this._model.columns$.value.some(v => v.id === propertyId)) {
-      updateCell(this._model, rowId, {
-        columnId: propertyId,
-        value: newValue,
-      });
-    }
+    updateFn({
+      value: old,
+      data: this.propertyDataGet(propertyId),
+      dataSource: this,
+      newValue: value,
+      setValue: newValue => {
+        if (this._model.columns$.value.some(v => v.id === propertyId)) {
+          updateCell(this._model, rowId, {
+            columnId: propertyId,
+            value: newValue,
+          });
+        }
+      },
+    });
   }
 
   cellValueGet(rowId: string, propertyId: string): unknown {
@@ -198,23 +202,32 @@ export class DatabaseBlockDataSource extends DataSourceBase {
       const model = this.getModelById(rowId);
       return model?.text;
     }
-    if (type == null) {
+    const meta = this.propertyMetaGet(type);
+    if (!meta) {
       return;
     }
-    const value = getCell(this._model, rowId, propertyId)?.value;
-    const meta = this.propertyMetaGet(type);
-    const result = meta.config.valueSchema.safeParse(value);
-    if (!result.success) {
-      return undefined;
+    const rawValue =
+      getCell(this._model, rowId, propertyId)?.value ??
+      meta.config.rawValue.default();
+    const schema = meta.config.rawValue.schema;
+    const result = schema.safeParse(rawValue);
+    if (result.success) {
+      return result.data;
     }
-    return result.data;
+    return;
   }
 
-  propertyAdd(insertToPosition: InsertToPosition, type?: string): string {
+  propertyAdd(
+    insertToPosition: InsertToPosition,
+    type?: string
+  ): string | undefined {
     this.doc.captureSync();
     const property = this.propertyMetaGet(
       type ?? propertyPresets.multiSelectPropertyConfig.type
     );
+    if (!property) {
+      return;
+    }
     const result = addProperty(
       this._model,
       insertToPosition,
@@ -257,6 +270,9 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     }
     if (this.isFixedProperty(propertyId)) {
       const meta = this.propertyMetaGet(propertyId);
+      if (!meta) {
+        return;
+      }
       const defaultData = meta.config.fixed?.defaultData ?? {};
       return {
         column: {
@@ -312,7 +328,10 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     }
     const { column } = result;
     const meta = this.propertyMetaGet(column.type);
-    return meta.config.type({
+    if (!meta) {
+      return;
+    }
+    return meta.config?.jsonValue.type({
       data: column.data,
       dataSource: this,
     });
@@ -359,15 +378,8 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     return id;
   }
 
-  propertyMetaGet(type: string): PropertyMetaConfig {
-    const property = DatabaseBlockDataSource.propertiesMap.value[type];
-    if (!property) {
-      throw new BlockSuiteError(
-        ErrorCode.DatabaseBlockError,
-        `Unknown property type: ${type}`
-      );
-    }
-    return property;
+  propertyMetaGet(type: string): PropertyMetaConfig | undefined {
+    return databaseBlockAllPropertyMap[type];
   }
 
   propertyNameGet(propertyId: string): string {
@@ -406,6 +418,10 @@ export class DatabaseBlockDataSource extends DataSourceBase {
     if (this.isFixedProperty(propertyId)) {
       return;
     }
+    const meta = this.propertyMetaGet(toType);
+    if (!meta) {
+      return;
+    }
     const currentType = this.propertyTypeGet(propertyId);
     const currentData = this.propertyDataGet(propertyId);
     const rows = this.rows$.value;
@@ -420,7 +436,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
 
       currentCells as any
     ) ?? {
-      property: this.propertyMetaGet(toType).config.defaultData(),
+      property: meta.config.propertyData.default(),
       cells: currentCells.map(() => undefined),
     };
     this.doc.captureSync();

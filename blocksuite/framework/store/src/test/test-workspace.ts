@@ -1,5 +1,4 @@
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { Slot } from '@blocksuite/global/slot';
 import { NoopLogger } from '@blocksuite/global/utils';
 import {
   AwarenessEngine,
@@ -11,6 +10,7 @@ import {
   MemoryBlobSource,
   NoopDocSource,
 } from '@blocksuite/sync';
+import { Subject } from 'rxjs';
 import { Awareness } from 'y-protocols/awareness.js';
 import * as Y from 'yjs';
 
@@ -67,9 +67,9 @@ export class TestWorkspace implements Workspace {
   meta: WorkspaceMeta;
 
   slots = {
-    docListUpdated: new Slot(),
-    docRemoved: new Slot<string>(),
-    docCreated: new Slot<string>(),
+    docListUpdated: new Subject<void>(),
+    docRemoved: new Subject<string>(),
+    docCreated: new Subject<string>(),
   };
 
   get docs() {
@@ -116,7 +116,7 @@ export class TestWorkspace implements Workspace {
   }
 
   private _bindDocMetaEvents() {
-    this.meta.docMetaAdded.on(docId => {
+    this.meta.docMetaAdded.subscribe(docId => {
       const doc = new TestDoc({
         id: docId,
         collection: this,
@@ -126,14 +126,14 @@ export class TestWorkspace implements Workspace {
       this.blockCollections.set(doc.id, doc);
     });
 
-    this.meta.docMetaUpdated.on(() => this.slots.docListUpdated.emit());
+    this.meta.docMetaUpdated.subscribe(() => this.slots.docListUpdated.next());
 
-    this.meta.docMetaRemoved.on(id => {
+    this.meta.docMetaRemoved.subscribe(id => {
       const space = this.getBlockCollection(id);
       if (!space) return;
       this.blockCollections.delete(id);
       space.remove();
-      this.slots.docRemoved.emit(id);
+      this.slots.docRemoved.next(id);
     });
   }
 
@@ -174,7 +174,7 @@ export class TestWorkspace implements Workspace {
       createDate: Date.now(),
       tags: [],
     });
-    this.slots.docCreated.emit(docId);
+    this.slots.docCreated.next(docId);
     return this.getDoc(docId, {
       id: docId,
       query,

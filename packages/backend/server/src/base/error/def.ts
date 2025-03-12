@@ -55,6 +55,7 @@ const IncludedEvents = new Set([
   'missing_oauth_query_parameter',
   'unknown_oauth_provider',
   'invalid_oauth_callback_state',
+  'invalid_oauth_state',
   'oauth_state_expired',
   'oauth_account_already_connected',
 ]);
@@ -318,6 +319,11 @@ export const USER_FRIENDLY_ERRORS = {
     args: { status: 'number', body: 'string' },
     message: ({ status, body }) =>
       `Invalid callback code parameter, provider response status: ${status} and body: ${body}.`,
+  },
+  invalid_auth_state: {
+    type: 'bad_request',
+    message:
+      'Invalid auth state. You might start the auth progress from another device.',
   },
   missing_oauth_query_parameter: {
     type: 'bad_request',

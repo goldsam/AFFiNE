@@ -4,7 +4,7 @@ import type {
 } from '@blocksuite/affine-model';
 import type { SurfaceBlockProps } from '@blocksuite/block-std/gfx';
 import { SurfaceBlockModel as BaseSurfaceModel } from '@blocksuite/block-std/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSchemaExtension, defineBlockSchema } from '@blocksuite/store';
 import * as Y from 'yjs';
 

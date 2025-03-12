@@ -47,7 +47,7 @@ export class EdgelessEditor extends SignalWatcher(
   override connectedCallback() {
     super.connectedCallback();
     this._disposables.add(
-      this.doc.slots.rootAdded.on(() => this.requestUpdate())
+      this.doc.slots.rootAdded.subscribe(() => this.requestUpdate())
     );
     this.std = new BlockStdScope({
       store: this.doc,

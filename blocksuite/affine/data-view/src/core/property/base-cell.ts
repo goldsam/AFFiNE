@@ -8,18 +8,19 @@ import type { Cell } from '../view-manager/cell.js';
 import type { CellRenderProps, DataViewCellLifeCycle } from './manager.js';
 
 export abstract class BaseCellRenderer<
-    Value,
+    RawValue = unknown,
+    JsonValue = unknown,
     Data extends Record<string, unknown> = Record<string, unknown>,
   >
   extends SignalWatcher(WithDisposable(ShadowlessElement))
-  implements DataViewCellLifeCycle, CellRenderProps<Data, Value>
+  implements DataViewCellLifeCycle, CellRenderProps<Data, RawValue, JsonValue>
 {
   get expose() {
     return this;
   }
 
   @property({ attribute: false })
-  accessor cell!: Cell<Value, Data>;
+  accessor cell!: Cell<RawValue, JsonValue, Data>;
 
   readonly$ = computed(() => {
     return this.cell.property.readonly$.value;
@@ -101,11 +102,11 @@ export abstract class BaseCellRenderer<
     this.requestUpdate();
   }
 
-  valueSetImmediate(value: Value | undefined): void {
+  valueSetImmediate(value: RawValue | undefined): void {
     this.cell.valueSet(value);
   }
 
-  valueSetNextTick(value: Value | undefined) {
+  valueSetNextTick(value: RawValue | undefined) {
     requestAnimationFrame(() => {
       this.cell.valueSet(value);
     });

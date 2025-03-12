@@ -57,7 +57,7 @@ export class AffineLink extends WithDisposable(ShadowlessElement) {
 
     e?.preventDefault();
 
-    refNodeSlotsProvider.docLinkClicked.emit({
+    refNodeSlotsProvider.docLinkClicked.next({
       ...referenceInfo,
       host: this.std.host,
     });

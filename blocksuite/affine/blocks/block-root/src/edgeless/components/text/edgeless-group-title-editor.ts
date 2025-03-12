@@ -54,7 +54,7 @@ export class EdgelessGroupTitleEditor extends WithDisposable(
 
         this.group.showTitle = false;
 
-        this.inlineEditor.slots.renderComplete.on(() => {
+        this.inlineEditor.slots.renderComplete.subscribe(() => {
           this.requestUpdate();
         });
 
@@ -72,7 +72,7 @@ export class EdgelessGroupTitleEditor extends WithDisposable(
           })
         );
         this.disposables.add(
-          this.edgeless.service.viewport.viewportUpdated.on(() => {
+          this.edgeless.service.viewport.viewportUpdated.subscribe(() => {
             this.requestUpdate();
           })
         );

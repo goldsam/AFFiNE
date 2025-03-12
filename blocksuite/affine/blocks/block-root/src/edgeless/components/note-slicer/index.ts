@@ -10,8 +10,8 @@ import { TelemetryProvider } from '@blocksuite/affine-shared/services';
 import { getRectByBlockComponent } from '@blocksuite/affine-shared/utils';
 import { WidgetComponent } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { deserializeXYWH, Point, serializeXYWH } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { ScissorsIcon } from '@blocksuite/icons/lit';
 import { css, html, nothing, type PropertyValues } from 'lit';
 import { state } from 'lit/decorators.js';
@@ -267,13 +267,13 @@ export class NoteSlicer extends WidgetComponent<
     this._updateDivingLineAndBlockIds();
 
     disposables.add(
-      block.slots.elementResizeStart.on(() => {
+      block.slots.elementResizeStart.subscribe(() => {
         this._isResizing = true;
       })
     );
 
     disposables.add(
-      block.slots.elementResizeEnd.on(() => {
+      block.slots.elementResizeEnd.subscribe(() => {
         this._isResizing = false;
       })
     );
@@ -289,14 +289,14 @@ export class NoteSlicer extends WidgetComponent<
     );
 
     disposables.add(
-      gfx.viewport.viewportUpdated.on(() => {
+      gfx.viewport.viewportUpdated.subscribe(() => {
         this._hidden = true;
         this.requestUpdate();
       })
     );
 
     disposables.add(
-      gfx.selection.slots.updated.on(() => {
+      gfx.selection.slots.updated.subscribe(() => {
         this._enableNoteSlicer = false;
         this._updateSlicedNote();
 
@@ -307,7 +307,7 @@ export class NoteSlicer extends WidgetComponent<
     );
 
     disposables.add(
-      block.slots.toggleNoteSlicer.on(() => {
+      block.slots.toggleNoteSlicer.subscribe(() => {
         this._enableNoteSlicer = !this._enableNoteSlicer;
 
         if (this.selectedRectEle && this._enableNoteSlicer) {
@@ -411,7 +411,7 @@ export class NoteSlicer extends WidgetComponent<
       if (this._anchorNote) {
         this._noteDisposables = new DisposableGroup();
         this._noteDisposables.add(
-          this._anchorNote.propsUpdated.on(({ key }) => {
+          this._anchorNote.propsUpdated.subscribe(({ key }) => {
             if (key === 'children' || key === 'xywh') {
               this.requestUpdate();
             }

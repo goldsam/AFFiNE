@@ -341,7 +341,7 @@ export function notifyDocCreated(std: BlockStdScope, doc: Store) {
   const clear = () => {
     doc.history.off('stack-item-added', addHandler);
     doc.history.off('stack-item-popped', popHandler);
-    disposable.dispose();
+    disposable.unsubscribe();
   };
   const closeNotify = () => {
     abortController.abort();
@@ -353,7 +353,7 @@ export function notifyDocCreated(std: BlockStdScope, doc: Store) {
   const popHandler = doc.history.on('stack-item-popped', closeNotify);
   const disposable = std
     .get(EditorLifeCycleExtension)
-    .slots.unmounted.on(closeNotify);
+    .slots.unmounted.subscribe(closeNotify);
 
   notification.notify({
     title: 'Linked doc created',

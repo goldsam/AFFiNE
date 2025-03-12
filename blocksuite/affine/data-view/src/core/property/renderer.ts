@@ -6,18 +6,20 @@ import type { CellRenderer, DataViewCellComponent } from './manager.js';
 
 export interface Renderer<
   Data extends NonNullable<unknown> = NonNullable<unknown>,
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
 > {
   type: string;
   icon?: UniComponent;
-  cellRenderer: CellRenderer<Data, Value>;
+  cellRenderer: CellRenderer<Data, RawValue, JsonValue>;
 }
 
 export const createFromBaseCellRenderer = <
-  Value,
+  RawValue = unknown,
+  JsonValue = unknown,
   Data extends Record<string, unknown> = Record<string, unknown>,
 >(
-  renderer: new () => BaseCellRenderer<Value, Data>
+  renderer: new () => BaseCellRenderer<RawValue, JsonValue, Data>
 ): DataViewCellComponent => {
   return createUniComponentFromWebComponent(renderer as never) as never;
 };

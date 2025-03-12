@@ -81,7 +81,7 @@ export class DatabaseColumnStatsCell extends SignalWatcher(
         return this.column.valueGet(id);
       });
     }
-    return this.column.cells$.value.map(cell => cell.value$.value);
+    return this.column.cells$.value.map(cell => cell.jsonValue$.value);
   });
 
   groups$ = computed(() => {

@@ -146,7 +146,11 @@ export class CopilotContextRootResolver {
     if (!lock) {
       return new TooManyRequest('Server is busy');
     }
-    await this.checkChatSession(user, sessionId, copilot.workspaceId);
+    await this.checkChatSession(
+      user,
+      sessionId,
+      copilot.workspaceId || undefined
+    );
 
     if (contextId) {
       const context = await this.context.get(contextId);

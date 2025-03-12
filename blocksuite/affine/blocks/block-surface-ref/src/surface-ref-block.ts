@@ -36,13 +36,13 @@ import {
   type GfxModel,
   GfxPrimitiveElementModel,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import {
   Bound,
   deserializeXYWH,
   type SerializedXYWH,
 } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { DeleteIcon, EdgelessIcon, FrameIcon } from '@blocksuite/icons/lit';
 import type { BaseSelection, Store } from '@blocksuite/store';
 import { css, html, nothing, type TemplateResult } from 'lit';
@@ -376,7 +376,7 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
     init();
 
     this._disposables.add(
-      this.model.propsUpdated.on(payload => {
+      this.model.propsUpdated.subscribe(payload => {
         if (
           payload.key === 'reference' &&
           this.model.reference !== this._referencedModel?.id
@@ -388,7 +388,7 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
 
     if (surfaceModel && this._referencedModel instanceof SurfaceElementModel) {
       this._disposables.add(
-        surfaceModel.elementRemoved.on(({ id }) => {
+        surfaceModel.elementRemoved.subscribe(({ id }) => {
           if (this.model.reference === id) {
             init();
           }
@@ -398,7 +398,7 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
 
     if (this._referencedModel instanceof GfxBlockElementModel) {
       this._disposables.add(
-        this.doc.slots.blockUpdated.on(({ type, id }) => {
+        this.doc.slots.blockUpdated.subscribe(({ type, id }) => {
           if (type === 'delete' && id === this.model.reference) {
             init();
           }
@@ -410,7 +410,7 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
   private _initSelection() {
     const selection = this.host.selection;
     this._disposables.add(
-      selection.slots.changed.on(selList => {
+      selection.slots.changed.subscribe(selList => {
         this._focused = selList.some(
           sel => sel.blockId === this.blockId && sel.is(BlockSelection)
         );
@@ -424,16 +424,16 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
       static override readonly key = 'surfaceRefViewportInitializer';
 
       override mounted() {
-        const disposable = this.std.view.viewUpdated.on(payload => {
+        const disposable = this.std.view.viewUpdated.subscribe(payload => {
           if (payload.type !== 'block') return;
           if (
             payload.method === 'add' &&
             matchModels(payload.view.model, [RootBlockModel])
           ) {
-            disposable.dispose();
+            disposable.unsubscribe();
             queueMicrotask(() => refreshViewport());
             const gfx = this.std.get(GfxControllerIdentifier);
-            gfx.viewport.sizeUpdated.on(() => {
+            gfx.viewport.sizeUpdated.subscribe(() => {
               refreshViewport();
             });
           }
@@ -475,7 +475,7 @@ export class SurfaceRefBlockComponent extends BlockComponent<SurfaceRefBlockMode
           );
         } else if (referenceElement instanceof GfxPrimitiveElementModel) {
           _disposable.add(
-            surfaceModel.elementUpdated.on(({ id, oldValues }) => {
+            surfaceModel.elementUpdated.subscribe(({ id, oldValues }) => {
               if (
                 id === referenceId &&
                 oldValues.xywh !== referenceElement.xywh

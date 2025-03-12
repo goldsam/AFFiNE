@@ -177,23 +177,23 @@ export class EdgelessWatcher {
     const edgelessSlots = std.get(EdgelessLegacySlotIdentifier);
 
     disposables.add(
-      viewport.viewportUpdated.on(this._handleEdgelessViewPortUpdated)
+      viewport.viewportUpdated.subscribe(this._handleEdgelessViewPortUpdated)
     );
 
     disposables.add(
-      selection.slots.updated.on(() => {
+      selection.slots.updated.subscribe(() => {
         this.updateAnchorElement();
       })
     );
 
     disposables.add(
-      edgelessSlots.readonlyUpdated.on(() => {
+      edgelessSlots.readonlyUpdated.subscribe(() => {
         this.updateAnchorElement();
       })
     );
 
     disposables.add(
-      edgelessSlots.elementResizeEnd.on(() => {
+      edgelessSlots.elementResizeEnd.subscribe(() => {
         this.updateAnchorElement();
       })
     );
@@ -207,14 +207,14 @@ export class EdgelessWatcher {
     );
 
     disposables.add(
-      edgelessSlots.elementResizeStart.on(() => {
+      edgelessSlots.elementResizeStart.subscribe(() => {
         this.widget.hide();
       })
     );
 
     if (surface) {
       disposables.add(
-        surface.elementUpdated.on(() => {
+        surface.elementUpdated.subscribe(() => {
           if (this.widget.isGfxDragHandleVisible) {
             this._showDragHandle().catch(console.error);
           }

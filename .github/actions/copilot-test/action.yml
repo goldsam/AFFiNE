@@ -11,6 +11,9 @@ inputs:
   fal-key:
     description: 'Fal secret key'
     required: true
+  perplexity-key:
+    description: 'Perplexity secret key'
+    required: true
 
 runs:
   using: 'composite'

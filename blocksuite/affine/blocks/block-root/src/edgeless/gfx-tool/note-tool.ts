@@ -69,7 +69,7 @@ export class NoteTool extends BaseTool<NoteToolOption> {
       endY = startY + (endY > startY ? m : -m);
     }
 
-    _draggingNoteOverlay.slots.draggingNoteUpdated.emit({
+    _draggingNoteOverlay.slots.draggingNoteUpdated.next({
       xywh: [
         Math.min(startX, endX),
         Math.min(startY, endY),

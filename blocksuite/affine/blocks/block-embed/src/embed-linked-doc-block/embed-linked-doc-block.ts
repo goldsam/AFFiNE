@@ -87,7 +87,8 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
 
     if (!this.isError && !linkedDoc.root) {
       await new Promise<void>(resolve => {
-        linkedDoc.slots.rootAdded.once(() => {
+        const subscription = linkedDoc.slots.rootAdded.subscribe(() => {
+          subscription.unsubscribe();
           resolve();
         });
       });
@@ -203,7 +204,7 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
     openMode?: OpenDocMode;
     event?: MouseEvent;
   } = {}) => {
-    this.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.emit({
+    this.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.next({
       ...this.referenceInfo$.peek(),
       openMode,
       event,
@@ -285,7 +286,7 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
     const linkedDoc = this.linkedDoc;
     if (linkedDoc) {
       this.disposables.add(
-        linkedDoc.workspace.slots.docListUpdated.on(() => {
+        linkedDoc.workspace.slots.docListUpdated.subscribe(() => {
           this._load().catch(e => {
             console.error(e);
             this.isError = true;
@@ -295,7 +296,7 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
       // Should throttle the blockUpdated event to avoid too many re-renders
       // Because the blockUpdated event is triggered too frequently at some cases
       this.disposables.add(
-        linkedDoc.slots.blockUpdated.on(
+        linkedDoc.slots.blockUpdated.subscribe(
           throttle(payload => {
             if (
               payload.type === 'update' &&
@@ -318,7 +319,7 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
 
       this._setDocUpdatedAt();
       this.disposables.add(
-        this.doc.workspace.slots.docListUpdated.on(() => {
+        this.doc.workspace.slots.docListUpdated.subscribe(() => {
           this._setDocUpdatedAt();
         })
       );
@@ -337,7 +338,7 @@ export class EmbedLinkedDocBlockComponent extends EmbedBlockComponent<EmbedLinke
     }
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'style') {
           this._cardStyle = this.model.style;
         }

@@ -20,7 +20,7 @@ import {
 } from './cell-renderer.css.js';
 import { datePropertyModelConfig } from './define.js';
 
-export class DateCell extends BaseCellRenderer<number> {
+export class DateCell extends BaseCellRenderer<number, number> {
   private _prevPortalAbortController: AbortController | null = null;
 
   private readonly openDatePicker = () => {

@@ -48,6 +48,7 @@ import {
   type SerializedElement,
   SortOrder,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import {
   Bound,
@@ -57,7 +58,6 @@ import {
   type SerializedXYWH,
   Vec,
 } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { assertType } from '@blocksuite/global/utils';
 import {
   type BlockSnapshot,

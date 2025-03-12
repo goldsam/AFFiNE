@@ -7,19 +7,24 @@ import { propertyType } from '../../core/property/property-config.js';
 export const datePropertyType = propertyType('date');
 export const datePropertyModelConfig = datePropertyType.modelConfig({
   name: 'Date',
-  type: () => t.date.instance(),
-  valueSchema: zod.number().optional(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) =>
-    value != null ? format(value, 'yyyy-MM-dd') : '',
-  cellFromString: ({ value }) => {
-    const date = parse(value, 'yyyy-MM-dd', new Date());
-
-    return {
-      value: +date,
-    };
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
   },
-  cellToJson: ({ value }) => value ?? null,
-  cellFromJson: ({ value }) => (typeof value !== 'number' ? undefined : value),
-  isEmpty: ({ value }) => value == null,
+  jsonValue: {
+    schema: zod.number().nullable(),
+    isEmpty: () => false,
+    type: () => t.date.instance(),
+  },
+  rawValue: {
+    schema: zod.number().nullable(),
+    default: () => null,
+    toString: ({ value }) => (value != null ? format(value, 'yyyy-MM-dd') : ''),
+    fromString: ({ value }) => {
+      const date = parse(value, 'yyyy-MM-dd', new Date());
+      return { value: +date };
+    },
+    toJson: ({ value }) => value,
+    fromJson: ({ value }) => value,
+  },
 });

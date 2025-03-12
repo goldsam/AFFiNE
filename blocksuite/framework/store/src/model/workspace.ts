@@ -1,5 +1,5 @@
-import type { Slot } from '@blocksuite/global/slot';
 import type { BlobEngine } from '@blocksuite/sync';
+import type { Subject } from 'rxjs';
 import type { Awareness } from 'y-protocols/awareness.js';
 import type * as Y from 'yjs';
 
@@ -20,9 +20,9 @@ export interface Workspace {
   get docs(): Map<string, Doc>;
 
   slots: {
-    docListUpdated: Slot;
-    docCreated: Slot<string>;
-    docRemoved: Slot<string>;
+    docListUpdated: Subject<void>;
+    docCreated: Subject<string>;
+    docRemoved: Subject<string>;
   };
 
   createDoc(options?: CreateBlocksOptions): Store;

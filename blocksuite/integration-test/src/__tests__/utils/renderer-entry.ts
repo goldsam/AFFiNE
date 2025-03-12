@@ -1,7 +1,7 @@
 import {
   ViewportTurboRendererExtension,
   ViewportTurboRendererIdentifier,
-} from '@blocksuite/affine-shared/viewport-renderer';
+} from '@blocksuite/affine/gfx/turbo-renderer';
 
 import { addSampleNotes } from './doc-generator.js';
 import { setupEditor } from './setup.js';

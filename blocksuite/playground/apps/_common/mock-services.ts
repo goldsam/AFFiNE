@@ -1,5 +1,4 @@
 import { toast } from '@blocksuite/affine/components/toast';
-import { Slot } from '@blocksuite/affine/global/slot';
 import {
   ColorScheme,
   type DocMode,
@@ -17,6 +16,7 @@ import {
 import { type Workspace } from '@blocksuite/affine/store';
 import type { TestAffineEditorContainer } from '@blocksuite/integration-test';
 import { Signal, signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 
 function getModeFromStorage() {
   const mapJson = localStorage.getItem('playground:docMode');
@@ -37,7 +37,7 @@ export function removeModeFromStorage(docId: string) {
 }
 
 const DEFAULT_MODE: DocMode = 'page';
-const slotMap = new Map<string, Slot<DocMode>>();
+const slotMap = new Map<string, Subject<DocMode>>();
 
 export function mockDocModeService(editor: TestAffineEditorContainer) {
   const getEditorModeCallback: () => DocMode = () => editor.mode;
@@ -54,9 +54,9 @@ export function mockDocModeService(editor: TestAffineEditorContainer) {
     },
     onPrimaryModeChange: (handler: (mode: DocMode) => void, docId: string) => {
       if (!slotMap.get(docId)) {
-        slotMap.set(docId, new Slot());
+        slotMap.set(docId, new Subject());
       }
-      return slotMap.get(docId)!.on(handler);
+      return slotMap.get(docId)!.subscribe(handler);
     },
     getEditorMode: () => {
       return getEditorModeCallback();
@@ -68,7 +68,7 @@ export function mockDocModeService(editor: TestAffineEditorContainer) {
       const modeMap = getModeFromStorage();
       modeMap.set(docId, mode);
       saveModeToStorage(modeMap);
-      slotMap.get(docId)?.emit(mode);
+      slotMap.get(docId)?.next(mode);
     },
     togglePrimaryMode: (docId: string) => {
       const mode =

@@ -305,12 +305,12 @@ export class EdgelessAutoConnectWidget extends WidgetComponent<RootBlockModel> {
     };
 
     this._disposables.add(
-      this._selection.slots.updated.on(() => {
+      this._selection.slots.updated.subscribe(() => {
         getVisibility();
       })
     );
     this._disposables.add(
-      this.doc.slots.blockUpdated.on(payload => {
+      this.doc.slots.blockUpdated.subscribe(payload => {
         if (payload.flavour === 'affine:surface-ref') {
           switch (payload.type) {
             case 'add':
@@ -339,7 +339,7 @@ export class EdgelessAutoConnectWidget extends WidgetComponent<RootBlockModel> {
     const surface = this._gfx.surface;
     if (surface) {
       this._disposables.add(
-        surface.elementUpdated.on(payload => {
+        surface.elementUpdated.subscribe(payload => {
           if (
             payload.props['xywh'] &&
             surfaceRefs.some(ref => ref.reference === payload.id)
@@ -539,13 +539,13 @@ export class EdgelessAutoConnectWidget extends WidgetComponent<RootBlockModel> {
     const gfx = std.get(GfxControllerIdentifier);
 
     _disposables.add(
-      gfx.viewport.viewportUpdated.on(() => {
+      gfx.viewport.viewportUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );
 
     _disposables.add(
-      gfx.selection.slots.updated.on(() => {
+      gfx.selection.slots.updated.subscribe(() => {
         const { selectedElements } = gfx.selection;
         if (
           !(selectedElements.length === 1 && isNoteBlock(selectedElements[0]))
@@ -566,12 +566,12 @@ export class EdgelessAutoConnectWidget extends WidgetComponent<RootBlockModel> {
       })
     );
     _disposables.add(
-      slots.elementResizeStart.on(() => {
+      slots.elementResizeStart.subscribe(() => {
         this._dragging = true;
       })
     );
     _disposables.add(
-      slots.elementResizeEnd.on(() => {
+      slots.elementResizeEnd.subscribe(() => {
         this._dragging = false;
       })
     );

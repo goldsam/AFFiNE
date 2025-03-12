@@ -222,7 +222,7 @@ export function mapDocRoleToPermissions(docRole: DocRole | null) {
     {} as Record<DocAction, boolean>
   );
 
-  if (docRole === null) {
+  if (docRole === null || docRole === DocRole.None) {
     return permissions;
   }
 
@@ -249,7 +249,10 @@ export function fixupDocRole(
   workspaceRole: WorkspaceRole | null,
   docRole: DocRole | null
 ): DocRole | null {
-  if (workspaceRole === null && docRole === null) {
+  if (
+    workspaceRole === null &&
+    (docRole === null || docRole === DocRole.None)
+  ) {
     return null;
   }
 
@@ -341,26 +344,6 @@ export function docActionRequiredRole(action: DocAction): DocRole {
     DOC_ACTION_TO_MINIMAL_ROLE_MAP.get(action) ??
     /* if we forget to put new action to [RoleActionsMap.DocRole] */ DocRole.Owner
   );
-}
-
-/**
- * Useful when a workspace member doesn't have a specified role in the doc, but want to check the permission of the action
- */
-export function docActionRequiredWorkspaceRole(
-  action: DocAction
-): WorkspaceRole {
-  const docRole = docActionRequiredRole(action);
-
-  switch (docRole) {
-    case DocRole.Owner:
-      return WorkspaceRole.Owner;
-    case DocRole.Manager:
-      return WorkspaceRole.Admin;
-    case DocRole.Editor:
-    case DocRole.Reader:
-    case DocRole.External:
-      return WorkspaceRole.Collaborator;
-  }
 }
 
 export function workspaceActionRequiredRole(

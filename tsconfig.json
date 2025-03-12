@@ -76,6 +76,7 @@
     { "path": "./blocksuite/affine/fragments/fragment-frame-panel" },
     { "path": "./blocksuite/affine/fragments/fragment-outline" },
     { "path": "./blocksuite/affine/gfx/text" },
+    { "path": "./blocksuite/affine/gfx/turbo-renderer" },
     { "path": "./blocksuite/affine/model" },
     { "path": "./blocksuite/affine/rich-text" },
     { "path": "./blocksuite/affine/shared" },

@@ -41,7 +41,7 @@ export class BookmarkCard extends WithDisposable(ShadowlessElement) {
     super.connectedCallback();
 
     this.disposables.add(
-      this.bookmark.model.propsUpdated.on(() => {
+      this.bookmark.model.propsUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );

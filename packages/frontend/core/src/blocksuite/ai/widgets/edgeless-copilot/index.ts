@@ -200,7 +200,7 @@ export class EdgelessCopilotWidget extends WidgetComponent<RootBlockModel> {
     const CopilotSelectionTool = this.gfx.tool.get('copilot');
 
     this._disposables.add(
-      CopilotSelectionTool.draggingAreaUpdated.on(shouldShowPanel => {
+      CopilotSelectionTool.draggingAreaUpdated.subscribe(shouldShowPanel => {
         this._visible = true;
         this._updateSelection(CopilotSelectionTool.area);
         if (shouldShowPanel) {
@@ -213,7 +213,7 @@ export class EdgelessCopilotWidget extends WidgetComponent<RootBlockModel> {
     );
 
     this._disposables.add(
-      this.gfx.viewport.viewportUpdated.on(() => {
+      this.gfx.viewport.viewportUpdated.subscribe(() => {
         if (!this._visible) return;
 
         this._updateSelection(CopilotSelectionTool.area);
@@ -258,7 +258,7 @@ export class EdgelessCopilotWidget extends WidgetComponent<RootBlockModel> {
 
   lockToolbar(disabled: boolean) {
     const legacySlot = this.std.get(EdgelessLegacySlotIdentifier);
-    legacySlot.toolbarLocked.emit(disabled);
+    legacySlot.toolbarLocked.next(disabled);
   }
 
   override render() {

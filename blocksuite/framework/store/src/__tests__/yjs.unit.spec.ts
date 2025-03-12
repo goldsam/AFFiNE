@@ -1,4 +1,4 @@
-import { Slot } from '@blocksuite/global/slot';
+import { Subject } from 'rxjs';
 import { describe, expect, test } from 'vitest';
 import * as Y from 'yjs';
 
@@ -184,7 +184,7 @@ test('flat', () => {
   map.set('prop:col.c.d', 3);
   map.set('prop:col.c.e', 4);
 
-  const reactive = new ReactiveFlatYMap(map, new Slot());
+  const reactive = new ReactiveFlatYMap(map, new Subject());
   const proxy = reactive.proxy as Record<string, any>;
   proxy.col.c.d = 200;
   expect(map.get('prop:col.c.d')).toBe(200);

@@ -108,7 +108,7 @@ export class DocsPanel extends WithDisposable(ShadowlessElement) {
     });
 
     this.disposables.add(
-      this.editor.doc.workspace.slots.docListUpdated.on(() => {
+      this.editor.doc.workspace.slots.docListUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );

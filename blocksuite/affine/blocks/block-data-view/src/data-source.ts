@@ -11,8 +11,8 @@ import type { EditorHost } from '@blocksuite/block-std';
 import { DataSourceBase, type PropertyMetaConfig } from '@blocksuite/data-view';
 import { propertyPresets } from '@blocksuite/data-view/property-presets';
 import { BlockSuiteError } from '@blocksuite/global/exceptions';
-import { Slot } from '@blocksuite/global/slot';
 import type { Block, Store } from '@blocksuite/store';
+import { Subject } from 'rxjs';
 
 import type { BlockMeta } from './block-meta/base.js';
 import { blockMetaMap } from './block-meta/index.js';
@@ -37,7 +37,7 @@ export class BlockQueryDataSource extends DataSourceBase {
   docDisposeMap = new Map<string, () => void>();
 
   slots = {
-    update: new Slot(),
+    update: new Subject(),
   };
 
   private get blocks() {
@@ -83,13 +83,13 @@ export class BlockQueryDataSource extends DataSourceBase {
     this.workspace.docs.forEach(doc => {
       this.listenToDoc(doc.getStore());
     });
-    this.workspace.slots.docCreated.on(id => {
+    this.workspace.slots.docCreated.subscribe(id => {
       const doc = this.workspace.getDoc(id);
       if (doc) {
         this.listenToDoc(doc);
       }
     });
-    this.workspace.slots.docRemoved.on(id => {
+    this.workspace.slots.docRemoved.subscribe(id => {
       this.docDisposeMap.get(id)?.();
     });
   }
@@ -149,7 +149,7 @@ export class BlockQueryDataSource extends DataSourceBase {
   listenToDoc(doc: Store) {
     this.docDisposeMap.set(
       doc.id,
-      doc.slots.blockUpdated.on(v => {
+      doc.slots.blockUpdated.subscribe(v => {
         if (v.type === 'add') {
           const blockById = doc.getBlock(v.id);
           if (blockById && this.meta.selector(blockById)) {
@@ -158,8 +158,8 @@ export class BlockQueryDataSource extends DataSourceBase {
         } else if (v.type === 'delete') {
           this.blockMap.delete(v.id);
         }
-        this.slots.update.emit();
-      }).dispose
+        this.slots.update.next(undefined);
+      }).unsubscribe
     );
   }
 
@@ -199,7 +199,7 @@ export class BlockQueryDataSource extends DataSourceBase {
     const property = this.getProperty(propertyId);
     return (
       property.getColumnData?.(this.blocks[0].model) ??
-      property.metaConfig.config.defaultData()
+      property.metaConfig.config.propertyData.default()
     );
   }
 
@@ -287,7 +287,7 @@ export class BlockQueryDataSource extends DataSourceBase {
         property:
           DatabaseBlockDataSource.propertiesMap.value[
             toType
-          ].config.defaultData(),
+          ].config.propertyData.default(),
         cells: currentCells.map(() => undefined),
       };
       this.block.doc.captureSync();

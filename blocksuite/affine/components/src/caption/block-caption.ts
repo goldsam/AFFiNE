@@ -124,7 +124,7 @@ export class BlockCaptionEditor<
     this.caption = this.model.caption;
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'caption') {
           this.caption = this.model.caption;
           if (!this._focus) {

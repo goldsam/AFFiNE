@@ -531,8 +531,11 @@ test.describe('readonly mode', () => {
     });
     await cell.click();
     await pressEnter(page);
+    await waitNextFrame(page, 100);
     await type(page, '123');
+    await waitNextFrame(page, 100);
     await pressEnter(page);
+    await waitNextFrame(page, 100);
     await assertDatabaseCellRichTexts(page, { text: '123' });
 
     await switchReadonly(page);

@@ -4,7 +4,6 @@ import type {
 } from '@blocksuite/affine-block-surface';
 import type { ConnectorElementModel } from '@blocksuite/affine-model';
 import { Bound, getCommonBound } from '@blocksuite/global/gfx';
-import { Slot } from '@blocksuite/global/slot';
 import { assertType } from '@blocksuite/global/utils';
 import {
   type BlockModel,
@@ -14,6 +13,7 @@ import {
   type SnapshotNode,
   type Transformer,
 } from '@blocksuite/store';
+import { Subject } from 'rxjs';
 import type * as Y from 'yjs';
 /**
  * Those block contains other block's id
@@ -73,7 +73,7 @@ export class TemplateJob {
   model: SurfaceBlockModel;
 
   slots = {
-    beforeInsert: new Slot<
+    beforeInsert: new Subject<
       | SlotBlockPayload
       | {
           type: 'template';
@@ -255,7 +255,7 @@ export class TemplateJob {
         index,
       };
 
-      this.slots.beforeInsert.emit({ type: 'block', data: slotData });
+      this.slots.beforeInsert.next({ type: 'block', data: slotData });
 
       /**
        * merge block should not be converted to model data
@@ -340,7 +340,7 @@ export class TemplateJob {
 
     const templateBound = this._getTemplateBound();
 
-    this.slots.beforeInsert.emit({
+    this.slots.beforeInsert.next({
       type: 'template',
       template: template,
       bound: templateBound,

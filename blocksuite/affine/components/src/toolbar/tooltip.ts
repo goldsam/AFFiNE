@@ -144,7 +144,7 @@ export class Tooltip extends LitElement {
         let arrowStyles: StyleInfo = {};
         return {
           template: ({ positionSlot, updatePortal }) => {
-            positionSlot.on(data => {
+            positionSlot.subscribe(data => {
               // The tooltip placement may change,
               // so we need to update the arrow position
               if (this.arrow) {

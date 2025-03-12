@@ -5,9 +5,9 @@ import {
   type IVec,
   Vec,
 } from '@blocksuite/global/gfx';
-import { Slot } from '@blocksuite/global/slot';
 import { signal } from '@preact/signals-core';
 import debounce from 'lodash-es/debounce';
+import { Subject } from 'rxjs';
 
 import type { GfxViewportElement } from '.';
 
@@ -74,18 +74,18 @@ export class Viewport {
 
   protected _zoom: number = 1.0;
 
-  elementReady = new Slot<GfxViewportElement>();
+  elementReady = new Subject<GfxViewportElement>();
 
-  sizeUpdated = new Slot<{
+  sizeUpdated = new Subject<{
     width: number;
     height: number;
     left: number;
     top: number;
   }>();
 
-  viewportMoved = new Slot<IVec>();
+  viewportMoved = new Subject<IVec>();
 
-  viewportUpdated = new Slot<{
+  viewportUpdated = new Subject<{
     zoom: number;
     center: IVec;
   }>();
@@ -106,7 +106,10 @@ export class Viewport {
   }, 200);
 
   constructor() {
-    this.elementReady.once(el => (this._element = el));
+    const subscription = this.elementReady.subscribe(el => {
+      this._element = el;
+      subscription.unsubscribe();
+    });
   }
 
   get boundingClientRect() {
@@ -233,9 +236,9 @@ export class Viewport {
 
   dispose() {
     this.clearViewportElement();
-    this.sizeUpdated.dispose();
-    this.viewportMoved.dispose();
-    this.viewportUpdated.dispose();
+    this.sizeUpdated.complete();
+    this.viewportMoved.complete();
+    this.viewportUpdated.complete();
     this.zooming$.value = false;
     this.panning$.value = false;
   }
@@ -296,7 +299,7 @@ export class Viewport {
     this._center.x = centerX;
     this._center.y = centerY;
     this.panning$.value = true;
-    this.viewportUpdated.emit({
+    this.viewportUpdated.next({
       zoom: this.zoom,
       center: Vec.toVec(this.center) as IVec,
     });
@@ -306,7 +309,7 @@ export class Viewport {
   setRect(left: number, top: number, width: number, height: number) {
     this._left = left;
     this._top = top;
-    this.sizeUpdated.emit({
+    this.sizeUpdated.next({
       left,
       top,
       width,
@@ -420,7 +423,7 @@ export class Viewport {
       this.zooming$.value = true;
     }
     this.setCenter(newCenter[0], newCenter[1]);
-    this.viewportUpdated.emit({
+    this.viewportUpdated.next({
       zoom: this.zoom,
       center: Vec.toVec(this.center) as IVec,
     });

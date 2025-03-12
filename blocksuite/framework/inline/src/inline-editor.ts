@@ -1,7 +1,8 @@
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { type Signal, signal } from '@preact/signals-core';
 import { nothing, render, type TemplateResult } from 'lit';
+import { Subject } from 'rxjs';
 import type * as Y from 'yjs';
 
 import type { VLine } from './components/v-line.js';
@@ -160,19 +161,19 @@ export class InlineEditor<
   };
 
   readonly slots = {
-    mounted: new Slot(),
-    unmounted: new Slot(),
-    renderComplete: new Slot(),
-    textChange: new Slot(),
-    inlineRangeSync: new Slot<Range | null>(),
+    mounted: new Subject<void>(),
+    unmounted: new Subject<void>(),
+    renderComplete: new Subject<void>(),
+    textChange: new Subject<void>(),
+    inlineRangeSync: new Subject<Range | null>(),
     /**
      * Corresponding to the `compositionUpdate` and `beforeInput` events, and triggered only when the `inlineRange` is not null.
      */
-    inputting: new Slot(),
+    inputting: new Subject<void>(),
     /**
      * Triggered only when the `inlineRange` is not null.
      */
-    keydown: new Slot<KeyboardEvent>(),
+    keydown: new Subject<KeyboardEvent>(),
   };
 
   readonly vLineRenderer: ((vLine: VLine) => TemplateResult) | null;
@@ -252,7 +253,7 @@ export class InlineEditor<
     this.renderService.mount();
 
     this._mounted = true;
-    this.slots.mounted.emit();
+    this.slots.mounted.next();
 
     this.render();
   }
@@ -267,7 +268,7 @@ export class InlineEditor<
     this._rootElement = null;
     this._mounted = false;
     this.disposables.dispose();
-    this.slots.unmounted.emit();
+    this.slots.unmounted.next();
   }
 
   setReadonly(isReadonly: boolean): void {

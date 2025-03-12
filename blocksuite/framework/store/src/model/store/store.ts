@@ -1,7 +1,8 @@
 import { Container, type ServiceProvider } from '@blocksuite/global/di';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { computed, signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 
 import type { ExtensionType } from '../../extension/extension.js';
 import {
@@ -67,15 +68,15 @@ export class Store {
 
   readonly slots: Doc['slots'] & {
     /** This is always triggered after `doc.load` is called. */
-    ready: Slot;
+    ready: Subject<void>;
     /**
      * This fires when the root block is added via API call or has just been initialized from existing ydoc.
      * useful for internal block UI components to start subscribing following up events.
      * Note that at this moment, the whole block tree may not be fully initialized yet.
      */
-    rootAdded: Slot<string>;
-    rootDeleted: Slot<string>;
-    blockUpdated: Slot<
+    rootAdded: Subject<string>;
+    rootDeleted: Subject<string>;
+    blockUpdated: Subject<
       | {
           type: 'add';
           id: string;
@@ -313,13 +314,15 @@ export class Store {
     return this._doc.withoutTransact.bind(this._doc);
   }
 
+  private _isDisposed = false;
+
   constructor({ doc, readonly, query, provider, extensions }: StoreOptions) {
     this._doc = doc;
     this.slots = {
-      ready: new Slot(),
-      rootAdded: new Slot(),
-      rootDeleted: new Slot(),
-      blockUpdated: new Slot(),
+      ready: new Subject(),
+      rootAdded: new Subject(),
+      rootDeleted: new Subject(),
+      blockUpdated: new Subject(),
       historyUpdated: this._doc.slots.historyUpdated,
       yBlockUpdated: this._doc.slots.yBlockUpdated,
     };
@@ -362,18 +365,31 @@ export class Store {
 
   private readonly _subscribeToSlots = () => {
     this.disposableGroup.add(
-      this._doc.slots.yBlockUpdated.on(({ type, id }) => {
-        switch (type) {
-          case 'add': {
-            this._onBlockAdded(id);
-            return;
-          }
-          case 'delete': {
-            this._onBlockRemoved(id);
-            return;
+      this._doc.slots.yBlockUpdated.subscribe(
+        ({ type, id }: { type: string; id: string }) => {
+          switch (type) {
+            case 'add': {
+              this._onBlockAdded(id);
+              return;
+            }
+            case 'delete': {
+              this._onBlockRemoved(id);
+              return;
+            }
+            case 'update': {
+              const block = this.getBlock(id);
+              if (!block) return;
+              this.slots.blockUpdated.next({
+                type: 'update',
+                id,
+                flavour: block.flavour,
+                props: { key: 'content' },
+              });
+              return;
+            }
           }
         }
-      })
+      )
     );
     this.disposableGroup.add(this.slots.ready);
     this.disposableGroup.add(this.slots.blockUpdated);
@@ -412,10 +428,10 @@ export class Store {
       const options: BlockOptions = {
         onChange: (block, key) => {
           if (key) {
-            block.model.propsUpdated.emit({ key });
+            block.model.propsUpdated.next({ key });
           }
 
-          this.slots.blockUpdated.emit({
+          this.slots.blockUpdated.next({
             type: 'update',
             id,
             flavour: block.flavour,
@@ -431,13 +447,13 @@ export class Store {
         ...this._blocks.value,
         [id]: block,
       };
-      block.model.created.emit();
+      block.model.created.next();
 
       if (block.model.role === 'root') {
-        this.slots.rootAdded.emit(id);
+        this.slots.rootAdded.next(id);
       }
 
-      this.slots.blockUpdated.emit({
+      this.slots.blockUpdated.next({
         type: 'add',
         id,
         init,
@@ -456,13 +472,13 @@ export class Store {
       if (!block) return;
 
       if (block.model.role === 'root') {
-        this.slots.rootDeleted.emit(id);
+        this.slots.rootDeleted.next(id);
       }
 
-      this.slots.blockUpdated.emit({
+      this.slots.blockUpdated.next({
         type: 'delete',
         id,
-        flavour: block.model.flavour,
+        flavour: block.flavour,
         parent: this.getParent(block.model)?.id ?? '',
         model: block.model,
       });
@@ -470,7 +486,7 @@ export class Store {
       const { [id]: _, ...blocks } = this._blocks.peek();
       this._blocks.value = blocks;
 
-      block.model.deleted.emit();
+      block.model.deleted.next();
       block.model.dispose();
     } catch (e) {
       console.error('An error occurred while removing block:');
@@ -604,8 +620,12 @@ export class Store {
     this._provider.getAll(StoreExtensionIdentifier).forEach(ext => {
       ext.disposed();
     });
-
+    this.slots.ready.complete();
+    this.slots.rootAdded.complete();
+    this.slots.rootDeleted.complete();
+    this.slots.blockUpdated.complete();
     this.disposableGroup.dispose();
+    this._isDisposed = true;
   }
 
   getBlock(id: string): Block | undefined {
@@ -705,16 +725,18 @@ export class Store {
   }
 
   load(initFn?: () => void) {
-    if (this.disposableGroup.disposed) {
+    if (this._isDisposed) {
       this.disposableGroup = new DisposableGroup();
       this._subscribeToSlots();
+      this._isDisposed = false;
     }
 
     this._doc.load(initFn);
     this._provider.getAll(StoreExtensionIdentifier).forEach(ext => {
       ext.loaded();
     });
-    this.slots.ready.emit();
+    this.slots.ready.next();
+    this.slots.rootAdded.next(this.root?.id ?? '');
     return this;
   }
 

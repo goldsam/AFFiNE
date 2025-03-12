@@ -94,7 +94,7 @@ export const processTable = (
       if (isDelta(cell.value)) {
         value = cell.value;
       } else {
-        value = property.config.cellToString({
+        value = property.config.rawValue.toString({
           value: cell.value,
           data: col.data,
         });

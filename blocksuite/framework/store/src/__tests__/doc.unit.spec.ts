@@ -41,7 +41,7 @@ test('trigger props updated', () => {
   expect(rootModel).not.toBeNull();
 
   const onPropsUpdated = vi.fn();
-  rootModel.propsUpdated.on(onPropsUpdated);
+  rootModel.propsUpdated.subscribe(onPropsUpdated);
 
   const getColor = () =>
     (rootModel.yBlock.get('prop:style') as Y.Map<string>).get('color');
@@ -101,7 +101,7 @@ test('stash and pop', () => {
   expect(rootModel).not.toBeNull();
 
   const onPropsUpdated = vi.fn();
-  rootModel.propsUpdated.on(onPropsUpdated);
+  rootModel.propsUpdated.subscribe(onPropsUpdated);
 
   const getCount = () => rootModel.yBlock.get('prop:count');
   const getColor = () =>
@@ -171,7 +171,7 @@ test('always get latest value in onChange', () => {
   expect(rootModel).not.toBeNull();
 
   let value: unknown;
-  rootModel.propsUpdated.on(({ key }) => {
+  rootModel.propsUpdated.subscribe(({ key }) => {
     // @ts-expect-error ignore
     value = rootModel[key];
   });

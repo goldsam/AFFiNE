@@ -1,6 +1,6 @@
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { Slot } from '@blocksuite/global/slot';
 import { computed, signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 
 import { nanoid } from '../../utils/id-generator';
 import type { StackItem } from '../../yjs';
@@ -42,8 +42,8 @@ export class StoreSelectionExtension extends StoreExtension {
   };
 
   slots = {
-    changed: new Slot<BaseSelection[]>(),
-    remoteChanged: new Slot<Map<number, BaseSelection[]>>(),
+    changed: new Subject<BaseSelection[]>(),
+    remoteChanged: new Subject<Map<number, BaseSelection[]>>(),
   };
 
   override loaded() {
@@ -98,7 +98,7 @@ export class StoreSelectionExtension extends StoreExtension {
             map.set(id, selections);
           });
           this._remoteSelections.value = map;
-          this.slots.remoteChanged.emit(map);
+          this.slots.remoteChanged.next(map);
         }
       }
     );
@@ -162,7 +162,7 @@ export class StoreSelectionExtension extends StoreExtension {
       this._id,
       selections.map(s => s.toJSON())
     );
-    this.slots.changed.emit(selections);
+    this.slots.changed.next(selections);
   }
 
   setGroup(group: string, selections: BaseSelection[]) {

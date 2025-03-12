@@ -1,6 +1,6 @@
 import type { Container } from '@blocksuite/global/di';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { Extension } from '@blocksuite/store';
 
 import type { EventName, UIEventHandler } from '../event/index.js';
@@ -109,12 +109,12 @@ export abstract class BlockService extends Extension {
   // life cycle end
 
   mounted() {
-    this.specSlots.mounted.emit({ service: this });
+    this.specSlots.mounted.next({ service: this });
   }
 
   unmounted() {
     this.dispose();
-    this.specSlots.unmounted.emit({ service: this });
+    this.specSlots.unmounted.next({ service: this });
   }
   // event handlers end
 }

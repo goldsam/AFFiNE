@@ -42,13 +42,12 @@ export const ProfilePanel = () => {
   useEffect(() => {
     if (workspace?.docCollection) {
       setName(workspace.docCollection.meta.name ?? UNTITLED_WORKSPACE_NAME);
-      const dispose = workspace.docCollection.meta.commonFieldsUpdated.on(
-        () => {
+      const dispose =
+        workspace.docCollection.meta.commonFieldsUpdated.subscribe(() => {
           setName(workspace.docCollection.meta.name ?? UNTITLED_WORKSPACE_NAME);
-        }
-      );
+        });
       return () => {
-        dispose.dispose();
+        dispose.unsubscribe();
       };
     } else {
       setName(UNTITLED_WORKSPACE_NAME);

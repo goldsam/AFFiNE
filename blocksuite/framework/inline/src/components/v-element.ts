@@ -1,6 +1,6 @@
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import { SignalWatcher } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { effect, signal } from '@preact/signals-core';
 import { html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';

@@ -9,7 +9,7 @@ export class EdgelessClipboardWatcher extends LifeCycleWatcher {
   override mounted() {
     super.mounted();
     const { view } = this.std;
-    view.viewUpdated.on(payload => {
+    view.viewUpdated.subscribe(payload => {
       if (payload.type !== 'block' || payload.method !== 'add') {
         return;
       }

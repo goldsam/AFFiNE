@@ -37,6 +37,7 @@
     "@blocksuite/affine-fragment-frame-panel": "workspace:*",
     "@blocksuite/affine-fragment-outline": "workspace:*",
     "@blocksuite/affine-gfx-text": "workspace:*",
+    "@blocksuite/affine-gfx-turbo-renderer": "workspace:*",
     "@blocksuite/affine-model": "workspace:*",
     "@blocksuite/affine-rich-text": "workspace:*",
     "@blocksuite/affine-shared": "workspace:*",
@@ -52,7 +53,8 @@
     "@blocksuite/global": "workspace:*",
     "@blocksuite/inline": "workspace:*",
     "@blocksuite/store": "workspace:*",
-    "@blocksuite/sync": "workspace:*"
+    "@blocksuite/sync": "workspace:*",
+    "rxjs": "^7.8.1"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -66,7 +68,7 @@
     "./global/di": "./src/global/di.ts",
     "./global/types": "./src/global/types.ts",
     "./global/gfx": "./src/global/gfx.ts",
-    "./global/slot": "./src/global/slot.ts",
+    "./global/disposable": "./src/global/disposable.ts",
     "./global/lit": "./src/global/lit.ts",
     "./store": "./src/store/index.ts",
     "./store/test": "./src/store/test.ts",
@@ -106,6 +108,7 @@
     "./fragments/frame-panel": "./src/fragments/frame-panel.ts",
     "./fragments/outline": "./src/fragments/outline.ts",
     "./gfx/text": "./src/gfx/text.ts",
+    "./gfx/turbo-renderer": "./src/gfx/turbo-renderer.ts",
     "./components/block-selection": "./src/components/block-selection.ts",
     "./components/block-zero-width": "./src/components/block-zero-width.ts",
     "./components/caption": "./src/components/caption.ts",

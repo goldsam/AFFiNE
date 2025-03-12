@@ -169,19 +169,21 @@ framework.scope(ServerScope).override(AuthProvider, resolver => {
   const serverService = resolver.get(ServerService);
   const endpoint = serverService.server.baseUrl;
   return {
-    async signInMagicLink(email, linkToken) {
+    async signInMagicLink(email, linkToken, clientNonce) {
       const { token } = await Auth.signInMagicLink({
         endpoint,
         email,
         token: linkToken,
+        clientNonce,
       });
       await writeEndpointToken(endpoint, token);
     },
-    async signInOauth(code, state, _provider) {
+    async signInOauth(code, state, _provider, clientNonce) {
       const { token } = await Auth.signInOauth({
         endpoint,
         code,
         state,
+        clientNonce,
       });
       await writeEndpointToken(endpoint, token);
       return {};

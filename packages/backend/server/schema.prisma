@@ -21,6 +21,7 @@ model User {
   /// Indicate whether the user finished the signup progress.
   /// for example, the value will be false if user never registered and invited into a workspace by others.
   registered      Boolean   @default(true)
+  disabled        Boolean   @default(false)
 
   features              UserFeature[]
   userStripeCustomer    UserStripeCustomer?
@@ -130,8 +131,8 @@ model WorkspaceDoc {
   mode        Int     @default(0) @db.SmallInt
   // Whether the doc is blocked
   blocked     Boolean @default(false)
-  title       String?  @db.VarChar
-  summary     String?  @db.VarChar
+  title       String? @db.VarChar
+  summary     String? @db.VarChar
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -647,16 +648,16 @@ enum NotificationLevel {
 }
 
 model Notification {
-  id            String            @id @default(uuid()) @db.VarChar
-  userId        String            @map("user_id") @db.VarChar
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  level         NotificationLevel
-  read          Boolean           @default(false)
-  type          NotificationType
-  body          Json              @db.JsonB
+  id        String            @id @default(uuid()) @db.VarChar
+  userId    String            @map("user_id") @db.VarChar
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  level     NotificationLevel
+  read      Boolean           @default(false)
+  type      NotificationType
+  body      Json              @db.JsonB
 
-  user          User              @relation(name: "user_notifications", fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(name: "user_notifications", fields: [userId], references: [id], onDelete: Cascade)
 
   // for user notifications list, including read and unread, ordered by createdAt
   @@index([userId, createdAt, read])

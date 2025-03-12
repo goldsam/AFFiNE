@@ -159,7 +159,7 @@ export class TestAffineEditorContainer extends SignalWatcher(
     super.connectedCallback();
 
     this._disposables.add(
-      this.doc.slots.rootAdded.on(() => this.requestUpdate())
+      this.doc.slots.rootAdded.subscribe(() => this.requestUpdate())
     );
   }
 

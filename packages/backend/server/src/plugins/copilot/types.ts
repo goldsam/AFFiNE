@@ -101,7 +101,7 @@ export type SubmittedMessage = z.infer<typeof SubmittedMessageSchema>;
 export const ChatHistorySchema = z
   .object({
     sessionId: z.string(),
-    action: z.string().optional(),
+    action: z.string().nullable(),
     tokens: z.number(),
     messages: z.array(PromptMessageSchema.or(ChatMessageSchema)),
     createdAt: z.date(),

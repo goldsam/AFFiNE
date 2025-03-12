@@ -565,7 +565,7 @@ export function actionToResponse<T extends keyof BlockSuitePresets.AIActions>(
             handler: () => {
               reportResponse('result:continue-in-chat');
               const panel = getAIPanelWidget(host);
-              AIProvider.slots.requestOpenWithChat.emit({ host });
+              AIProvider.slots.requestOpenWithChat.next({ host });
               panel.hide();
             },
           },
@@ -604,11 +604,11 @@ export function actionToErrorResponse<
 ): ErrorConfig {
   return {
     upgrade: () => {
-      AIProvider.slots.requestUpgradePlan.emit({ host: panel.host });
+      AIProvider.slots.requestUpgradePlan.next({ host: panel.host });
       panel.hide();
     },
     login: () => {
-      AIProvider.slots.requestLogin.emit({ host: panel.host });
+      AIProvider.slots.requestLogin.next({ host: panel.host });
       panel.hide();
     },
     cancel: () => {

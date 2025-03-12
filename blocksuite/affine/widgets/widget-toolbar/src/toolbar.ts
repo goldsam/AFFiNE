@@ -211,7 +211,7 @@ export class AffineToolbarWidget extends WidgetComponent {
     );
 
     disposables.add(
-      std.selection.slots.changed.on(selections => {
+      std.selection.slots.changed.subscribe(selections => {
         if (!context.activated) return;
 
         const value = flags.value$.peek();
@@ -239,26 +239,25 @@ export class AffineToolbarWidget extends WidgetComponent {
     // When switch the view mode, wait until the view is created
     // `card view` or `embed view`
     disposables.add(
-      std.view.viewUpdated
-        .filter(view => view.type === 'block')
-        .on(record => {
-          if (
-            flags.isBlock() &&
-            std.selection
-              .filter$(BlockSelection)
-              .peek()
-              .find(s => s.blockId === record.id)
-          ) {
-            if (record.method === 'add') {
-              flags.refresh(Flag.Block);
-            }
-            return;
+      std.view.viewUpdated.subscribe(record => {
+        if (
+          record.type === 'block' &&
+          flags.isBlock() &&
+          std.selection
+            .filter$(BlockSelection)
+            .peek()
+            .find(s => s.blockId === record.id)
+        ) {
+          if (record.method === 'add') {
+            flags.refresh(Flag.Block);
           }
-        })
+          return;
+        }
+      })
     );
 
     disposables.add(
-      std.store.slots.blockUpdated.on(record => {
+      std.store.slots.blockUpdated.subscribe(record => {
         if (
           flags.isBlock() &&
           record.type === 'update' &&
@@ -334,28 +333,30 @@ export class AffineToolbarWidget extends WidgetComponent {
 
     // Should update position of notes' toolbar in edgeless
     disposables.add(
-      this.std.get(GfxControllerIdentifier).viewport.viewportUpdated.on(() => {
-        if (!context.activated) return;
+      this.std
+        .get(GfxControllerIdentifier)
+        .viewport.viewportUpdated.subscribe(() => {
+          if (!context.activated) return;
 
-        if (flags.value === Flag.None || flags.check(Flag.Hiding)) {
-          return;
-        }
+          if (flags.value === Flag.None || flags.check(Flag.Hiding)) {
+            return;
+          }
 
-        if (flags.isText()) {
-          flags.refresh(Flag.Text);
-          return;
-        }
+          if (flags.isText()) {
+            flags.refresh(Flag.Text);
+            return;
+          }
 
-        if (flags.isNative()) {
-          flags.refresh(Flag.Native);
-          return;
-        }
+          if (flags.isNative()) {
+            flags.refresh(Flag.Native);
+            return;
+          }
 
-        if (flags.isBlock()) {
-          flags.refresh(Flag.Block);
-          return;
-        }
-      })
+          if (flags.isBlock()) {
+            flags.refresh(Flag.Block);
+            return;
+          }
+        })
     );
 
     disposables.add(

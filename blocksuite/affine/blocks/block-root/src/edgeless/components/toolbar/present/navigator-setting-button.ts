@@ -73,7 +73,7 @@ export class EdgelessNavigatorSettingButton extends WithDisposable(LitElement) {
 
   private readonly _onBlackBackgroundChange = (checked: boolean) => {
     this.blackBackground = checked;
-    this.edgeless.slots.navigatorSettingUpdated.emit({
+    this.edgeless.slots.navigatorSettingUpdated.next({
       blackBackground: this.blackBackground,
     });
   };
@@ -134,7 +134,7 @@ export class EdgelessNavigatorSettingButton extends WithDisposable(LitElement) {
           <div class="text">Black background</div>
 
           <toggle-switch
-            .on=${this.blackBackground}
+            .subscribe=${this.blackBackground}
             .onChange=${this._onBlackBackgroundChange}
           >
           </toggle-switch>
@@ -144,7 +144,7 @@ export class EdgelessNavigatorSettingButton extends WithDisposable(LitElement) {
           <div class="text">Hide toolbar</div>
 
           <toggle-switch
-            .on=${this.hideToolbar}
+            .subscribe=${this.hideToolbar}
             .onChange=${(checked: boolean) => {
               this.onHideToolbarChange && this.onHideToolbarChange(checked);
             }}

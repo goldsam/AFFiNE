@@ -1,4 +1,4 @@
-import type { Slot } from '@blocksuite/global/slot';
+import type { Subject } from 'rxjs';
 
 export type Tag = {
   id: string;
@@ -39,8 +39,8 @@ export interface WorkspaceMeta {
   get docs(): unknown[] | undefined;
   initialize(): void;
 
-  commonFieldsUpdated: Slot;
-  docMetaAdded: Slot<string>;
-  docMetaRemoved: Slot<string>;
-  docMetaUpdated: Slot;
+  commonFieldsUpdated: Subject<void>;
+  docMetaAdded: Subject<string>;
+  docMetaRemoved: Subject<string>;
+  docMetaUpdated: Subject<void>;
 }

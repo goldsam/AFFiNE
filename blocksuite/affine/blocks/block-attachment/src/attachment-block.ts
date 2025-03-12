@@ -112,7 +112,7 @@ export class AttachmentBlockComponent extends CaptionedBlockComponent<Attachment
       });
     }
 
-    this.model.propsUpdated.on(({ key }) => {
+    this.model.propsUpdated.subscribe(({ key }) => {
       if (key === 'sourceId') {
         // Reset the blob url when the sourceId is changed
         if (this.blobUrl) {

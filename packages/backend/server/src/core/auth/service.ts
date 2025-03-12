@@ -10,11 +10,11 @@ import type { CurrentUser } from './session';
 export function sessionUser(
   user: Pick<
     User,
-    'id' | 'email' | 'avatarUrl' | 'name' | 'emailVerifiedAt'
+    'id' | 'email' | 'avatarUrl' | 'name' | 'emailVerifiedAt' | 'disabled'
   > & { password?: string | null }
 ): CurrentUser {
   // use pick to avoid unexpected fields
-  return assign(pick(user, 'id', 'email', 'avatarUrl', 'name'), {
+  return assign(pick(user, 'id', 'email', 'avatarUrl', 'name', 'disabled'), {
     hasPassword: user.password !== null,
     emailVerified: user.emailVerifiedAt !== null,
   });
@@ -105,7 +105,7 @@ export class AuthService implements OnApplicationBootstrap {
     if (!userId) {
       await this.models.session.deleteSession(sessionId);
     } else {
-      await this.models.session.deleteUserSession(userId, sessionId);
+      await this.models.session.deleteUserSessions(userId, sessionId);
     }
   }
 
@@ -195,7 +195,7 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async revokeUserSessions(userId: string) {
-    return await this.models.session.deleteUserSession(userId);
+    return await this.models.session.deleteUserSessions(userId);
   }
 
   getSessionOptionsFromRequest(req: Request) {

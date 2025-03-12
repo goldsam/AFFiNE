@@ -214,9 +214,9 @@ test('should delete userSession success by userId', async t => {
     data: {},
   });
   await t.context.session.createOrRefreshUserSession(user.id, session.id);
-  let count = await t.context.session.deleteUserSession(user.id);
+  let count = await t.context.session.deleteUserSessions(user.id);
   t.is(count, 1);
-  count = await t.context.session.deleteUserSession(user.id);
+  count = await t.context.session.deleteUserSessions(user.id);
   t.is(count, 0);
 });
 
@@ -228,7 +228,7 @@ test('should delete userSession success by userId and sessionId', async t => {
     data: {},
   });
   await t.context.session.createOrRefreshUserSession(user.id, session.id);
-  const count = await t.context.session.deleteUserSession(user.id, session.id);
+  const count = await t.context.session.deleteUserSessions(user.id, session.id);
   t.is(count, 1);
 });
 
@@ -240,7 +240,7 @@ test('should delete userSession fail when sessionId not match', async t => {
     data: {},
   });
   await t.context.session.createOrRefreshUserSession(user.id, session.id);
-  const count = await t.context.session.deleteUserSession(
+  const count = await t.context.session.deleteUserSessions(
     user.id,
     'not-exists-session-id'
   );

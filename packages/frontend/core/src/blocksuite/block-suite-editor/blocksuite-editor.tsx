@@ -9,7 +9,7 @@ import {
   customImageProxyMiddleware,
   ImageProxyService,
 } from '@blocksuite/affine/blocks/image';
-import { DisposableGroup } from '@blocksuite/affine/global/slot';
+import { DisposableGroup } from '@blocksuite/affine/global/disposable';
 import type { DocMode } from '@blocksuite/affine/model';
 import { LinkPreviewerService } from '@blocksuite/affine/shared/services';
 import type { Store } from '@blocksuite/affine/store';
@@ -49,13 +49,14 @@ const BlockSuiteEditorImpl = ({
   defaultOpenProperty,
 }: EditorProps) => {
   useEffect(() => {
-    const disposable = page.slots.blockUpdated.once(() => {
+    const disposable = page.slots.blockUpdated.subscribe(() => {
+      disposable.unsubscribe();
       page.workspace.meta.setDocMeta(page.id, {
         updatedDate: Date.now(),
       });
     });
     return () => {
-      disposable.dispose();
+      disposable.unsubscribe();
     };
   }, [page]);
 
@@ -154,15 +155,16 @@ export const BlockSuiteEditor = (props: EditorProps) => {
       return;
     }
     const timer = setTimeout(() => {
-      disposable.dispose();
+      disposable.unsubscribe();
       setError(new NoPageRootError(props.page));
     }, 20 * 1000);
-    const disposable = props.page.slots.rootAdded.once(() => {
+    const disposable = props.page.slots.rootAdded.subscribe(() => {
+      disposable.unsubscribe();
       setIsLoading(false);
       clearTimeout(timer);
     });
     return () => {
-      disposable.dispose();
+      disposable.unsubscribe();
       clearTimeout(timer);
     };
   }, [props.page]);

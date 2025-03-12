@@ -1,7 +1,11 @@
 import { useNavigateHelper } from '@affine/core/components/hooks/use-navigate-helper';
 import { GraphQLService } from '@affine/core/modules/cloud';
 import { OpenInAppPage } from '@affine/core/modules/open-in-app/views/open-in-app-page';
-import { appSchemes, channelToScheme } from '@affine/core/utils/channel';
+import {
+  appSchemaUrl,
+  appSchemes,
+  channelToScheme,
+} from '@affine/core/utils/channel';
 import type { GetCurrentUserQuery } from '@affine/graphql';
 import { getCurrentUserQuery } from '@affine/graphql';
 import { useService } from '@toeverything/infra';
@@ -23,12 +27,13 @@ const OpenUrl = () => {
     [navigateHelper]
   );
 
-  if (!urlToOpen) {
+  const parsed = appSchemaUrl.safeParse(urlToOpen);
+  if (!parsed.success) {
+    console.error(parsed.error);
     return null;
   }
 
-  const urlObj = new URL(urlToOpen || '');
-
+  const urlObj = new URL(parsed.data);
   params.forEach((v, k) => {
     if (k === 'url') {
       return;
@@ -55,7 +60,7 @@ const OpenOAuthJwt = () => {
   const scheme = maybeScheme.success
     ? maybeScheme.data
     : channelToScheme[BUILD_CONFIG.appBuildType];
-  const next = params.get('next');
+  const next = params.get('next') || '';
 
   useEffect(() => {
     graphqlService
@@ -74,7 +79,7 @@ const OpenOAuthJwt = () => {
 
   const urlToOpen = `${scheme}://signin-redirect?token=${
     currentUser.token.sessionToken
-  }&next=${next || ''}`;
+  }&next=${next}`;
 
   return <OpenInAppPage urlToOpen={urlToOpen} />;
 };

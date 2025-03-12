@@ -11,11 +11,6 @@ import {
 } from './edgeless/components/note-slicer/index.js';
 import { EdgelessAlignPanel } from './edgeless/components/panel/align-panel.js';
 import { CardStylePanel } from './edgeless/components/panel/card-style-panel.js';
-import {
-  EdgelessColorButton,
-  EdgelessColorPanel,
-  EdgelessTextColorIcon,
-} from './edgeless/components/panel/color-panel.js';
 import { EdgelessFontFamilyPanel } from './edgeless/components/panel/font-family-panel.js';
 import { EdgelessFontWeightAndStylePanel } from './edgeless/components/panel/font-weight-and-style-panel.js';
 import { EdgelessLineWidthPanel } from './edgeless/components/panel/line-width-panel.js';
@@ -230,7 +225,6 @@ function registerEdgelessToolbarComponents() {
 function registerEdgelessPanelComponents() {
   customElements.define('edgeless-align-panel', EdgelessAlignPanel);
   customElements.define('card-style-panel', CardStylePanel);
-  customElements.define('edgeless-color-panel', EdgelessColorPanel);
   customElements.define('edgeless-line-width-panel', EdgelessLineWidthPanel);
   customElements.define(
     'edgeless-font-weight-and-style-panel',
@@ -244,10 +238,6 @@ function registerEdgelessPanelComponents() {
   customElements.define('note-display-mode-panel', NoteDisplayModePanel);
   customElements.define('stroke-style-panel', StrokeStylePanel);
   customElements.define('edgeless-shape-style-panel', EdgelessShapeStylePanel);
-
-  // Color components
-  customElements.define('edgeless-color-button', EdgelessColorButton);
-  customElements.define('edgeless-text-color-icon', EdgelessTextColorIcon);
 }
 
 function registerEdgelessEditorComponents() {
@@ -333,9 +323,6 @@ declare global {
     'note-slicer': NoteSlicer;
     'edgeless-align-panel': EdgelessAlignPanel;
     'card-style-panel': CardStylePanel;
-    'edgeless-color-panel': EdgelessColorPanel;
-    'edgeless-color-button': EdgelessColorButton;
-    'edgeless-text-color-icon': EdgelessTextColorIcon;
     'edgeless-font-family-panel': EdgelessFontFamilyPanel;
     'edgeless-font-weight-and-style-panel': EdgelessFontWeightAndStylePanel;
     'edgeless-line-width-panel': EdgelessLineWidthPanel;

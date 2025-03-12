@@ -104,8 +104,11 @@ const StarterBarNotEmpty = ({ doc }: { doc: Store }) => {
 
     const { id, created } = rootComponent.focusFirstParagraph();
     if (created) {
-      std.view.viewUpdated.once(v => {
-        if (v.id === id) handleInlineAskAIAction(std.host, pageAIGroups);
+      const subscription = std.view.viewUpdated.subscribe(v => {
+        if (v.id === id) {
+          subscription.unsubscribe();
+          handleInlineAskAIAction(std.host, pageAIGroups);
+        }
       });
     } else {
       handleInlineAskAIAction(std.host, pageAIGroups);

@@ -196,7 +196,7 @@ class CopilotHistoriesType implements Partial<ChatHistory> {
     description: 'An mark identifying which view to use to display the session',
     nullable: true,
   })
-  action!: string | undefined;
+  action!: string | null;
 
   @Field(() => Number, {
     description: 'The number of tokens used in the session',
@@ -281,7 +281,7 @@ class CopilotSessionType {
   id!: string;
 
   @Field(() => ID, { nullable: true })
-  parentSessionId!: string | undefined;
+  parentSessionId!: string | null;
 
   @Field(() => String)
   promptName!: string;
@@ -292,10 +292,7 @@ class CopilotSessionType {
 @ObjectType('Copilot')
 export class CopilotType {
   @Field(() => ID, { nullable: true })
-  workspaceId!: string | undefined;
-
-  @Field(() => ID, { nullable: true })
-  docId!: string | undefined;
+  workspaceId!: string | null;
 }
 
 @Throttle()
@@ -575,7 +572,7 @@ export class UserCopilotResolver {
         .allowLocal()
         .assert('Workspace.Copilot');
     }
-    return { workspaceId };
+    return { workspaceId: workspaceId || null };
   }
 }
 

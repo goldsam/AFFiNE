@@ -55,13 +55,13 @@ import {
   deserializeXYWH,
   normalizeDegAngle,
 } from '@blocksuite/global/gfx';
-import { type Disposable, Slot } from '@blocksuite/global/slot';
 import { assertType } from '@blocksuite/global/utils';
 import { css, html, nothing } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import clamp from 'lodash-es/clamp';
+import { Subject, type Subscription } from 'rxjs';
 
 import type { EdgelessRootBlockComponent } from '../../edgeless-root-block.js';
 import {
@@ -447,13 +447,13 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
   private _dragEndCallback: (() => void)[] = [];
 
   private readonly _initSelectedSlot = () => {
-    this._propDisposables.forEach(disposable => disposable.dispose());
+    this._propDisposables.forEach(disposable => disposable.unsubscribe());
     this._propDisposables = [];
 
     this.selection.selectedElements.forEach(element => {
       if ('flavour' in element) {
         this._propDisposables.push(
-          element.propsUpdated.on(() => {
+          element.propsUpdated.subscribe(() => {
             this._updateOnElementChange(element.id);
           })
         );
@@ -462,7 +462,7 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
   };
 
   private readonly _onDragEnd = () => {
-    this.slots.dragEnd.emit();
+    this.slots.dragEnd.next();
 
     this.doc.transact(() => {
       this._dragEndCallback.forEach(cb => cb());
@@ -478,7 +478,7 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
     this._scaleDirection = undefined;
     this._updateMode();
 
-    this.block.slots.elementResizeEnd.emit();
+    this.block.slots.elementResizeEnd.next();
 
     this.frameOverlay.clear();
   };
@@ -494,7 +494,7 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
     >,
     direction: HandleDirection
   ) => {
-    this.slots.dragMove.emit();
+    this.slots.dragMove.next();
 
     const { gfx } = this;
 
@@ -557,7 +557,7 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
   };
 
   private readonly _onDragRotate = (center: IPoint, delta: number) => {
-    this.slots.dragRotate.emit();
+    this.slots.dragRotate.next();
 
     const { selection } = this;
     const m = new DOMMatrix()
@@ -602,12 +602,12 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
   };
 
   private readonly _onDragStart = () => {
-    this.slots.dragStart.emit();
+    this.slots.dragStart.next();
 
     const rotation = this._resizeManager.rotation;
 
     this._dragEndCallback = [];
-    this.block.slots.elementResizeStart.emit();
+    this.block.slots.elementResizeStart.next();
     this.selection.selectedElements.forEach(el => {
       el.stash('xywh');
 
@@ -644,7 +644,7 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
     this._updateResizeManagerState(true);
   };
 
-  private _propDisposables: Disposable[] = [];
+  private _propDisposables: Subscription[] = [];
 
   private readonly _resizeManager: HandleResizeManager;
 
@@ -836,10 +836,10 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
   }, this);
 
   readonly slots = {
-    dragStart: new Slot(),
-    dragMove: new Slot(),
-    dragRotate: new Slot(),
-    dragEnd: new Slot(),
+    dragStart: new Subject<void>(),
+    dragMove: new Subject<void>(),
+    dragRotate: new Subject<void>(),
+    dragEnd: new Subject<void>(),
   };
 
   get dragDirection() {
@@ -1307,39 +1307,41 @@ export class EdgelessSelectedRectWidget extends WidgetComponent<
 
     _disposables.add(
       // viewport zooming / scrolling
-      gfx.viewport.viewportUpdated.on(this._updateOnViewportChange)
+      gfx.viewport.viewportUpdated.subscribe(this._updateOnViewportChange)
     );
 
     if (gfx.surface) {
       _disposables.add(
-        gfx.surface.elementAdded.on(this._updateOnElementChange)
+        gfx.surface.elementAdded.subscribe(this._updateOnElementChange)
       );
       _disposables.add(
-        gfx.surface.elementRemoved.on(this._updateOnElementChange)
+        gfx.surface.elementRemoved.subscribe(this._updateOnElementChange)
       );
       _disposables.add(
-        gfx.surface.elementUpdated.on(this._updateOnElementChange)
+        gfx.surface.elementUpdated.subscribe(this._updateOnElementChange)
       );
     }
 
     _disposables.add(
-      this.doc.slots.blockUpdated.on(this._updateOnElementChange)
-    );
-
-    _disposables.add(selection.slots.updated.on(this._updateOnSelectionChange));
-
-    _disposables.add(
-      block.slots.readonlyUpdated.on(() => this.requestUpdate())
+      this.doc.slots.blockUpdated.subscribe(this._updateOnElementChange)
     );
 
     _disposables.add(
-      block.slots.elementResizeStart.on(() => (this._isResizing = true))
+      selection.slots.updated.subscribe(this._updateOnSelectionChange)
+    );
+
+    _disposables.add(
+      block.slots.readonlyUpdated.subscribe(() => this.requestUpdate())
+    );
+
+    _disposables.add(
+      block.slots.elementResizeStart.subscribe(() => (this._isResizing = true))
     );
     _disposables.add(
-      block.slots.elementResizeEnd.on(() => (this._isResizing = false))
+      block.slots.elementResizeEnd.subscribe(() => (this._isResizing = false))
     );
     _disposables.add(() => {
-      this._propDisposables.forEach(disposable => disposable.dispose());
+      this._propDisposables.forEach(disposable => disposable.unsubscribe());
     });
 
     this.block.handleEvent(

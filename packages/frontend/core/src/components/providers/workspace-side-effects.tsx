@@ -111,14 +111,14 @@ export const WorkspaceSideEffects = () => {
       })
     );
 
-    const disposable = AIProvider.slots.requestInsertTemplate.on(
+    const disposable = AIProvider.slots.requestInsertTemplate.subscribe(
       ({ template, mode }) => {
         insertTemplate({ template, mode });
       }
     );
 
     return () => {
-      disposable.dispose();
+      disposable.unsubscribe();
       insertTemplate.unsubscribe();
     };
   }, [
@@ -134,14 +134,14 @@ export const WorkspaceSideEffects = () => {
   const globalDialogService = useService(GlobalDialogService);
 
   useEffect(() => {
-    const disposable = AIProvider.slots.requestUpgradePlan.on(() => {
+    const disposable = AIProvider.slots.requestUpgradePlan.subscribe(() => {
       workspaceDialogService.open('setting', {
         activeTab: 'billing',
       });
       track.$.paywall.aiAction.viewPlans();
     });
     return () => {
-      disposable.dispose();
+      disposable.unsubscribe();
     };
   }, [workspaceDialogService]);
 

@@ -1086,6 +1086,7 @@
   "com.affine.resetSyncStatus.button": "Reset sync",
   "com.affine.resetSyncStatus.description": "This operation may fix some synchronization issues.",
   "com.affine.rootAppSidebar.collections": "Collections",
+  "com.affine.rootAppSidebar.notifications": "Notifications",
   "com.affine.rootAppSidebar.doc.link-doc-only": "Only doc can be placed on here",
   "com.affine.rootAppSidebar.docs.no-subdoc": "No linked docs",
   "com.affine.rootAppSidebar.docs.references-loading": "Loading linked docs...",
@@ -1630,6 +1631,9 @@
   "com.affine.workspaceSubPath.trash.empty-description": "Deleted docs will appear here.",
   "com.affine.write_with_a_blank_page": "Write with a blank page",
   "com.affine.yesterday": "Yesterday",
+  "com.affine.inactive": "Inactive",
+  "com.affine.inactive-member": "Inactive member",
+  "com.affine.inactive-workspace": "Inactive workspace",
   "core": "core",
   "dark": "Dark",
   "invited you to join": "invited you to join",
@@ -1734,6 +1738,9 @@
   "com.affine.page-starter-bar.template": "Template",
   "com.affine.page-starter-bar.ai": "With AI",
   "com.affine.page-starter-bar.edgeless": "Edgeless",
+  "com.affine.notification.unsupported": "Unsupported message",
+  "com.affine.notification.mention": "<1>{{username}}</1> mentioned you in <2>{{docTitle}}</2>",
+  "com.affine.notification.empty": "No new notifications",
   "tips": "Tips",
   "Template": "Template",
   "com.affine.template-list.delete": "Delete Template",
@@ -1864,5 +1871,9 @@
   "error.INVALID_LICENSE_TO_ACTIVATE": "Invalid license to activate.",
   "error.INVALID_LICENSE_UPDATE_PARAMS": "Invalid license update params. {{reason}}",
   "error.WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE": "You cannot downgrade the workspace from team workspace because there are more than {{limit}} members that are currently active.",
-  "error.UNSUPPORTED_CLIENT_VERSION": "Unsupported client with version [{{clientVersion}}], required version is [{{requiredVersion}}]."
+  "error.UNSUPPORTED_CLIENT_VERSION": "Unsupported client with version [{{clientVersion}}], required version is [{{requiredVersion}}].",
+  "error.NOTIFICATION_NOT_FOUND": "Notification not found.",
+  "error.MENTION_USER_SPACE_ACCESS_DENIED": "Mention user do not have permission to access space {{spaceId}}.",
+  "error.MENTION_USER_ONESELF_DENIED": "You cannot mention yourself.",
+  "error.NOTIFICATION_ACCESS_DENIED": "You do not have permission to access notification {{notificationId}}."
 }

@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import {
   Args,
   Field,
@@ -39,6 +40,27 @@ export class CredentialsRequirementType {
 registerEnumType(RuntimeConfigType, {
   name: 'RuntimeConfigType',
 });
+
+@ObjectType()
+export class ReleaseVersionType {
+  @Field()
+  version!: string;
+
+  @Field()
+  url!: string;
+
+  @Field(() => GraphQLISODateTime)
+  publishedAt!: Date;
+
+  @Field()
+  changelog!: string;
+}
+
+const RELEASE_CHANNEL_MAP = new Map<Config['AFFINE_ENV'], string>([
+  ['dev', 'canary'],
+  ['beta', 'beta'],
+  ['production', 'stable'],
+]);
 @ObjectType()
 export class ServerRuntimeConfigType implements Partial<RuntimeConfig> {
   @Field()
@@ -74,6 +96,8 @@ export class ServerFlagsType implements ServerFlags {
 
 @Resolver(() => ServerConfigType)
 export class ServerConfigResolver {
+  private readonly logger = new Logger(ServerConfigResolver.name);
+
   constructor(
     private readonly config: Config,
     private readonly runtime: Runtime,
@@ -134,6 +158,53 @@ export class ServerConfigResolver {
   })
   async initialized() {
     return this.server.initialized();
+  }
+
+  @ResolveField(() => ReleaseVersionType, {
+    description: 'fetch latest available upgradable release of server',
+  })
+  async availableUpgrade(): Promise<ReleaseVersionType | null> {
+    const channel = RELEASE_CHANNEL_MAP.get(this.config.AFFINE_ENV) ?? 'stable';
+    const url = `https://affine.pro/api/worker/releases?channel=${channel}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (!response.ok) {
+        this.logger.error(
+          'failed to fetch affine releases',
+          await response.text()
+        );
+        return null;
+      }
+      const releases = (await response.json()) as Array<{
+        name: string;
+        url: string;
+        body: string;
+        published_at: string;
+      }>;
+
+      const latest = releases.at(0);
+      if (!latest || latest.name === this.config.version) {
+        return null;
+      }
+
+      return {
+        version: latest.name,
+        url: latest.url,
+        changelog: latest.body,
+        publishedAt: new Date(latest.published_at),
+      };
+    } catch (e) {
+      this.logger.error('failed to fetch affine releases', e);
+      return null;
+    }
   }
 }
 

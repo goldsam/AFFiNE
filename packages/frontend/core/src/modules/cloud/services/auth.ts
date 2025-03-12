@@ -3,6 +3,7 @@ import { UserFriendlyError } from '@affine/error';
 import type { OAuthProviderType } from '@affine/graphql';
 import { track } from '@affine/track';
 import { OnEvent, Service } from '@toeverything/infra';
+import { nanoid } from 'nanoid';
 import { distinctUntilChanged, map, skip } from 'rxjs';
 
 import { ApplicationFocused } from '../../lifecycle';
@@ -52,7 +53,7 @@ export class AuthService extends Service {
         skip(1) // skip the initial value
       )
       .subscribe(({ account }) => {
-        AIProvider.slots.userInfo.emit(toAIUserInfo(account));
+        AIProvider.slots.userInfo.next(toAIUserInfo(account));
 
         if (account === null) {
           this.eventBus.emit(AccountLoggedOut, account);
@@ -78,6 +79,7 @@ export class AuthService extends Service {
     redirectUrl?: string // url to redirect to after signed-in
   ) {
     track.$.$.auth.signIn({ method: 'magic-link' });
+    this.setClientNonce();
     try {
       const scheme = this.urlService.getClientScheme();
       const magicLinkUrlParams = new URLSearchParams();
@@ -94,6 +96,7 @@ export class AuthService extends Service {
           // we call it [callbackUrl] instead of [redirect_uri]
           // to make it clear the url is used to finish the sign-in process instead of redirect after signed-in
           callbackUrl: `/magic-link?${magicLinkUrlParams.toString()}`,
+          client_nonce: this.store.getClientNonce(),
         }),
         headers: {
           'content-type': 'application/json',
@@ -130,29 +133,22 @@ export class AuthService extends Service {
     client: string,
     /** @deprecated*/ redirectUrl?: string
   ) {
+    this.setClientNonce();
     try {
       const res = await this.fetchService.fetch('/api/oauth/preflight', {
         method: 'POST',
-        body: JSON.stringify({ provider, redirect_uri: redirectUrl }),
+        body: JSON.stringify({
+          provider,
+          client,
+          redirect_uri: redirectUrl,
+          client_nonce: this.store.getClientNonce(),
+        }),
         headers: {
           'content-type': 'application/json',
         },
       });
 
       let { url } = await res.json();
-
-      // change `state=xxx` to `state={state:xxx,native:true}`
-      // so we could know the callback should be redirect to native app
-      const oauthUrl = new URL(url);
-      oauthUrl.searchParams.set(
-        'state',
-        JSON.stringify({
-          state: oauthUrl.searchParams.get('state'),
-          client,
-          provider,
-        })
-      );
-      url = oauthUrl.toString();
 
       return url as string;
     } catch (e) {
@@ -227,5 +223,12 @@ export class AuthService extends Service {
     }
 
     return headers;
+  }
+
+  private setClientNonce() {
+    if (BUILD_CONFIG.isNative) {
+      // send random client nonce on native app
+      this.store.setClientNonce(nanoid());
+    }
   }
 }

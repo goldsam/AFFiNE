@@ -181,21 +181,6 @@ test('should get workspace user by id', async t => {
   t.is(workspaceUser!.email, user.email);
 });
 
-test('should get workspace user by email', async t => {
-  const user = await t.context.user.create({
-    email: 'test@affine.pro',
-  });
-
-  const workspaceUser = await t.context.user.getWorkspaceUserByEmail(
-    user.email
-  );
-
-  t.not(workspaceUser, null);
-  t.is(workspaceUser!.id, user.id);
-  t.true(!('password' in workspaceUser!));
-  t.is(workspaceUser!.email, user.email);
-});
-
 test('should get user by email', async t => {
   const user = await t.context.user.create({
     email: 'test@affine.pro',
@@ -305,6 +290,7 @@ test('should paginate users', async t => {
         name: `test-paginate-${i}`,
         email: `test-paginate-${i}@affine.pro`,
         createdAt: new Date(now + i),
+        disabled: i % 2 === 0,
       })
     )
   );
@@ -317,13 +303,93 @@ test('should paginate users', async t => {
   );
 });
 
-test('should check if user exists', async t => {
+// #region disabled user
+test('should not get disabled user by default', async t => {
+  const user = await t.context.user.create({
+    email: 'test@affine.pro',
+    disabled: true,
+  });
+
+  const user2 = await t.context.user.get(user.id);
+  const user3 = await t.context.user.getPublicUser(user.id);
+  const user4 = await t.context.user.getPublicUserByEmail(user.email);
+  const userList1 = await t.context.user.getPublicUsers([user.id]);
+  const user5 = await t.context.user.getWorkspaceUser(user.id);
+  const userList2 = await t.context.user.getWorkspaceUsers([user.id]);
+
+  t.is(user2, null);
+  t.is(user3, null);
+  t.is(user4, null);
+  t.is(user5, null);
+  t.is(userList1.length, 0);
+  t.is(userList2.length, 0);
+});
+
+test('should get disabled user `withDisabled`', async t => {
+  const user = await t.context.user.create({
+    email: 'test@affine.pro',
+    disabled: true,
+  });
+
+  const user2 = await t.context.user.get(user.id, { withDisabled: true });
+  const user3 = await t.context.user.getUserByEmail(user.email, {
+    withDisabled: true,
+  });
+
+  t.is(user2!.id, user.id);
+  t.is(user3!.id, user.id);
+});
+
+test('should not be able to update email to disabled user', async t => {
+  const user = await t.context.user.create({
+    email: 'test@affine.pro',
+    disabled: false,
+  });
+  const user2 = await t.context.user.create({
+    email: 'test2@affine.pro',
+    disabled: true,
+  });
+
+  await t.throwsAsync(
+    t.context.user.update(user.id, {
+      email: user2.email,
+    }),
+    {
+      instanceOf: EmailAlreadyUsed,
+    }
+  );
+});
+
+test('should ban user', async t => {
   const user = await t.context.user.create({
     email: 'test@affine.pro',
   });
-  t.true(await t.context.user.exists(user.id));
-  t.false(await t.context.user.exists('non-existing-user'));
+  const event = t.context.module.get(EventBus);
+  const spy = Sinon.spy();
+  event.on('user.deleted', spy);
+
+  await t.context.user.ban(user.id);
+
+  t.true(spy.calledOnce);
+  const user2 = await t.context.user.get(user.id);
+  t.is(user2, null);
 });
+
+test('should enable user', async t => {
+  const user = await t.context.user.create({
+    email: 'test@affine.pro',
+    disabled: true,
+  });
+
+  const user2 = await t.context.user.enable(user.id);
+
+  t.is(user2.disabled, false);
+
+  const user3 = await t.context.user.get(user.id);
+  t.is(user3!.id, user.id);
+});
+
+// #endregion
 
 // #region ConnectedAccount
 

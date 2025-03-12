@@ -386,7 +386,7 @@ export class EdgelessDraggableElementController<T>
 
   hostConnected() {
     this.host.disposables.add(
-      this.options.service.viewport.viewportUpdated.on(({ zoom }) => {
+      this.options.service.viewport.viewportUpdated.subscribe(({ zoom }) => {
         this._updateOverlayScale(zoom);
       })
     );

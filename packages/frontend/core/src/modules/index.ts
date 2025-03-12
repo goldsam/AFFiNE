@@ -31,6 +31,7 @@ import { configureImportTemplateModule } from './import-template';
 import { configureJournalModule } from './journal';
 import { configureLifecycleModule } from './lifecycle';
 import { configureNavigationModule } from './navigation';
+import { configureNotificationModule } from './notification';
 import { configureOpenInApp } from './open-in-app';
 import { configureOrganizeModule } from './organize';
 import { configurePDFModule } from './pdf';
@@ -102,4 +103,5 @@ export function configureCommonModules(framework: Framework) {
   configureTemplateDocModule(framework);
   configureBlobManagementModule(framework);
   configureImportClipperModule(framework);
+  configureNotificationModule(framework);
 }

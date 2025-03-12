@@ -42,3 +42,15 @@ export const appNames = {
   beta: 'AFFiNE Beta',
   internal: 'AFFiNE Internal',
 } satisfies Record<Channel, string>;
+
+export const appSchemaUrl = z.custom<string>(
+  (url: string) => {
+    try {
+      return appSchemes.safeParse(new URL(url).protocol.replace(':', ''))
+        .success;
+    } catch {
+      return false;
+    }
+  },
+  { message: 'Invalid URL or protocol' }
+);

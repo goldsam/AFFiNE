@@ -99,20 +99,21 @@ export class EmbedSyncedDocCard extends WithDisposable(ShadowlessElement) {
       if (syncedDoc.root) {
         renderLinkedDocInCard(this);
       } else {
-        syncedDoc.slots.rootAdded.once(() => {
+        const subscription = syncedDoc.slots.rootAdded.subscribe(() => {
+          subscription.unsubscribe();
           renderLinkedDocInCard(this);
         });
       }
 
       this.disposables.add(
-        syncedDoc.workspace.slots.docListUpdated.on(() => {
+        syncedDoc.workspace.slots.docListUpdated.subscribe(() => {
           renderLinkedDocInCard(this);
         })
       );
       // Should throttle the blockUpdated event to avoid too many re-renders
       // Because the blockUpdated event is triggered too frequently at some cases
       this.disposables.add(
-        syncedDoc.slots.blockUpdated.on(
+        syncedDoc.slots.blockUpdated.subscribe(
           throttle(payload => {
             if (this._dragging) {
               return;

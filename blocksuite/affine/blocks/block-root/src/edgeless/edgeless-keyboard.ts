@@ -138,7 +138,7 @@ export class EdgelessPageKeyboardManager extends PageKeyboardManager {
               NoteBlockModel,
             ])
           ) {
-            rootComponent.slots.toggleNoteSlicer.emit();
+            rootComponent.slots.toggleNoteSlicer.next();
           }
         },
         f: () => {
@@ -173,7 +173,7 @@ export class EdgelessPageKeyboardManager extends PageKeyboardManager {
             elements.length === 1 &&
             isNoteBlock(elements[0])
           ) {
-            rootComponent.slots.toggleNoteSlicer.emit();
+            rootComponent.slots.toggleNoteSlicer.next();
           }
         },
         '@': () => {

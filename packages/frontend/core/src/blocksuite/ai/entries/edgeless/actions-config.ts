@@ -107,7 +107,7 @@ const othersGroup: AIItemGroupConfig = {
       showWhen: () => true,
       handler: host => {
         const panel = getAIPanelWidget(host);
-        AIProvider.slots.requestOpenWithChat.emit({
+        AIProvider.slots.requestOpenWithChat.next({
           host,
           mode: 'edgeless',
           autoSelect: true,

@@ -8,10 +8,7 @@ import type {
   EdgelessColorPickerButton,
   PickColorEvent,
 } from '@blocksuite/affine-components/color-picker';
-import {
-  packColor,
-  packColorsWithColorScheme,
-} from '@blocksuite/affine-components/color-picker';
+import { packColor } from '@blocksuite/affine-components/color-picker';
 import { renderToolbarSeparator } from '@blocksuite/affine-components/toolbar';
 import {
   type ColorScheme,
@@ -30,7 +27,6 @@ import {
   type TextStyleProps,
 } from '@blocksuite/affine-model';
 import { FeatureFlagService } from '@blocksuite/affine-shared/services';
-import type { ColorEvent } from '@blocksuite/affine-shared/utils';
 import { Bound } from '@blocksuite/global/gfx';
 import { WithDisposable } from '@blocksuite/global/lit';
 import {
@@ -42,7 +38,6 @@ import { css, html, LitElement, nothing, type TemplateResult } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { choose } from 'lit/directives/choose.js';
 import { join } from 'lit/directives/join.js';
-import { when } from 'lit/directives/when.js';
 import countBy from 'lodash-es/countBy';
 import maxBy from 'lodash-es/maxBy';
 
@@ -229,14 +224,6 @@ export class EdgelessChangeTextMenu extends WithDisposable(LitElement) {
     });
   };
 
-  private readonly _setTextColor = (e: ColorEvent) => {
-    const color = e.detail.value;
-    const props = { color };
-    this.elements.forEach(element => {
-      this.crud.updateElement(element.id, buildProps(element, props));
-    });
-  };
-
   private readonly _updateElementBound = (element: SurfaceTextModel) => {
     const elementType = this.elementType;
     if (elementType === 'text' && element instanceof TextElementModel) {
@@ -346,6 +333,9 @@ export class EdgelessChangeTextMenu extends WithDisposable(LitElement) {
       this.elementType === 'shape'
         ? DefaultTheme.ShapeTextColorPalettes
         : DefaultTheme.Palettes;
+    const enableCustomColor = this.edgeless.doc
+      .get(FeatureFlagService)
+      .getFlag('enable_color_picker');
 
     return join(
       [
@@ -375,57 +365,22 @@ export class EdgelessChangeTextMenu extends WithDisposable(LitElement) {
           </editor-menu-button>
         `,
 
-        when(
-          this.edgeless.doc
-            .get(FeatureFlagService)
-            .getFlag('enable_color_picker'),
-          () => {
-            const { type, colors } = packColorsWithColorScheme(
-              colorScheme,
-              selectedColor,
-              elements[0] instanceof ConnectorElementModel
-                ? elements[0].labelStyle.color
-                : elements[0].color
-            );
-
-            return html`
-              <edgeless-color-picker-button
-                class="text-color"
-                .label="${'Text color'}"
-                .pick=${this.pickColor}
-                .isText=${true}
-                .color=${selectedColor}
-                .colors=${colors}
-                .colorType=${type}
-                .theme=${colorScheme}
-                .palettes=${palettes}
-              >
-              </edgeless-color-picker-button>
-            `;
-          },
-          () => html`
-            <editor-menu-button
-              .contentPadding=${'8px'}
-              .button=${html`
-                <editor-icon-button
-                  aria-label="Text color"
-                  .tooltip=${'Text color'}
-                >
-                  <edgeless-text-color-icon
-                    .color=${selectedColor}
-                  ></edgeless-text-color-icon>
-                </editor-icon-button>
-              `}
-            >
-              <edgeless-color-panel
-                .value=${selectedColor}
-                .theme=${colorScheme}
-                .palettes=${palettes}
-                @select=${this._setTextColor}
-              ></edgeless-color-panel>
-            </editor-menu-button>
-          `
-        ),
+        html`
+          <edgeless-color-picker-button
+            class="text-color"
+            .label="${'Text color'}"
+            .pick=${this.pickColor}
+            .isText=${true}
+            .color=${selectedColor}
+            .originalColor=${elements[0] instanceof ConnectorElementModel
+              ? elements[0].labelStyle.color
+              : elements[0].color}
+            .theme=${colorScheme}
+            .palettes=${palettes}
+            .enableCustomColor=${enableCustomColor}
+          >
+          </edgeless-color-picker-button>
+        `,
 
         html`
           <editor-menu-button

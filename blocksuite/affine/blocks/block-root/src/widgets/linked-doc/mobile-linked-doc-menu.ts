@@ -196,20 +196,28 @@ export class AffineMobileLinkedDocMenu extends SignalWatcher(
           if (isComposition) {
             this._updateLinkedDocGroup().catch(console.error);
           } else {
-            inlineEditor.slots.renderComplete.once(this._updateLinkedDocGroup);
+            const subscription = inlineEditor.slots.renderComplete.subscribe(
+              () => {
+                subscription.unsubscribe();
+                this._updateLinkedDocGroup().catch(console.error);
+              }
+            );
           }
         },
         onDelete: () => {
-          inlineEditor.slots.renderComplete.once(() => {
-            const curRange = inlineEditor.getInlineRange();
+          const subscription = inlineEditor.slots.renderComplete.subscribe(
+            () => {
+              subscription.unsubscribe();
+              const curRange = inlineEditor.getInlineRange();
 
-            if (!this.context.startRange || !curRange) return;
+              if (!this.context.startRange || !curRange) return;
 
-            if (curRange.index < this.context.startRange.index) {
-              this.context.close();
+              if (curRange.index < this.context.startRange.index) {
+                this.context.close();
+              }
+              this._updateLinkedDocGroup().catch(console.error);
             }
-            this._updateLinkedDocGroup().catch(console.error);
-          });
+          );
         },
         onConfirm: () => {
           this._firstActionItem?.action()?.catch(console.error);

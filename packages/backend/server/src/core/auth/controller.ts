@@ -21,6 +21,7 @@ import {
   EarlyAccessRequired,
   EmailTokenNotFound,
   InternalServerError,
+  InvalidAuthState,
   InvalidEmail,
   InvalidEmailToken,
   Runtime,
@@ -45,11 +46,13 @@ interface SignInCredential {
   email: string;
   password?: string;
   callbackUrl?: string;
+  client_nonce?: string;
 }
 
 interface MagicLinkCredential {
   email: string;
   token: string;
+  client_nonce?: string;
 }
 
 const OTP_CACHE_KEY = (otp: string) => `magic-link-otp:${otp}`;
@@ -140,7 +143,8 @@ export class AuthController {
         res,
         credential.email,
         credential.callbackUrl,
-        redirectUri
+        redirectUri,
+        credential.client_nonce
       );
     }
   }
@@ -162,7 +166,8 @@ export class AuthController {
     res: Response,
     email: string,
     callbackUrl = '/magic-link',
-    redirectUrl?: string
+    redirectUrl?: string,
+    clientNonce?: string
   ) {
     // send email magic link
     const user = await this.models.user.getUserByEmail(email);
@@ -210,7 +215,11 @@ export class AuthController {
     const otp = this.crypto.otp();
     // TODO(@forehalo): this is a temporary solution, we should not rely on cache to store the otp
     const cacheKey = OTP_CACHE_KEY(otp);
-    await this.cache.set(cacheKey, token, { ttl: ttlInSec * 1000 });
+    await this.cache.set(
+      cacheKey,
+      { token, clientNonce },
+      { ttl: ttlInSec * 1000 }
+    );
 
     const magicLink = this.url.link(callbackUrl, {
       token: otp,
@@ -266,24 +275,37 @@ export class AuthController {
   async magicLinkSignIn(
     @Req() req: Request,
     @Res() res: Response,
-    @Body() { email, token }: MagicLinkCredential
+    @Body()
+    { email, token: otp, client_nonce: clientNonce }: MagicLinkCredential
   ) {
-    if (!token || !email) {
+    if (!otp || !email) {
       throw new EmailTokenNotFound();
     }
 
     validators.assertValidEmail(email);
 
-    const cacheKey = OTP_CACHE_KEY(token);
-    const cachedToken = await this.cache.get<string>(cacheKey);
+    const cacheKey = OTP_CACHE_KEY(otp);
+    const cachedToken = await this.cache.get<
+      { token: string; clientNonce: string } | string
+    >(cacheKey);
+    let token: string | undefined;
+    // TODO(@fengmk2): this is a temporary compatible with cache token is string value, should be removed in 0.22
+    if (typeof cachedToken === 'string') {
+      token = cachedToken;
+    } else if (cachedToken) {
+      token = cachedToken.token;
+      if (cachedToken.clientNonce && cachedToken.clientNonce !== clientNonce) {
+        throw new InvalidAuthState();
+      }
+    }
 
-    if (!cachedToken) {
+    if (!token) {
       throw new InvalidEmailToken();
     }
 
     const tokenRecord = await this.models.verificationToken.verify(
       TokenType.SignIn,
-      cachedToken,
+      token,
       {
         credential: email,
       }

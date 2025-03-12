@@ -197,7 +197,7 @@ export class PresentationToolbar extends EdgelessToolbarToolMixin(
       }
 
       viewport.setViewportByBound(bound, [0, 0, 0, 0], false);
-      this.edgeless.slots.navigatorFrameChanged.emit(
+      this.edgeless.slots.navigatorFrameChanged.next(
         this._frames[this._currentFrameIndex]
       );
     }
@@ -278,7 +278,7 @@ export class PresentationToolbar extends EdgelessToolbarToolMixin(
     this._bindHotKey();
 
     _disposables.add(
-      edgeless.slots.navigatorSettingUpdated.on(({ fillScreen }) => {
+      edgeless.slots.navigatorSettingUpdated.subscribe(({ fillScreen }) => {
         if (fillScreen !== undefined) {
           this._navigatorMode = fillScreen ? 'fill' : 'fit';
         }
@@ -307,7 +307,7 @@ export class PresentationToolbar extends EdgelessToolbarToolMixin(
       }
 
       setTimeout(() => this._moveToCurrentFrame(), 400);
-      this.edgeless.slots.fullScreenToggled.emit();
+      this.edgeless.slots.fullScreenToggled.next();
     });
 
     this._navigatorMode =

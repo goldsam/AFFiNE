@@ -78,7 +78,6 @@ export interface Copilot {
   __typename?: 'Copilot';
   /** Get the context list of a session */
   contexts: Array<CopilotContext>;
-  docId: Maybe<Scalars['ID']['output']>;
   histories: Array<CopilotHistories>;
   /** Get the quota of the user in the workspace */
   quota: CopilotQuota;
@@ -3103,6 +3102,42 @@ export type LeaveWorkspaceMutation = {
   leaveWorkspace: boolean;
 };
 
+export type ListNotificationsQueryVariables = Exact<{
+  pagination: PaginationInput;
+}>;
+
+export type ListNotificationsQuery = {
+  __typename?: 'Query';
+  currentUser: {
+    __typename?: 'UserType';
+    notifications: {
+      __typename?: 'PaginatedNotificationObjectType';
+      totalCount: number;
+      edges: Array<{
+        __typename?: 'NotificationObjectTypeEdge';
+        cursor: string;
+        node: {
+          __typename?: 'NotificationObjectType';
+          id: string;
+          type: NotificationType;
+          level: NotificationLevel;
+          read: boolean;
+          createdAt: string;
+          updatedAt: string;
+          body: any;
+        };
+      }>;
+      pageInfo: {
+        __typename?: 'PageInfo';
+        startCursor: string | null;
+        endCursor: string | null;
+        hasNextPage: boolean;
+        hasPreviousPage: boolean;
+      };
+    };
+  } | null;
+};
+
 export type ListUsersQueryVariables = Exact<{
   filter: ListUserInput;
 }>;
@@ -3119,6 +3154,13 @@ export type ListUsersQuery = {
     emailVerified: boolean;
     avatarUrl: string | null;
   }>;
+};
+
+export type NotificationCountQueryVariables = Exact<{ [key: string]: never }>;
+
+export type NotificationCountQuery = {
+  __typename?: 'Query';
+  currentUser: { __typename?: 'UserType'; notificationCount: number } | null;
 };
 
 export type PricesQueryVariables = Exact<{ [key: string]: never }>;
@@ -3172,6 +3214,15 @@ export type QuotaQuery = {
     };
     quotaUsage: { __typename?: 'UserQuotaUsageType'; storageQuota: number };
   } | null;
+};
+
+export type ReadNotificationMutationVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+export type ReadNotificationMutation = {
+  __typename?: 'Mutation';
+  readNotification: boolean;
 };
 
 export type RecoverDocMutationVariables = Exact<{
@@ -3869,9 +3920,19 @@ export type Queries =
       response: InvoicesQuery;
     }
   | {
+      name: 'listNotificationsQuery';
+      variables: ListNotificationsQueryVariables;
+      response: ListNotificationsQuery;
+    }
+  | {
       name: 'listUsersQuery';
       variables: ListUsersQueryVariables;
       response: ListUsersQuery;
+    }
+  | {
+      name: 'notificationCountQuery';
+      variables: NotificationCountQueryVariables;
+      response: NotificationCountQuery;
     }
   | {
       name: 'pricesQuery';
@@ -4064,6 +4125,11 @@ export type Mutations =
       name: 'publishPageMutation';
       variables: PublishPageMutationVariables;
       response: PublishPageMutation;
+    }
+  | {
+      name: 'readNotificationMutation';
+      variables: ReadNotificationMutationVariables;
+      response: ReadNotificationMutation;
     }
   | {
       name: 'recoverDocMutation';

@@ -1,8 +1,9 @@
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { assertType, type Constructor } from '@blocksuite/global/utils';
 import type { Boxed } from '@blocksuite/store';
 import { BlockModel, nanoid } from '@blocksuite/store';
 import { signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 import * as Y from 'yjs';
 
 import {
@@ -77,24 +78,24 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
   protected _surfaceBlockModel = true;
 
-  elementAdded = new Slot<{ id: string; local: boolean }>();
+  protected localElements = new Set<GfxLocalElementModel>();
 
-  elementRemoved = new Slot<{
+  elementAdded = new Subject<{ id: string; local: boolean }>();
+
+  elementRemoved = new Subject<{
     id: string;
     type: string;
     model: GfxPrimitiveElementModel;
     local: boolean;
   }>();
 
-  elementUpdated = new Slot<ElementUpdatedData>();
+  elementUpdated = new Subject<ElementUpdatedData>();
 
-  localElementAdded = new Slot<GfxLocalElementModel>();
+  localElementAdded = new Subject<GfxLocalElementModel>();
 
-  localElementDeleted = new Slot<GfxLocalElementModel>();
+  localElementDeleted = new Subject<GfxLocalElementModel>();
 
-  protected localElements = new Set<GfxLocalElementModel>();
-
-  localElementUpdated = new Slot<{
+  localElementUpdated = new Subject<{
     model: GfxLocalElementModel;
     props: Record<string, unknown>;
     oldValues: Record<string, unknown>;
@@ -122,7 +123,10 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
   constructor() {
     super();
-    this.created.once(() => this._init());
+    const subscription = this.created.subscribe(() => {
+      this._init();
+      subscription.unsubscribe();
+    });
   }
 
   private _createElementFromProps(
@@ -296,9 +300,9 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
                     element,
                     {
                       onChange: payload => {
-                        this.elementUpdated.emit(payload);
+                        this.elementUpdated.next(payload);
                         Object.keys(payload.props).forEach(key => {
-                          model.model.propsUpdated.emit({ key });
+                          model.model.propsUpdated.next({ key });
                         });
                       },
                       skipFieldInit: true,
@@ -323,11 +327,11 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
       addedElements.forEach(({ mount, model }) => {
         mount();
-        this.elementAdded.emit({ id: model.id, local: transaction.local });
+        this.elementAdded.next({ id: model.id, local: transaction.local });
       });
       deletedElements.forEach(({ unmount, model }) => {
         unmount();
-        this.elementRemoved.emit({
+        this.elementRemoved.next({
           id: model.id,
           type: model.type,
           model,
@@ -343,9 +347,9 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
         val,
         {
           onChange: payload => {
-            this.elementUpdated.emit(payload),
+            this.elementUpdated.next(payload),
               Object.keys(payload.props).forEach(key => {
-                model.model.propsUpdated.emit({ key });
+                model.model.propsUpdated.next({ key });
               });
           },
           skipFieldInit: true,
@@ -368,7 +372,7 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
     elementsYMap.observe(onElementsMapChange);
 
-    const disposable = this.doc.slots.blockUpdated.on(payload => {
+    const subscription = this.doc.slots.blockUpdated.subscribe(payload => {
       switch (payload.type) {
         case 'add':
           if (isGfxGroupCompatibleModel(payload.model)) {
@@ -392,9 +396,9 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
       }
     });
 
-    this.deleted.on(() => {
+    this.deleted.subscribe(() => {
       elementsYMap.unobserve(onElementsMapChange);
-      disposable.dispose();
+      subscription.unsubscribe();
     });
   }
 
@@ -435,7 +439,7 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
     ): element is GfxGroupLikeElementModel =>
       element instanceof GfxGroupLikeElementModel;
 
-    const disposable = this.elementUpdated.on(({ id, oldValues }) => {
+    const disposable = this.elementUpdated.subscribe(({ id, oldValues }) => {
       const element = this.getElementById(id)!;
 
       if (
@@ -446,8 +450,8 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
         this.deleteElement(id);
       }
     });
-    this.deleted.on(() => {
-      disposable.dispose();
+    this.deleted.subscribe(() => {
+      disposable.unsubscribe();
     });
   }
 
@@ -458,14 +462,14 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
     };
 
     const disposables = new DisposableGroup();
-    disposables.add(this.elementAdded.on(updateIsEmpty));
-    disposables.add(this.elementRemoved.on(updateIsEmpty));
-    this.doc.slots.blockUpdated.on(payload => {
+    disposables.add(this.elementAdded.subscribe(updateIsEmpty));
+    disposables.add(this.elementRemoved.subscribe(updateIsEmpty));
+    this.doc.slots.blockUpdated.subscribe(payload => {
       if (['add', 'delete'].includes(payload.type)) {
         updateIsEmpty();
       }
     });
-    this.deleted.on(() => {
+    this.deleted.subscribe(() => {
       disposables.dispose();
     });
   }
@@ -518,9 +522,9 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
     const elementModel = this._createElementFromProps(props, {
       onChange: payload => {
-        this.elementUpdated.emit(payload);
+        this.elementUpdated.next(payload);
         Object.keys(payload.props).forEach(key => {
-          elementModel.model.propsUpdated.emit({ key });
+          elementModel.model.propsUpdated.next({ key });
         });
       },
     });
@@ -536,7 +540,7 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
   addLocalElement(elem: GfxLocalElementModel) {
     this.localElements.add(elem);
-    this.localElementAdded.emit(elem);
+    this.localElementAdded.next(elem);
   }
 
   applyMiddlewares(middlewares: SurfaceMiddleware[]) {
@@ -575,16 +579,16 @@ export class SurfaceBlockModel extends BlockModel<SurfaceBlockProps> {
 
   deleteLocalElement(elem: GfxLocalElementModel) {
     if (this.localElements.delete(elem)) {
-      this.localElementDeleted.emit(elem);
+      this.localElementDeleted.next(elem);
     }
   }
 
   override dispose(): void {
     super.dispose();
 
-    this.elementAdded.dispose();
-    this.elementRemoved.dispose();
-    this.elementUpdated.dispose();
+    this.elementAdded.complete();
+    this.elementRemoved.complete();
+    this.elementUpdated.complete();
 
     this._elementModels.forEach(({ unmount }) => unmount());
     this._elementModels.clear();

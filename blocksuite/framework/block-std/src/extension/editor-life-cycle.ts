@@ -1,4 +1,5 @@
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
+import { Subject } from 'rxjs';
 
 import type { BlockStdScope } from '../scope/block-std-scope';
 import { LifeCycleWatcher } from './lifecycle-watcher';
@@ -9,10 +10,10 @@ export class EditorLifeCycleExtension extends LifeCycleWatcher {
   disposables = new DisposableGroup();
 
   readonly slots = {
-    created: new Slot(),
-    mounted: new Slot(),
-    rendered: new Slot(),
-    unmounted: new Slot(),
+    created: new Subject<void>(),
+    mounted: new Subject<void>(),
+    rendered: new Subject<void>(),
+    unmounted: new Subject<void>(),
   };
 
   constructor(override readonly std: BlockStdScope) {
@@ -26,22 +27,22 @@ export class EditorLifeCycleExtension extends LifeCycleWatcher {
 
   override created() {
     super.created();
-    this.slots.created.emit();
+    this.slots.created.next();
   }
 
   override mounted() {
     super.mounted();
-    this.slots.mounted.emit();
+    this.slots.mounted.next();
   }
 
   override rendered() {
     super.rendered();
-    this.slots.rendered.emit();
+    this.slots.rendered.next();
   }
 
   override unmounted() {
     super.unmounted();
-    this.slots.unmounted.emit();
+    this.slots.unmounted.next();
 
     this.disposables.dispose();
   }

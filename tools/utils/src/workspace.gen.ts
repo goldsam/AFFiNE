@@ -29,6 +29,7 @@ export const PackageList = [
       'blocksuite/affine/fragments/fragment-frame-panel',
       'blocksuite/affine/fragments/fragment-outline',
       'blocksuite/affine/gfx/text',
+      'blocksuite/affine/gfx/turbo-renderer',
       'blocksuite/affine/model',
       'blocksuite/affine/rich-text',
       'blocksuite/affine/shared',
@@ -445,6 +446,14 @@ export const PackageList = [
       'blocksuite/framework/global',
       'blocksuite/framework/inline',
       'blocksuite/framework/store',
+    ],
+  },
+  {
+    location: 'blocksuite/affine/gfx/turbo-renderer',
+    name: '@blocksuite/affine-gfx-turbo-renderer',
+    workspaceDependencies: [
+      'blocksuite/framework/block-std',
+      'blocksuite/framework/global',
     ],
   },
   {
@@ -942,6 +951,7 @@ export type PackageName =
   | '@blocksuite/affine-fragment-frame-panel'
   | '@blocksuite/affine-fragment-outline'
   | '@blocksuite/affine-gfx-text'
+  | '@blocksuite/affine-gfx-turbo-renderer'
   | '@blocksuite/affine-model'
   | '@blocksuite/affine-rich-text'
   | '@blocksuite/affine-shared'

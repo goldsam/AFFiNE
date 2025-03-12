@@ -12,8 +12,9 @@ export type RootBlockProps = {
 export class RootBlockModel extends BlockModel<RootBlockProps> {
   constructor() {
     super();
-    this.created.once(() => {
-      this.doc.slots.rootAdded.on(id => {
+    const createdSubscription = this.created.subscribe(() => {
+      createdSubscription.unsubscribe();
+      this.doc.slots.rootAdded.subscribe(id => {
         const model = this.doc.getBlockById(id);
         if (model instanceof RootBlockModel) {
           const newDocMeta = this.doc.workspace.meta.getDocMeta(model.doc.id);

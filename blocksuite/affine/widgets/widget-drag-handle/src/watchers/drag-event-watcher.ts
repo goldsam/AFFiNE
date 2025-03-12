@@ -1624,7 +1624,7 @@ export class DragEventWatcher {
     disposables.add(this._monitorBlockDrag());
 
     disposables.add(
-      std.view.viewUpdated.on(payload => {
+      std.view.viewUpdated.subscribe(payload => {
         if (payload.type !== 'block') {
           return;
         }

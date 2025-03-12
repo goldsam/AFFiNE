@@ -392,7 +392,7 @@ export class ChatPanel extends SignalWatcher(
     if (!this.doc) throw new Error('doc is required');
 
     this._disposables.add(
-      AIProvider.slots.actions.on(({ event }) => {
+      AIProvider.slots.actions.subscribe(({ event }) => {
         const { status } = this.chatContextValue;
         if (
           event === 'finished' &&
@@ -403,16 +403,19 @@ export class ChatPanel extends SignalWatcher(
       })
     );
     this._disposables.add(
-      AIProvider.slots.userInfo.on(async () => {
-        await this._initPanel();
+      AIProvider.slots.userInfo.subscribe(() => {
+        this._initPanel().catch(console.error);
       })
     );
     this._disposables.add(
-      AIProvider.slots.requestOpenWithChat.on(async ({ host }) => {
+      AIProvider.slots.requestOpenWithChat.subscribe(({ host }) => {
         if (this.host === host) {
-          const context = await extractSelectedContent(host);
-          if (!context) return;
-          this.updateContext(context);
+          extractSelectedContent(host)
+            .then(context => {
+              if (!context) return;
+              this.updateContext(context);
+            })
+            .catch(console.error);
         }
       })
     );

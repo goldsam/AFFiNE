@@ -37,7 +37,7 @@ const handlePoint = (
 };
 
 const sliceText = (slots: TransformerSlots, std: EditorHost['std']) => {
-  slots.afterExport.on(payload => {
+  slots.afterExport.subscribe(payload => {
     if (payload.type === 'block') {
       const snapshot = payload.snapshot;
 

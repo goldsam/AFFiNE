@@ -38,11 +38,11 @@ const styles = css`
     transition: 0.1s;
   }
 
-  label.on {
+  label.subscribe {
     background: var(--affine-primary-color);
   }
 
-  label.on:after {
+  label.subscribe:after {
     left: calc(100% - 1px);
     transform: translateX(-100%);
   }

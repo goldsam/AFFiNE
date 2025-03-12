@@ -75,7 +75,7 @@ export class AskAIToolbarButton extends WithDisposable(LitElement) {
       aiPanel.hide();
       extractSelectedContent(this.host)
         .then(context => {
-          AIProvider.slots.requestSendWithChat.emit({
+          AIProvider.slots.requestSendWithChat.next({
             input,
             context,
             host: this.host,

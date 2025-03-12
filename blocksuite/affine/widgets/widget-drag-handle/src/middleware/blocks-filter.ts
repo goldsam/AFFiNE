@@ -40,7 +40,7 @@ export const gfxBlocksFilter = (
   }
 
   return ({ slots, transformerConfigs }) => {
-    slots.beforeExport.on(payload => {
+    slots.beforeExport.subscribe(payload => {
       if (payload.type !== 'block') {
         return;
       }
@@ -54,7 +54,7 @@ export const gfxBlocksFilter = (
       }
     });
 
-    slots.afterExport.on(payload => {
+    slots.afterExport.subscribe(payload => {
       if (payload.type !== 'block') {
         return;
       }

@@ -92,7 +92,7 @@ export const EdgelessSnapshot = (props: Props) => {
 
     // refresh viewport
     const gfx = editorHost.std.get(GfxControllerIdentifier);
-    const disposable = editorHost.std.view.viewUpdated.on(payload => {
+    const disposable = editorHost.std.view.viewUpdated.subscribe(payload => {
       if (
         payload.type !== 'block' ||
         payload.method !== 'add' ||
@@ -110,7 +110,7 @@ export const EdgelessSnapshot = (props: Props) => {
       const bound = boundMap.get(docName);
       bound && gfx.viewport.setViewportByBound(bound);
       doc.readonly = true;
-      disposable.dispose();
+      disposable.unsubscribe();
     });
 
     // append to dom node

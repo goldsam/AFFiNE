@@ -57,7 +57,7 @@ const EdgelessNoteToggleButton = ({ note }: { note: NoteBlockModel }) => {
 
     const { selection } = gfx;
 
-    const dispose = selection.slots.updated.on(() => {
+    const dispose = selection.slots.updated.subscribe(() => {
       if (selection.has(note.id) && selection.editing) {
         note.doc.transact(() => {
           note.edgeless.collapse = false;
@@ -65,7 +65,7 @@ const EdgelessNoteToggleButton = ({ note }: { note: NoteBlockModel }) => {
       }
     });
 
-    return () => dispose.dispose();
+    return () => dispose.unsubscribe();
   }, [gfx, note]);
 
   const toggle = useCallback(() => {

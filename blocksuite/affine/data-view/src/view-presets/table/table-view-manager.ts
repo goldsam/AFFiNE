@@ -14,6 +14,7 @@ import {
   groupTraitKey,
   sortByManually,
 } from '../../core/group-by/trait.js';
+import { fromJson } from '../../core/property/utils';
 import { SortManager, sortTraitKey } from '../../core/sort/manager.js';
 import { PropertyBase } from '../../core/view-manager/property.js';
 import {
@@ -327,8 +328,8 @@ export class TableSingleView extends SingleViewBase<TableViewData> {
       Object.entries(defaultValues).forEach(([propertyId, jsonValue]) => {
         const property = this.propertyGet(propertyId);
         const propertyMeta = this.propertyMetaGet(property.type$.value);
-        if (propertyMeta?.config.cellFromJson) {
-          const value = propertyMeta.config.cellFromJson({
+        if (propertyMeta) {
+          const value = fromJson(propertyMeta.config, {
             value: jsonValue,
             data: property.data$.value,
             dataSource: this.dataSource,

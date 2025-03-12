@@ -73,12 +73,17 @@ const linkedDocSlashMenuConfig: SlashMenuConfig = {
         insertContent(std.host, model, triggerKey);
 
         const inlineEditor = getInlineEditorByModel(std.host, model);
-        // Wait for range to be updated
-        inlineEditor?.slots.inlineRangeSync.once(() => {
-          // TODO(@L-Sun): make linked-doc-widget as extension
-          // @ts-expect-error same as above
-          linkedDocWidget.show({ addTriggerKey: true });
-        });
+        if (inlineEditor) {
+          // Wait for range to be updated
+          const subscription = inlineEditor.slots.inlineRangeSync.subscribe(
+            () => {
+              // TODO(@L-Sun): make linked-doc-widget as extension
+              subscription.unsubscribe();
+              // @ts-expect-error same as above
+              linkedDocWidget.show({ addTriggerKey: true });
+            }
+          );
+        }
       },
     },
   ],

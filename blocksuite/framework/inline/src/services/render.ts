@@ -14,7 +14,7 @@ export class RenderService<TextAttributes extends BaseTextAttributes> {
     _: Y.YTextEvent,
     transaction: Y.Transaction
   ) => {
-    this.editor.slots.textChange.emit();
+    this.editor.slots.textChange.next();
 
     const yText = this.editor.yText;
 
@@ -153,7 +153,7 @@ export class RenderService<TextAttributes extends BaseTextAttributes> {
       .waitForUpdate()
       .then(() => {
         this._rendering = false;
-        this.editor.slots.renderComplete.emit();
+        this.editor.slots.renderComplete.next();
         this.editor.syncInlineRange();
       })
       .catch(console.error);

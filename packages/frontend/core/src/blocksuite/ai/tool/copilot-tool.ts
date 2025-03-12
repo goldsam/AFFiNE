@@ -10,7 +10,7 @@ import {
   Bound,
   getCommonBoundWithRotation,
 } from '@blocksuite/affine/global/gfx';
-import { Slot } from '@blocksuite/affine/global/slot';
+import { Subject } from 'rxjs';
 
 import {
   AFFINE_AI_PANEL_WIDGET,
@@ -22,7 +22,8 @@ export class CopilotTool extends BaseTool {
 
   private _dragging = false;
 
-  draggingAreaUpdated = new Slot<boolean | void>();
+  // eslint-disable-next-line rxjs/finnish
+  draggingAreaUpdated = new Subject<boolean | void>();
 
   dragLastPoint: [number, number] = [0, 0];
 
@@ -85,7 +86,7 @@ export class CopilotTool extends BaseTool {
     if (!this._dragging) return;
 
     this._dragging = false;
-    this.draggingAreaUpdated.emit(true);
+    this.draggingAreaUpdated.next(true);
   }
 
   override dragMove(e: PointerEventState): void {
@@ -108,7 +109,7 @@ export class CopilotTool extends BaseTool {
       });
     }
 
-    this.draggingAreaUpdated.emit();
+    this.draggingAreaUpdated.next();
   }
 
   override dragStart(e: PointerEventState): void {
@@ -116,7 +117,7 @@ export class CopilotTool extends BaseTool {
 
     this._initDragState(e);
     this._dragging = true;
-    this.draggingAreaUpdated.emit();
+    this.draggingAreaUpdated.next();
   }
 
   override mounted(): void {
@@ -167,7 +168,7 @@ export class CopilotTool extends BaseTool {
       inoperable: true,
     });
 
-    this.draggingAreaUpdated.emit(true);
+    this.draggingAreaUpdated.next(true);
   }
 }
 

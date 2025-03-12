@@ -1,6 +1,6 @@
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { Slot } from '@blocksuite/global/slot';
 import { nextTick } from '@blocksuite/global/utils';
+import { Subject } from 'rxjs';
 
 import {
   BlockModel,
@@ -68,10 +68,10 @@ export class Transformer {
   private readonly _docCRUD: DocCRUD;
 
   private readonly _slots: TransformerSlots = {
-    beforeImport: new Slot<BeforeImportPayload>(),
-    afterImport: new Slot<AfterImportPayload>(),
-    beforeExport: new Slot<BeforeExportPayload>(),
-    afterExport: new Slot<AfterExportPayload>(),
+    beforeImport: new Subject<BeforeImportPayload>(),
+    afterImport: new Subject<AfterImportPayload>(),
+    beforeExport: new Subject<BeforeExportPayload>(),
+    afterExport: new Subject<AfterExportPayload>(),
   };
 
   blockToSnapshot = (
@@ -99,7 +99,7 @@ export class Transformer {
 
   docToSnapshot = (doc: Store): DocSnapshot | undefined => {
     try {
-      this._slots.beforeExport.emit({
+      this._slots.beforeExport.next({
         type: 'page',
         page: doc,
       });
@@ -120,7 +120,7 @@ export class Transformer {
         meta,
         blocks,
       };
-      this._slots.afterExport.emit({
+      this._slots.afterExport.next({
         type: 'page',
         page: doc,
         snapshot: docSnapshot,
@@ -137,7 +137,7 @@ export class Transformer {
 
   sliceToSnapshot = (slice: Slice): SliceSnapshot | undefined => {
     try {
-      this._slots.beforeExport.emit({
+      this._slots.beforeExport.next({
         type: 'slice',
         slice,
       });
@@ -156,7 +156,7 @@ export class Transformer {
         pageId,
         content: contentSnapshot,
       };
-      this._slots.afterExport.emit({
+      this._slots.afterExport.next({
         type: 'slice',
         slice,
         snapshot,
@@ -191,7 +191,7 @@ export class Transformer {
 
   snapshotToDoc = async (snapshot: DocSnapshot): Promise<Store | undefined> => {
     try {
-      this._slots.beforeImport.emit({
+      this._slots.beforeImport.next({
         type: 'page',
         snapshot,
       });
@@ -200,7 +200,7 @@ export class Transformer {
       const doc = this.docCRUD.create(meta.id);
       doc.load();
       await this.snapshotToBlock(blocks, doc);
-      this._slots.afterImport.emit({
+      this._slots.afterImport.next({
         type: 'page',
         snapshot,
         page: doc,
@@ -247,7 +247,7 @@ export class Transformer {
   ): Promise<Slice | undefined> => {
     SliceSnapshotSchema.parse(snapshot);
     try {
-      this._slots.beforeImport.emit({
+      this._slots.beforeImport.next({
         type: 'slice',
         snapshot,
       });
@@ -303,7 +303,7 @@ export class Transformer {
         pageId,
       });
 
-      this._slots.afterImport.emit({
+      this._slots.afterImport.next({
         type: 'slice',
         snapshot,
         slice,
@@ -376,7 +376,7 @@ export class Transformer {
   }
 
   private _blockToSnapshot(model: DraftModel): BlockSnapshot | null {
-    this._slots.beforeExport.emit({
+    this._slots.beforeExport.next({
       type: 'block',
       model,
     });
@@ -397,7 +397,7 @@ export class Transformer {
       ...snapshotLeaf,
       children,
     };
-    this._slots.afterExport.emit({
+    this._slots.afterExport.next({
       type: 'block',
       model,
       snapshot,
@@ -539,7 +539,7 @@ export class Transformer {
         );
       }
 
-      this._slots.afterImport.emit({
+      this._slots.afterImport.next({
         type: 'block',
         model,
         snapshot: node.snapshot,
@@ -627,7 +627,7 @@ export class Transformer {
       parent?: string,
       index?: number
     ) => {
-      this._slots.beforeImport.emit({
+      this._slots.beforeImport.next({
         type: 'block',
         snapshot: node,
         parent: parent,

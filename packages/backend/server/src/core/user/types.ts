@@ -41,6 +41,11 @@ export class UserType implements CurrentUser {
     nullable: true,
   })
   createdAt?: Date | null;
+
+  @Field(() => Boolean, {
+    description: 'User is disabled',
+  })
+  disabled!: boolean;
 }
 
 @ObjectType()

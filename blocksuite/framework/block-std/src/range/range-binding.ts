@@ -313,7 +313,7 @@ export class RangeBinding {
 
   constructor(public manager: RangeManager) {
     this.host.disposables.add(
-      this.selectionManager.slots.changed.on(this._onStdSelectionChanged)
+      this.selectionManager.slots.changed.subscribe(this._onStdSelectionChanged)
     );
 
     this.host.disposables.addFromEvent(

@@ -1,8 +1,8 @@
-import { Slot } from '@blocksuite/affine/global/slot';
 import { SpecProvider } from '@blocksuite/affine/shared/utils';
 import {
   AwarenessStore,
   type Doc,
+  type ExtensionType,
   type GetBlocksOptions,
   type Query,
   Store,
@@ -10,6 +10,7 @@ import {
   type YBlock,
 } from '@blocksuite/affine/store';
 import { signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 import { Awareness } from 'y-protocols/awareness.js';
 import * as Y from 'yjs';
 
@@ -37,7 +38,7 @@ export class DocImpl implements Doc {
 
   private readonly _historyObserver = () => {
     this._updateCanUndoRedoSignals();
-    this.slots.historyUpdated.emit();
+    this.slots.historyUpdated.next();
   };
 
   private readonly _initSubDoc = () => {
@@ -65,7 +66,8 @@ export class DocImpl implements Doc {
 
   private _loaded!: boolean;
 
-  private readonly _onLoadSlot = new Slot();
+  // eslint-disable-next-line rxjs/finnish
+  private readonly _onLoadSlot = new Subject();
 
   /** Indicate whether the block tree is ready */
   private _ready = false;
@@ -91,6 +93,8 @@ export class DocImpl implements Doc {
    */
   protected readonly _ySpaceDoc: Y.Doc;
 
+  readonly storeExtensions: ExtensionType[] = [];
+
   readonly awarenessStore: AwarenessStore;
 
   readonly id: string;
@@ -98,8 +102,10 @@ export class DocImpl implements Doc {
   readonly rootDoc: Y.Doc;
 
   readonly slots = {
-    historyUpdated: new Slot(),
-    yBlockUpdated: new Slot<
+    // eslint-disable-next-line rxjs/finnish
+    historyUpdated: new Subject<void>(),
+    // eslint-disable-next-line rxjs/finnish
+    yBlockUpdated: new Subject<
       | {
           type: 'add';
           id: string;
@@ -170,11 +176,11 @@ export class DocImpl implements Doc {
   }
 
   private _handleYBlockAdd(id: string) {
-    this.slots.yBlockUpdated.emit({ type: 'add', id });
+    this.slots.yBlockUpdated.next({ type: 'add', id });
   }
 
   private _handleYBlockDelete(id: string) {
-    this.slots.yBlockUpdated.emit({ type: 'delete', id });
+    this.slots.yBlockUpdated.next({ type: 'delete', id });
   }
 
   private _handleYEvent(event: Y.YEvent<YBlock | Y.Text | Y.Array<unknown>>) {
@@ -229,13 +235,13 @@ export class DocImpl implements Doc {
   private _destroy() {
     this.awarenessStore.destroy();
     this._ySpaceDoc.destroy();
-    this._onLoadSlot.dispose();
+    this._onLoadSlot.unsubscribe();
     this._loaded = false;
   }
 
   dispose() {
     this._destroy();
-    this.slots.historyUpdated.dispose();
+    this.slots.historyUpdated.unsubscribe();
 
     if (this.ready) {
       this._yBlocks.unobserveDeep(this._handleYEvents);
@@ -281,7 +287,9 @@ export class DocImpl implements Doc {
 
     const storeExtensions = SpecProvider._.getSpec('store');
     const extensionSet = new Set(
-      storeExtensions.value.concat(extensions ?? [])
+      storeExtensions.value
+        .concat(extensions ?? [])
+        .concat(this.storeExtensions)
     );
 
     const doc = new Store({

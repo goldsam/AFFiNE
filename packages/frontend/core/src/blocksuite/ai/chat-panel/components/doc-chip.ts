@@ -54,7 +54,7 @@ export class ChatPanelDocChip extends SignalWatcher(
     const doc = this.docDisplayConfig.getDoc(this.chip.docId);
     if (doc) {
       this.disposables.add(
-        doc.slots.blockUpdated.on(
+        doc.slots.blockUpdated.subscribe(
           throttle(this.autoUpdateChip, EXTRACT_DOC_THROTTLE)
         )
       );

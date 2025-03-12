@@ -253,9 +253,6 @@ export class EdgelessColorPanel extends LitElement {
   @property({ attribute: false })
   accessor hollowCircle = false;
 
-  @property()
-  accessor openColorPicker!: (e: MouseEvent) => void;
-
   @property({ type: Array })
   accessor palettes: readonly Palette[] = DefaultTheme.Palettes;
 

@@ -20,7 +20,7 @@ import {
   CommunityCanvasTextFonts,
   FontConfigExtension,
 } from '@blocksuite/affine/shared/services';
-import type { ViewportTurboRendererExtension } from '@blocksuite/affine-shared/viewport-renderer';
+import type { ViewportTurboRendererExtension } from '@blocksuite/affine-gfx-turbo-renderer';
 import { Schema, Text } from '@blocksuite/store';
 import {
   createAutoIncrementIdGenerator,

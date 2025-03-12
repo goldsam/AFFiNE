@@ -31,6 +31,7 @@
     { "path": "../fragments/fragment-frame-panel" },
     { "path": "../fragments/fragment-outline" },
     { "path": "../gfx/text" },
+    { "path": "../gfx/turbo-renderer" },
     { "path": "../model" },
     { "path": "../rich-text" },
     { "path": "../shared" },

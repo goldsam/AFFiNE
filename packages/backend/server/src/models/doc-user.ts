@@ -144,6 +144,14 @@ export class DocUserModel extends BaseModel {
     });
   }
 
+  async deleteByUserId(userId: string) {
+    await this.db.workspaceDocUserRole.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
   async getOwner(workspaceId: string, docId: string) {
     return await this.db.workspaceDocUserRole.findFirst({
       where: {

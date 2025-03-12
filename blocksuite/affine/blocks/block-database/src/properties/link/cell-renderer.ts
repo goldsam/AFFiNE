@@ -29,7 +29,7 @@ import {
 } from './cell-renderer.css.js';
 import { linkPropertyModelConfig } from './define.js';
 
-export class LinkCell extends BaseCellRenderer<string> {
+export class LinkCell extends BaseCellRenderer<string, string> {
   protected override firstUpdated(_changedProperties: PropertyValues) {
     super.firstUpdated(_changedProperties);
     this.classList.add(linkCellStyle);
@@ -81,7 +81,7 @@ export class LinkCell extends BaseCellRenderer<string> {
       return;
     }
 
-    std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.emit({
+    std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.next({
       pageId: this.docId$.value,
       host: std.host,
     });

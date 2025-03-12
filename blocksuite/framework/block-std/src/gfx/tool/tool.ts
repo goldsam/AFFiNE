@@ -1,6 +1,6 @@
 import { type Container, createIdentifier } from '@blocksuite/global/di';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { Extension } from '@blocksuite/store';
 
 import type { PointerEventState } from '../../event/index.js';

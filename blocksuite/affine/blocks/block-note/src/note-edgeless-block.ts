@@ -126,7 +126,7 @@ export class EdgelessNoteBlockComponent extends toGfxBlockComponent(
 
     this._editing = selection.has(this.model.id) && selection.editing;
     this._disposables.add(
-      selection.slots.updated.on(() => {
+      selection.slots.updated.subscribe(() => {
         if (selection.has(this.model.id) && selection.editing) {
           this._editing = true;
         } else {
@@ -147,7 +147,7 @@ export class EdgelessNoteBlockComponent extends toGfxBlockComponent(
     const selection = this.gfx.selection;
 
     _disposables.add(
-      this.edgelessSlots.elementResizeStart.on(() => {
+      this.edgelessSlots.elementResizeStart.subscribe(() => {
         if (selection.selectedElements.includes(this.model)) {
           this._isResizing = true;
         }
@@ -155,7 +155,7 @@ export class EdgelessNoteBlockComponent extends toGfxBlockComponent(
     );
 
     _disposables.add(
-      this.edgelessSlots.elementResizeEnd.on(() => {
+      this.edgelessSlots.elementResizeEnd.subscribe(() => {
         this._isResizing = false;
       })
     );

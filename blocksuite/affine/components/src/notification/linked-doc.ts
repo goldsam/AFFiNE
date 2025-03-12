@@ -19,7 +19,7 @@ function notify(std: BlockStdScope, title: string, message: string) {
   const clear = () => {
     doc.history.off('stack-item-added', addHandler);
     doc.history.off('stack-item-popped', popHandler);
-    disposable.dispose();
+    disposable.unsubscribe();
   };
   const closeNotify = () => {
     abortController.abort();
@@ -31,7 +31,7 @@ function notify(std: BlockStdScope, title: string, message: string) {
   const popHandler = doc.history.on('stack-item-popped', closeNotify);
   const disposable = host.std
     .get(EditorLifeCycleExtension)
-    .slots.unmounted.on(closeNotify);
+    .slots.unmounted.subscribe(closeNotify);
 
   notification.notify({
     title,

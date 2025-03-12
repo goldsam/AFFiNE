@@ -14,6 +14,7 @@ import {
   groupTraitKey,
   sortByManually,
 } from '../../core/group-by/trait.js';
+import { fromJson } from '../../core/property/utils';
 import { PropertyBase } from '../../core/view-manager/property.js';
 import { SingleViewBase } from '../../core/view-manager/single-view.js';
 import type { KanbanViewData } from './define.js';
@@ -183,14 +184,15 @@ export class KanbanSingleView extends SingleViewBase<KanbanViewData> {
       Object.entries(defaultValues).forEach(([propertyId, jsonValue]) => {
         const property = this.propertyGet(propertyId);
         const propertyMeta = this.propertyMetaGet(property.type$.value);
-        if (propertyMeta?.config.cellFromJson) {
-          const value = propertyMeta.config.cellFromJson({
-            value: jsonValue,
-            data: property.data$.value,
-            dataSource: this.dataSource,
-          });
-          this.cellValueSet(id, propertyId, value);
+        if (!propertyMeta) {
+          return;
         }
+        const value = fromJson(propertyMeta.config, {
+          value: jsonValue,
+          data: property.data$.value,
+          dataSource: this.dataSource,
+        });
+        this.cellValueSet(id, propertyId, value);
       });
     }
 

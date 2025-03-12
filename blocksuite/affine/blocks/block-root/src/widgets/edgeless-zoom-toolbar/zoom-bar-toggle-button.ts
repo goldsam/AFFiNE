@@ -69,7 +69,7 @@ export class ZoomBarToggleButton extends WithDisposable(LitElement) {
   override firstUpdated() {
     const { disposables } = this;
     disposables.add(
-      this.edgeless.slots.readonlyUpdated.on(() => {
+      this.edgeless.slots.readonlyUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );

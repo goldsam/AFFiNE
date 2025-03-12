@@ -23,7 +23,7 @@ const progressColors = {
   success: 'var(--affine-success-color)',
 };
 
-export class ProgressCell extends BaseCellRenderer<number> {
+export class ProgressCell extends BaseCellRenderer<number, number> {
   startDrag = (event: MouseEvent) => {
     if (!this.isEditing$.value) return;
 

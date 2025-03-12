@@ -4378,6 +4378,10 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.rootAppSidebar.collections"](): string;
     /**
+      * `Notifications`
+      */
+    ["com.affine.rootAppSidebar.notifications"](): string;
+    /**
       * `Only doc can be placed on here`
       */
     ["com.affine.rootAppSidebar.doc.link-doc-only"](): string;
@@ -6976,6 +6980,17 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.page-starter-bar.edgeless"](): string;
     /**
+      * `Unsupported message`
+      */
+    ["com.affine.notification.unsupported"](): string;
+    /**
+      * `{{username}} mentioned you in {{docTitle}}`
+      */
+    ["com.affine.notification.mention"](options: Readonly<{
+        username: string;
+        docTitle: string;
+    }>): string;
+    /**
       * `Tips`
       */
     tips(): string;
@@ -7594,6 +7609,26 @@ export function useAFFiNEI18N(): {
         clientVersion: string;
         requiredVersion: string;
     }>): string;
+    /**
+      * `Notification not found.`
+      */
+    ["error.NOTIFICATION_NOT_FOUND"](): string;
+    /**
+      * `Mention user do not have permission to access space {{spaceId}}.`
+      */
+    ["error.MENTION_USER_SPACE_ACCESS_DENIED"](options: {
+        readonly spaceId: string;
+    }): string;
+    /**
+      * `You cannot mention yourself.`
+      */
+    ["error.MENTION_USER_ONESELF_DENIED"](): string;
+    /**
+      * `You do not have permission to access notification {{notificationId}}.`
+      */
+    ["error.NOTIFICATION_ACCESS_DENIED"](options: {
+        readonly notificationId: string;
+    }): string;
 } { const { t } = useTranslation(); return useMemo(() => createProxy((key) => t.bind(null, key)), [t]); }
 function createComponent(i18nKey: string) {
     return (props) => createElement(Trans, { i18nKey, shouldUnescape: true, ...props });

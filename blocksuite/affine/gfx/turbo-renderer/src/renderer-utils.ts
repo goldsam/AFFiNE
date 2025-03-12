@@ -8,12 +8,12 @@ import {
 import { Pane } from 'tweakpane';
 
 import { getSentenceRects, segmentSentences } from './text-utils.js';
+import type { ViewportTurboRendererExtension } from './turbo-renderer.js';
 import type {
   ParagraphLayout,
   RenderingState,
   ViewportLayout,
 } from './types.js';
-import type { ViewportTurboRendererExtension } from './viewport-renderer.js';
 
 export function syncCanvasSize(canvas: HTMLCanvasElement, host: HTMLElement) {
   const hostRect = host.getBoundingClientRect();

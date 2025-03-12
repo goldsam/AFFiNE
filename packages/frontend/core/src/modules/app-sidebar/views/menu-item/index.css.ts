@@ -63,7 +63,7 @@ export const postfix = style({
   opacity: 0,
   pointerEvents: 'none',
   selectors: {
-    [`${root}:hover &`]: {
+    [`${root}:hover &, &[data-postfix-display="always"]`]: {
       justifySelf: 'flex-end',
       position: 'initial',
       opacity: 1,

@@ -109,7 +109,8 @@ export async function onModelTextUpdated(
     console.error('Inline editor is not ready yet.');
     return;
   }
-  inlineEditor.slots.renderComplete.once(() => {
+  const subscription = inlineEditor.slots.renderComplete.subscribe(() => {
+    subscription.unsubscribe();
     if (callback) {
       callback(richText);
     }

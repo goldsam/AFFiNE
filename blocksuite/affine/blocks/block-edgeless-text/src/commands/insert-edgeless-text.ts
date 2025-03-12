@@ -54,7 +54,7 @@ export const insertEdgelessTextCommand: Command<
         elements: [textId],
         editing: true,
       });
-      const disposable = selection.slots.updated.on(() => {
+      const disposable = selection.slots.updated.subscribe(() => {
         const editing = selection.editing;
         const id = selection.selectedIds[0];
         if (!editing || id !== textId) {
@@ -63,7 +63,7 @@ export const insertEdgelessTextCommand: Command<
             textBlock.model.hasMaxWidth = true;
           }
 
-          disposable.dispose();
+          disposable.unsubscribe();
         }
       });
 
@@ -91,7 +91,8 @@ export const insertEdgelessTextCommand: Command<
               signal: abortController.signal,
             }
           );
-          paragraph.model.deleted.once(() => {
+          const subscription = paragraph.model.deleted.subscribe(() => {
+            subscription.unsubscribe();
             abortController.abort();
           });
           edgelessText.addEventListener(

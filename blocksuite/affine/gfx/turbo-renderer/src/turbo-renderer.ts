@@ -8,7 +8,7 @@ import {
   type GfxViewportElement,
 } from '@blocksuite/block-std/gfx';
 import type { Container, ServiceIdentifier } from '@blocksuite/global/di';
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import debounce from 'lodash-es/debounce';
 
 import {
@@ -46,16 +46,17 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
       initTweakpane(this, mountPoint as HTMLElement);
     }
 
-    this.viewport.elementReady.once(element => {
+    const subscription = this.viewport.elementReady.subscribe(element => {
+      subscription.unsubscribe();
       this.viewportElement = element;
       syncCanvasSize(this.canvas, this.std.host);
       this.setState('pending');
 
       this.disposables.add(
-        this.viewport.sizeUpdated.on(() => this.handleResize())
+        this.viewport.sizeUpdated.subscribe(() => this.handleResize())
       );
       this.disposables.add(
-        this.viewport.viewportUpdated.on(() => {
+        this.viewport.viewportUpdated.subscribe(() => {
           this.refresh().catch(console.error);
         })
       );
@@ -74,10 +75,10 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
     });
 
     this.disposables.add(
-      this.selection.slots.updated.on(() => this.invalidate())
+      this.selection.slots.updated.subscribe(() => this.invalidate())
     );
     this.disposables.add(
-      this.std.store.slots.blockUpdated.on(() => this.invalidate())
+      this.std.store.slots.blockUpdated.subscribe(() => this.invalidate())
     );
   }
 

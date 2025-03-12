@@ -178,19 +178,19 @@ export class EdgelessTextEditor extends WithDisposable(ShadowlessElement) {
     this.updateComplete
       .then(() => {
         if (!this.inlineEditor) return;
-        this.inlineEditor.slots.renderComplete.on(() => {
+        this.inlineEditor.slots.renderComplete.subscribe(() => {
           this._updateRect();
           this.requestUpdate();
         });
 
         this.disposables.add(
-          surface.elementUpdated.on(({ id }) => {
+          surface.elementUpdated.subscribe(({ id }) => {
             if (id === element.id) this.requestUpdate();
           })
         );
 
         this.disposables.add(
-          this.gfx.viewport.viewportUpdated.on(() => {
+          this.gfx.viewport.viewportUpdated.subscribe(() => {
             this.requestUpdate();
           })
         );

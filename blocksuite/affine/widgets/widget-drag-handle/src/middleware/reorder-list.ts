@@ -7,7 +7,7 @@ import type { TransformerMiddleware } from '@blocksuite/store';
 export const reorderList =
   (std: BlockStdScope): TransformerMiddleware =>
   ({ slots }) => {
-    slots.afterImport.on(payload => {
+    slots.afterImport.subscribe(payload => {
       if (payload.type === 'block') {
         const model = payload.model;
         if (matchModels(model, [ListBlockModel]) && model.type === 'numbered') {

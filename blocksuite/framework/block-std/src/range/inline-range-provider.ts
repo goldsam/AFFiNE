@@ -87,7 +87,7 @@ export const getInlineRangeProvider: (
   const inlineRange$: InlineRangeProvider['inlineRange$'] = signal(null);
 
   editorHost.disposables.add(
-    selectionManager.slots.changed.on(selections => {
+    selectionManager.slots.changed.subscribe(selections => {
       if (!isActiveInEditor(editorHost)) return;
 
       const textSelection = selections.find(s => s.type === 'text') as

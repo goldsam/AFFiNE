@@ -4,10 +4,7 @@ import type {
   EdgelessColorPickerButton,
   PickColorEvent,
 } from '@blocksuite/affine-components/color-picker';
-import {
-  packColor,
-  packColorsWithColorScheme,
-} from '@blocksuite/affine-components/color-picker';
+import { packColor } from '@blocksuite/affine-components/color-picker';
 import { toast } from '@blocksuite/affine-components/toast';
 import { renderToolbarSeparator } from '@blocksuite/affine-components/toolbar';
 import {
@@ -19,7 +16,6 @@ import {
   resolveColor,
 } from '@blocksuite/affine-model';
 import { FeatureFlagService } from '@blocksuite/affine-shared/services';
-import type { ColorEvent } from '@blocksuite/affine-shared/utils';
 import { matchModels } from '@blocksuite/affine-shared/utils';
 import { GfxExtensionIdentifier } from '@blocksuite/block-std/gfx';
 import { deserializeXYWH, serializeXYWH } from '@blocksuite/global/gfx';
@@ -28,7 +24,6 @@ import { EditIcon, PageIcon, UngroupIcon } from '@blocksuite/icons/lit';
 import { html, LitElement, nothing } from 'lit';
 import { property, query } from 'lit/decorators.js';
 import { join } from 'lit/directives/join.js';
-import { when } from 'lit/directives/when.js';
 import countBy from 'lodash-es/countBy';
 import maxBy from 'lodash-es/maxBy';
 
@@ -50,13 +45,6 @@ export class EdgelessChangeFrameButton extends WithDisposable(LitElement) {
   get crud() {
     return this.edgeless.std.get(EdgelessCRUDIdentifier);
   }
-
-  private readonly _setFrameBackground = (e: ColorEvent) => {
-    const background = e.detail.value;
-    this.frames.forEach(frame => {
-      this.crud.updateElement(frame.id, { background });
-    });
-  };
 
   pickColor = (e: PickColorEvent) => {
     const field = 'background';
@@ -128,6 +116,9 @@ export class EdgelessChangeFrameButton extends WithDisposable(LitElement) {
     const onlyOne = len === 1;
     const colorScheme = this.edgeless.surface.renderer.getColorScheme();
     const background = getMostCommonColor(frames, colorScheme);
+    const enableCustomColor = this.edgeless.doc
+      .get(FeatureFlagService)
+      .getFlag('enable_color_picker');
 
     return join(
       [
@@ -183,53 +174,18 @@ export class EdgelessChangeFrameButton extends WithDisposable(LitElement) {
           </editor-icon-button>
         `,
 
-        when(
-          this.edgeless.doc
-            .get(FeatureFlagService)
-            .getFlag('enable_color_picker'),
-          () => {
-            const { type, colors } = packColorsWithColorScheme(
-              colorScheme,
-              background,
-              this.frames[0].background
-            );
-
-            return html`
-              <edgeless-color-picker-button
-                class="background"
-                .label="${'Background'}"
-                .pick=${this.pickColor}
-                .color=${background}
-                .colors=${colors}
-                .colorType=${type}
-                .theme=${colorScheme}
-              >
-              </edgeless-color-picker-button>
-            `;
-          },
-          () => html`
-            <editor-menu-button
-              .contentPadding=${'8px'}
-              .button=${html`
-                <editor-icon-button
-                  aria-label="Background"
-                  .tooltip=${'Background'}
-                >
-                  <edgeless-color-button
-                    .color=${background}
-                  ></edgeless-color-button>
-                </editor-icon-button>
-              `}
-            >
-              <edgeless-color-panel
-                .value=${background}
-                .theme=${colorScheme}
-                @select=${this._setFrameBackground}
-              >
-              </edgeless-color-panel>
-            </editor-menu-button>
-          `
-        ),
+        html`
+          <edgeless-color-picker-button
+            class="background"
+            .label="${'Background'}"
+            .pick=${this.pickColor}
+            .color=${background}
+            .theme=${colorScheme}
+            .originalColor=${this.frames[0].background}
+            .enableCustomColor=${enableCustomColor}
+          >
+          </edgeless-color-picker-button>
+        `,
       ].filter(button => button !== nothing),
       renderToolbarSeparator
     );

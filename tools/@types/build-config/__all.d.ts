@@ -12,6 +12,10 @@ declare interface BUILD_CONFIG_TYPE {
 
   isElectron: boolean;
   isWeb: boolean;
+  /**
+   * 'desktop' | 'ios' | 'android'
+   */
+  isNative: boolean;
   isMobileWeb: boolean;
   isIOS: boolean;
   isAndroid: boolean;

@@ -98,28 +98,10 @@ export class EditorMenuButton extends WithDisposable(LitElement) {
 export class EditorMenuContent extends LitElement {
   static override styles = css`
     :host {
-      --packed-height: 6px;
-      --offset-height: calc(-1 * var(--packed-height));
       display: none;
       outline: none;
       overscroll-behavior: contain;
-    }
-
-    :host::before,
-    :host::after {
-      content: '';
-      display: block;
-      position: absolute;
-      height: var(--packed-height);
-      width: 100%;
-    }
-
-    :host::before {
-      top: var(--offset-height);
-    }
-
-    :host::after {
-      bottom: var(--offset-height);
+      overflow-y: auto;
     }
 
     :host([data-show]) {
@@ -152,8 +134,7 @@ export class EditorMenuContent extends LitElement {
       flex-direction: column;
       align-items: stretch;
       gap: unset;
-      min-height: unset;
-      overflow-y: auto;
+      min-height: fit-content;
     }
   `;
 

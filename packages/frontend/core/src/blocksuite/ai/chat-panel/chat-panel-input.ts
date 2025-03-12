@@ -273,12 +273,16 @@ export class ChatPanelInput extends SignalWatcher(WithDisposable(LitElement)) {
     super.connectedCallback();
 
     this._disposables.add(
-      AIProvider.slots.requestSendWithChat.on(
-        async ({ input, context, host }) => {
+      AIProvider.slots.requestSendWithChat.subscribe(
+        ({ input, context, host }) => {
           if (this.host === host) {
             context && this.updateContext(context);
-            await this.updateComplete;
-            await this.send(input);
+            const { updateComplete, send } = this;
+            updateComplete
+              .then(() => {
+                return send(input);
+              })
+              .catch(console.error);
           }
         }
       )

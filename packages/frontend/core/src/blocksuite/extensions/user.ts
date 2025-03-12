@@ -1,24 +1,8 @@
-import type {
-  AuthService,
-  PublicUserService,
-} from '@affine/core/modules/cloud';
+import type { PublicUserService } from '@affine/core/modules/cloud';
 import { UserServiceExtension } from '@blocksuite/affine/shared/services';
 
-export function patchUserExtensions(
-  publicUserService: PublicUserService,
-  authService: AuthService
-) {
+export function patchUserExtensions(publicUserService: PublicUserService) {
   return UserServiceExtension({
-    getCurrentUser() {
-      const account = authService.session.account$.value;
-      return account
-        ? {
-            id: account.id,
-            avatar: account.avatar,
-            name: account.label,
-          }
-        : null;
-    },
     // eslint-disable-next-line rxjs/finnish
     userInfo$(id) {
       return publicUserService.publicUser$(id).signal;

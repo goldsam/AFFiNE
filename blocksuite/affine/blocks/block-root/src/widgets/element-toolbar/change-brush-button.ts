@@ -3,10 +3,7 @@ import type {
   EdgelessColorPickerButton,
   PickColorEvent,
 } from '@blocksuite/affine-components/color-picker';
-import {
-  packColor,
-  packColorsWithColorScheme,
-} from '@blocksuite/affine-components/color-picker';
+import { packColor } from '@blocksuite/affine-components/color-picker';
 import type {
   BrushElementModel,
   BrushProps,
@@ -18,11 +15,9 @@ import {
   resolveColor,
 } from '@blocksuite/affine-model';
 import { FeatureFlagService } from '@blocksuite/affine-shared/services';
-import type { ColorEvent } from '@blocksuite/affine-shared/utils';
 import { WithDisposable } from '@blocksuite/global/lit';
 import { html, LitElement, nothing } from 'lit';
 import { property, query } from 'lit/decorators.js';
-import { when } from 'lit/directives/when.js';
 import countBy from 'lodash-es/countBy';
 import maxBy from 'lodash-es/maxBy';
 
@@ -53,11 +48,6 @@ function notEqual<K extends keyof BrushProps>(key: K, value: BrushProps[K]) {
 }
 
 export class EdgelessChangeBrushButton extends WithDisposable(LitElement) {
-  private readonly _setBrushColor = ({ detail }: ColorEvent) => {
-    const color = detail.value;
-    this._setBrushProp('color', color);
-  };
-
   private readonly _setLineWidth = ({ detail: lineWidth }: LineWidthEvent) => {
     this._setBrushProp('lineWidth', lineWidth);
   };
@@ -112,6 +102,9 @@ export class EdgelessChangeBrushButton extends WithDisposable(LitElement) {
     const elements = this.elements;
     const selectedColor = getMostCommonColor(elements, colorScheme);
     const selectedSize = getMostCommonSize(elements);
+    const enableCustomColor = this.edgeless.doc
+      .get(FeatureFlagService)
+      .getFlag('enable_color_picker');
 
     return html`
       <edgeless-line-width-panel
@@ -122,50 +115,16 @@ export class EdgelessChangeBrushButton extends WithDisposable(LitElement) {
 
       <editor-toolbar-separator></editor-toolbar-separator>
 
-      ${when(
-        this.edgeless.doc
-          .get(FeatureFlagService)
-          .getFlag('enable_color_picker'),
-        () => {
-          const { type, colors } = packColorsWithColorScheme(
-            colorScheme,
-            selectedColor,
-            elements[0].color
-          );
-
-          return html`
-            <edgeless-color-picker-button
-              class="color"
-              .label="${'Color'}"
-              .pick=${this.pickColor}
-              .color=${selectedColor}
-              .colors=${colors}
-              .colorType=${type}
-              .theme=${colorScheme}
-            >
-            </edgeless-color-picker-button>
-          `;
-        },
-        () => html`
-          <editor-menu-button
-            .contentPadding=${'8px'}
-            .button=${html`
-              <editor-icon-button aria-label="Color" .tooltip=${'Color'}>
-                <edgeless-color-button
-                  .color=${selectedColor}
-                ></edgeless-color-button>
-              </editor-icon-button>
-            `}
-          >
-            <edgeless-color-panel
-              .value=${selectedColor}
-              .theme=${colorScheme}
-              @select=${this._setBrushColor}
-            >
-            </edgeless-color-panel>
-          </editor-menu-button>
-        `
-      )}
+      <edgeless-color-picker-button
+        class="color"
+        .label="${'Color'}"
+        .pick=${this.pickColor}
+        .color=${selectedColor}
+        .theme=${colorScheme}
+        .originalColor=${elements[0].color}
+        .enableCustomColor=${enableCustomColor}
+      >
+      </edgeless-color-picker-button>
     `;
   }
 

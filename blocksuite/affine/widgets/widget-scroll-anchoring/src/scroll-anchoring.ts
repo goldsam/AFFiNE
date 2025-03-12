@@ -102,18 +102,24 @@ export class AffineScrollAnchoringWidget extends WidgetComponent {
     if (!xywh) {
       if (!this.#listened) return;
 
-      // listen for document updates
-      this.disposables.add(
-        this.std.store.slots.blockUpdated
-          .filter(v => v.type === 'add' && v.id === id)
-          .once(() => this.#moveToAnchorInEdgeless(id))
-      );
+      const blockUpdatedSubscription =
+        this.std.store.slots.blockUpdated.subscribe(v => {
+          if (v.type === 'add' && v.id === id) {
+            blockUpdatedSubscription.unsubscribe();
+            this.#moveToAnchorInEdgeless(id);
+          }
+        });
 
-      this.disposables.add(
-        surface.elementAdded
-          .filter(v => v.id === id && v.local === false)
-          .once(() => this.#moveToAnchorInEdgeless(id))
-      );
+      const elementAddedSubscription = surface.elementAdded.subscribe(v => {
+        if (v.id === id && v.local === false) {
+          elementAddedSubscription.unsubscribe();
+          this.#moveToAnchorInEdgeless(id);
+        }
+      });
+
+      // listen for document updates
+      this.disposables.add(blockUpdatedSubscription);
+      this.disposables.add(elementAddedSubscription);
       return;
     }
 
@@ -152,11 +158,13 @@ export class AffineScrollAnchoringWidget extends WidgetComponent {
       if (!this.#listened) return;
 
       // listen for document updates
-      this.disposables.add(
-        this.std.store.slots.blockUpdated
-          .filter(v => v.type === 'add' && v.id === id)
-          .once(() => this.#moveToAnchorInPage(id))
-      );
+      const subscription = this.std.store.slots.blockUpdated.subscribe(v => {
+        if (v.type === 'add' && v.id === id) {
+          subscription.unsubscribe();
+          this.#moveToAnchorInPage(id);
+        }
+      });
+      this.disposables.add(subscription);
       return;
     }
 
@@ -192,7 +200,7 @@ export class AffineScrollAnchoringWidget extends WidgetComponent {
     // In edgeless
     const controler = this.std.get(GfxControllerIdentifier);
     this.disposables.add(
-      controler.viewport.viewportUpdated.on(this.#requestUpdateFn)
+      controler.viewport.viewportUpdated.subscribe(this.#requestUpdateFn)
     );
 
     this.disposables.add(

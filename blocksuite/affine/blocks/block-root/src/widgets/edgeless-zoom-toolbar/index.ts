@@ -63,7 +63,7 @@ export class AffineEdgelessZoomToolbarWidget extends WidgetComponent<
     const slots = std.get(EdgelessLegacySlotIdentifier);
 
     disposables.add(
-      slots.navigatorSettingUpdated.on(({ hideToolbar }) => {
+      slots.navigatorSettingUpdated.subscribe(({ hideToolbar }) => {
         if (hideToolbar !== undefined) {
           this._hide = hideToolbar;
         }

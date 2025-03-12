@@ -39,7 +39,7 @@ function startWatch(prop: string | symbol, receiver: GfxPrimitiveElementModel) {
   if (!watchFn) return;
 
   receiver['_disposable'].add(
-    receiver.surface.elementUpdated.on(payload => {
+    receiver.surface.elementUpdated.subscribe(payload => {
       if (payload.id === receiver.id && prop in payload.props) {
         watchFn(payload.oldValues[prop as string], receiver, payload.local);
       }

@@ -18,7 +18,7 @@ export const AIPreloadConfig = [
     icon: LanguageIcon(),
     text: 'Read a foreign language article with AI',
     handler: () => {
-      AIProvider.slots.requestInsertTemplate.emit({
+      AIProvider.slots.requestInsertTemplate.next({
         template: readAforeign,
         mode: 'edgeless',
       });
@@ -28,7 +28,7 @@ export const AIPreloadConfig = [
     icon: MindmapIcon(),
     text: 'Tidy an article with AI MindMap Action',
     handler: () => {
-      AIProvider.slots.requestInsertTemplate.emit({
+      AIProvider.slots.requestInsertTemplate.next({
         template: TidyMindMapV3,
         mode: 'edgeless',
       });
@@ -38,7 +38,7 @@ export const AIPreloadConfig = [
     icon: ImageIcon(),
     text: 'Add illustrations to the article',
     handler: () => {
-      AIProvider.slots.requestInsertTemplate.emit({
+      AIProvider.slots.requestInsertTemplate.next({
         template: redHat,
         mode: 'edgeless',
       });
@@ -48,7 +48,7 @@ export const AIPreloadConfig = [
     icon: PenIcon(),
     text: 'Complete writing with AI',
     handler: () => {
-      AIProvider.slots.requestInsertTemplate.emit({
+      AIProvider.slots.requestInsertTemplate.next({
         template: completeWritingWithAI,
         mode: 'edgeless',
       });
@@ -58,7 +58,7 @@ export const AIPreloadConfig = [
     icon: SendIcon(),
     text: 'Freely communicate with AI',
     handler: () => {
-      AIProvider.slots.requestInsertTemplate.emit({
+      AIProvider.slots.requestInsertTemplate.next({
         template: freelyCommunicateWithAI,
         mode: 'edgeless',
       });

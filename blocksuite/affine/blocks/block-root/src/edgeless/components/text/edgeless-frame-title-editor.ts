@@ -69,7 +69,7 @@ export class EdgelessFrameTitleEditor extends WithDisposable(
 
         this.inlineEditor.selectAll();
 
-        this.inlineEditor.slots.renderComplete.on(() => {
+        this.inlineEditor.slots.renderComplete.subscribe(() => {
           this.requestUpdate();
         });
 
@@ -87,7 +87,7 @@ export class EdgelessFrameTitleEditor extends WithDisposable(
           })
         );
         this.disposables.add(
-          this.edgeless.service.viewport.viewportUpdated.on(() => {
+          this.edgeless.service.viewport.viewportUpdated.subscribe(() => {
             this.requestUpdate();
           })
         );

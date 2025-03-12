@@ -126,7 +126,7 @@ export class EdgelessRootPreviewBlockComponent extends BlockComponent<
     });
 
     this._disposables.add(
-      this._gfx.layer.slots.layerUpdated.on(() => updateLayers())
+      this._gfx.layer.slots.layerUpdated.subscribe(() => updateLayers())
     );
   }
 
@@ -219,7 +219,7 @@ export class EdgelessRootPreviewBlockComponent extends BlockComponent<
     this._initLayerUpdateEffect();
 
     this._disposables.add(
-      this._gfx.viewport.viewportUpdated.on(() => {
+      this._gfx.viewport.viewportUpdated.subscribe(() => {
         this._refreshLayerViewport();
       })
     );

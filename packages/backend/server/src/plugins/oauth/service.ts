@@ -10,6 +10,8 @@ const OAUTH_STATE_KEY = 'OAUTH_STATE';
 
 interface OAuthState {
   redirectUri?: string;
+  client?: string;
+  clientNonce?: string;
   provider: OAuthProviderName;
 }
 

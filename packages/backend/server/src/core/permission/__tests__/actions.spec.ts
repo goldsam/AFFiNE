@@ -36,8 +36,9 @@ const docRoles = Object.values(DocRole).filter(
 test(`should be able to fixup doc role from workspace role and doc role`, t => {
   for (const workspaceRole of workspaceRoles) {
     for (const docRole of docRoles) {
+      const fixedDocRole = fixupDocRole(workspaceRole, docRole);
       t.snapshot(
-        DocRole[fixupDocRole(workspaceRole, docRole)!],
+        fixedDocRole === null ? null : DocRole[fixedDocRole],
         `WorkspaceRole: ${WorkspaceRole[workspaceRole]}, DocRole: ${DocRole[docRole]}`
       );
     }

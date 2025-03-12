@@ -47,7 +47,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
-    "tweakpane": "^4.0.5",
+    "rxjs": "^7.8.1",
     "unified": "^11.0.5",
     "yjs": "^13.6.21",
     "zod": "^3.23.8"
@@ -62,7 +62,6 @@
     "./theme": "./src/theme/index.ts",
     "./styles": "./src/styles/index.ts",
     "./services": "./src/services/index.ts",
-    "./viewport-renderer": "./src/viewport-renderer/index.ts",
     "./adapters": "./src/adapters/index.ts"
   },
   "files": [

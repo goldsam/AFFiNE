@@ -74,7 +74,7 @@ export class WidgetComponent<
     super.connectedCallback();
     this.std.view.setWidget(this);
 
-    this.service?.specSlots.widgetConnected.emit({
+    this.service?.specSlots.widgetConnected.next({
       service: this.service,
       component: this,
     });
@@ -83,7 +83,7 @@ export class WidgetComponent<
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.std?.view.deleteWidget(this);
-    this.service?.specSlots.widgetDisconnected.emit({
+    this.service?.specSlots.widgetDisconnected.next({
       service: this.service,
       component: this,
     });

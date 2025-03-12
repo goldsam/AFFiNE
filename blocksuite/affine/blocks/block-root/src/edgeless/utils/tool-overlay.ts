@@ -12,11 +12,12 @@ import {
 } from '@blocksuite/affine-model';
 import { ThemeProvider } from '@blocksuite/affine-shared/services';
 import type { GfxController, GfxToolsMap } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { XYWH } from '@blocksuite/global/gfx';
 import { Bound } from '@blocksuite/global/gfx';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { assertType, noop } from '@blocksuite/global/utils';
 import { effect } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 
 import type { ShapeTool } from '../gfx-tool/shape-tool.js';
 import {
@@ -237,7 +238,7 @@ class ToolOverlay extends Overlay {
     this.globalAlpha = 0;
     this.gfx = gfx;
     this.disposables.add(
-      this.gfx.viewport.viewportUpdated.on(() => {
+      this.gfx.viewport.viewportUpdated.subscribe(() => {
         // when viewport is updated, we should keep the overlay in the same position
         // to get last mouse position and convert it to model coordinates
         const pos = this.gfx.tool.lastMousePos$.value;
@@ -444,7 +445,7 @@ export class DraggingNoteOverlay extends NoteOverlay {
   height: number;
 
   slots: {
-    draggingNoteUpdated: Slot<{ xywh: XYWH }>;
+    draggingNoteUpdated: Subject<{ xywh: XYWH }>;
   };
 
   width: number;
@@ -452,14 +453,14 @@ export class DraggingNoteOverlay extends NoteOverlay {
   constructor(gfx: GfxController, background: Color) {
     super(gfx, background);
     this.slots = {
-      draggingNoteUpdated: new Slot<{
+      draggingNoteUpdated: new Subject<{
         xywh: XYWH;
       }>(),
     };
     this.width = 0;
     this.height = 0;
     this.disposables.add(
-      this.slots.draggingNoteUpdated.on(({ xywh }) => {
+      this.slots.draggingNoteUpdated.subscribe(({ xywh }) => {
         [this.x, this.y, this.width, this.height] = xywh;
         (this.gfx.surfaceComponent as SurfaceBlockComponent).refresh();
       })

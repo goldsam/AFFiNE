@@ -14,6 +14,7 @@ import { multiSelectPropertyModelConfig } from './define.js';
 
 export class MultiSelectCell extends BaseCellRenderer<
   string[],
+  string[],
   SelectPropertyData
 > {
   closePopup?: () => void;

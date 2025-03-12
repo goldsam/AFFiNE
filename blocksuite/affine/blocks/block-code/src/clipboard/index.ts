@@ -14,7 +14,7 @@ import {
   Clipboard,
   type UIEventHandler,
 } from '@blocksuite/block-std';
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 
 export class CodeClipboardController {
   private _clipboard!: Clipboard;

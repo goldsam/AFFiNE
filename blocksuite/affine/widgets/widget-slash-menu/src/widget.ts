@@ -4,7 +4,7 @@ import {
 } from '@blocksuite/affine-rich-text';
 import type { UIEventStateContext } from '@blocksuite/block-std';
 import { TextSelection, WidgetComponent } from '@blocksuite/block-std';
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { InlineEditor } from '@blocksuite/inline';
 import debounce from 'lodash-es/debounce';
 
@@ -93,8 +93,16 @@ export class AffineSlashMenuWidget extends WidgetComponent {
   ) => {
     const inlineRangeApplyCallback = (callback: () => void) => {
       // the inline ranged updated in compositionEnd event before this event callback
-      if (isCompositionEnd) callback();
-      else inlineEditor.slots.inlineRangeSync.once(callback);
+      if (isCompositionEnd) {
+        callback();
+      } else {
+        const subscription = inlineEditor.slots.inlineRangeSync.subscribe(
+          () => {
+            subscription.unsubscribe();
+            callback();
+          }
+        );
+      }
     };
 
     if (this.block.model.flavour !== 'affine:page') {

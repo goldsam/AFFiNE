@@ -123,7 +123,7 @@ export class SessionModel extends BaseModel {
     });
   }
 
-  async deleteUserSession(userId: string, sessionId?: string) {
+  async deleteUserSessions(userId: string, sessionId?: string) {
     const { count } = await this.db.userSession.deleteMany({
       where: {
         userId,
@@ -131,7 +131,7 @@ export class SessionModel extends BaseModel {
       },
     });
     this.logger.log(
-      `Deleted user session success by userId: ${userId} and sessionId: ${sessionId}`
+      `Deleted user sessions success by userId: ${userId} and sessionId: ${sessionId}`
     );
     return count;
   }

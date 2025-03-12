@@ -51,7 +51,7 @@ export function createTestEditor(store: Store, workspace: Workspace) {
 
   editor.std
     .get(RefNodeSlotsProvider)
-    .docLinkClicked.on(({ pageId: docId }) => {
+    .docLinkClicked.subscribe(({ pageId: docId }) => {
       const target = workspace.getDoc(docId);
       if (!target) {
         throw new Error(`Failed to jump to doc ${docId}`);

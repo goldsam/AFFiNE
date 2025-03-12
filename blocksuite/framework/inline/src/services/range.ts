@@ -257,7 +257,8 @@ export class RangeService<TextAttributes extends BaseTextAttributes> {
         if (editor.inlineRangeProviderOverride) return;
 
         if (this.editor.renderService.rendering) {
-          editor.slots.renderComplete.once(() => {
+          const subscription = editor.slots.renderComplete.subscribe(() => {
+            subscription.unsubscribe();
             this.syncInlineRange(newInlineRange);
           });
         } else {
@@ -308,11 +309,14 @@ export class RangeService<TextAttributes extends BaseTextAttributes> {
             selection.addRange(newRange);
             this.editor.rootElement.focus();
 
-            this.editor.slots.inlineRangeSync.emit(newRange);
+            this.editor.slots.inlineRangeSync.next(newRange);
           } else {
-            this.editor.slots.renderComplete.once(() => {
-              this.syncInlineRange(inlineRange);
-            });
+            const subscription = this.editor.slots.renderComplete.subscribe(
+              () => {
+                subscription.unsubscribe();
+                this.syncInlineRange(inlineRange);
+              }
+            );
           }
         } catch (error) {
           console.error('failed to apply inline range');
@@ -322,7 +326,10 @@ export class RangeService<TextAttributes extends BaseTextAttributes> {
     };
 
     if (this.editor.renderService.rendering) {
-      this.editor.slots.renderComplete.once(handler);
+      const subscription = this.editor.slots.renderComplete.subscribe(() => {
+        subscription.unsubscribe();
+        handler();
+      });
     } else {
       handler();
     }

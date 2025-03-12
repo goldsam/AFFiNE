@@ -1,4 +1,4 @@
-import type { Disposable } from '@blocksuite/global/slot';
+import type { Disposable } from '@blocksuite/global/disposable';
 import {
   autoPlacement,
   autoUpdate,

@@ -7,7 +7,7 @@ import {
   type PageEditor,
 } from '@affine/core/blocksuite/editors';
 import { useEnableAI } from '@affine/core/components/hooks/affine/use-enable-ai';
-import { AuthService, PublicUserService } from '@affine/core/modules/cloud';
+import { PublicUserService } from '@affine/core/modules/cloud';
 import type { DocCustomPropertyInfo } from '@affine/core/modules/db';
 import { DocService, DocsService } from '@affine/core/modules/doc';
 import type {
@@ -24,8 +24,8 @@ import { MemberSearchService } from '@affine/core/modules/permissions';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import track from '@affine/track';
 import type { DocTitle } from '@blocksuite/affine/fragments/doc-title';
+import { ViewportTurboRendererExtension } from '@blocksuite/affine/gfx/turbo-renderer';
 import type { DocMode } from '@blocksuite/affine/model';
-import { ViewportTurboRendererExtension } from '@blocksuite/affine/shared/viewport-renderer';
 import type { Store } from '@blocksuite/affine/store';
 import {
   useFramework,
@@ -95,7 +95,6 @@ const usePatchSpecs = (mode: DocMode) => {
     featureFlagService,
     memberSearchService,
     publicUserService,
-    authService,
   } = useServices({
     PeekViewService,
     DocService,
@@ -105,7 +104,6 @@ const usePatchSpecs = (mode: DocMode) => {
     FeatureFlagService,
     MemberSearchService,
     PublicUserService,
-    AuthService,
   });
   const isCloud = workspaceService.workspace.flavour !== 'local';
   const framework = useFramework();
@@ -168,7 +166,7 @@ const usePatchSpecs = (mode: DocMode) => {
         isCloud
           ? [
               patchUserListExtensions(memberSearchService),
-              patchUserExtensions(publicUserService, authService),
+              patchUserExtensions(publicUserService),
             ]
           : [],
         patchDatabaseBlockConfigService(),
@@ -203,7 +201,6 @@ const usePatchSpecs = (mode: DocMode) => {
     isCloud,
     memberSearchService,
     publicUserService,
-    authService,
     enableTurboRenderer,
     featureFlagService.flags.enable_pdf_embed_preview.value,
   ]);

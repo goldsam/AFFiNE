@@ -214,21 +214,23 @@ export class BlockComponent<
 
     this.std.view.setBlock(this);
 
-    const disposable = this.std.store.slots.blockUpdated.on(({ type, id }) => {
-      if (id === this.model.id && type === 'delete') {
-        this.std.view.deleteBlock(this);
-        disposable.dispose();
+    const disposable = this.std.store.slots.blockUpdated.subscribe(
+      ({ type, id }) => {
+        if (id === this.model.id && type === 'delete') {
+          this.std.view.deleteBlock(this);
+          disposable.unsubscribe();
+        }
       }
-    });
+    );
     this._disposables.add(disposable);
 
     this._disposables.add(
-      this.model.propsUpdated.on(() => {
+      this.model.propsUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );
 
-    this.service?.specSlots.viewConnected.emit({
+    this.service?.specSlots.viewConnected.next({
       service: this.service,
       component: this,
     });
@@ -237,7 +239,7 @@ export class BlockComponent<
   override disconnectedCallback() {
     super.disconnectedCallback();
 
-    this.service?.specSlots.viewDisconnected.emit({
+    this.service?.specSlots.viewDisconnected.next({
       service: this.service,
       component: this,
     });

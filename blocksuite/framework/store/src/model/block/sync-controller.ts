@@ -142,7 +142,10 @@ export class SyncController {
             this.model[key] = value;
           });
         });
-        model.deleted.once(dispose);
+        const subscription = model.deleted.subscribe(() => {
+          subscription.unsubscribe();
+          dispose();
+        });
         return {
           ...acc,
           [`${key}$`]: data,

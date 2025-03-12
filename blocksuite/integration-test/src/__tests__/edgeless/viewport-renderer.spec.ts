@@ -1,4 +1,4 @@
-import { ViewportTurboRendererExtension } from '@blocksuite/affine-shared/viewport-renderer';
+import { ViewportTurboRendererExtension } from '@blocksuite/affine-gfx-turbo-renderer';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { wait } from '../utils/common.js';

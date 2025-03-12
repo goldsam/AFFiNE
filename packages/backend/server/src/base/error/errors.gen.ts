@@ -131,6 +131,12 @@ export class InvalidOauthCallbackCode extends UserFriendlyError {
     super('bad_request', 'invalid_oauth_callback_code', message, args);
   }
 }
+
+export class InvalidAuthState extends UserFriendlyError {
+  constructor(message?: string) {
+    super('bad_request', 'invalid_auth_state', message);
+  }
+}
 @ObjectType()
 class MissingOauthQueryParameterDataType {
   @Field() name!: string
@@ -895,6 +901,7 @@ export enum ErrorNames {
   OAUTH_STATE_EXPIRED,
   INVALID_OAUTH_CALLBACK_STATE,
   INVALID_OAUTH_CALLBACK_CODE,
+  INVALID_AUTH_STATE,
   MISSING_OAUTH_QUERY_PARAMETER,
   OAUTH_ACCOUNT_ALREADY_CONNECTED,
   INVALID_EMAIL,

@@ -13,7 +13,7 @@ export const replaceIdMiddleware =
   (idGenerator: () => string): TransformerMiddleware =>
   ({ slots, docCRUD }) => {
     const idMap = new Map<string, string>();
-    slots.afterImport.on(payload => {
+    slots.afterImport.subscribe(payload => {
       if (
         payload.type === 'block' &&
         payload.snapshot.flavour === 'affine:database'
@@ -112,7 +112,7 @@ export const replaceIdMiddleware =
         }
       }
     });
-    slots.beforeImport.on(payload => {
+    slots.beforeImport.subscribe(payload => {
       if (payload.type === 'page') {
         if (idMap.has(payload.snapshot.meta.id)) {
           payload.snapshot.meta.id = idMap.get(payload.snapshot.meta.id)!;

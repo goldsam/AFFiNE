@@ -9,9 +9,9 @@ import {
   stdContext,
 } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { Vec } from '@blocksuite/global/gfx';
 import { WithDisposable } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import type { Store } from '@blocksuite/store';
 import { consume } from '@lit/context';
 import { css, html, LitElement } from 'lit';
@@ -63,11 +63,11 @@ export class EdgelessConnectorHandle extends WithDisposable(LitElement) {
     const edgeless = this.edgeless;
 
     this._disposables.addFromEvent(this._startHandler, 'pointerdown', e => {
-      edgeless.slots.elementResizeStart.emit();
+      edgeless.slots.elementResizeStart.next();
       this._capPointerDown(e, 'source');
     });
     this._disposables.addFromEvent(this._endHandler, 'pointerdown', e => {
-      edgeless.slots.elementResizeStart.emit();
+      edgeless.slots.elementResizeStart.next();
       this._capPointerDown(e, 'target');
     });
     this._disposables.add(() => {
@@ -96,7 +96,7 @@ export class EdgelessConnectorHandle extends WithDisposable(LitElement) {
       _disposables.dispose();
       this._disposables = new DisposableGroup();
       this._bindEvent();
-      edgeless.slots.elementResizeEnd.emit();
+      edgeless.slots.elementResizeEnd.next();
     });
   }
 
@@ -105,7 +105,7 @@ export class EdgelessConnectorHandle extends WithDisposable(LitElement) {
     const { viewport } = edgeless.service;
 
     this._lastZoom = viewport.zoom;
-    edgeless.service.viewport.viewportUpdated.on(() => {
+    edgeless.service.viewport.viewportUpdated.subscribe(() => {
       if (viewport.zoom !== this._lastZoom) {
         this._lastZoom = viewport.zoom;
         this.requestUpdate();

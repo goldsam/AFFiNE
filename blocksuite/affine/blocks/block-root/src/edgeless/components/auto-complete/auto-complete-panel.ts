@@ -568,7 +568,7 @@ export class EdgelessAutoCompletePanel extends WithDisposable(LitElement) {
 
   override firstUpdated() {
     this.disposables.add(
-      this.edgeless.service.viewport.viewportUpdated.on(() =>
+      this.edgeless.service.viewport.viewportUpdated.subscribe(() =>
         this.requestUpdate()
       )
     );

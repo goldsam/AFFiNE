@@ -62,7 +62,7 @@ export class SurfaceRefNotePortal extends WithDisposable(ShadowlessElement) {
 
   override firstUpdated() {
     this.disposables.add(
-      this.model.propsUpdated.on(() => this.requestUpdate())
+      this.model.propsUpdated.subscribe(() => this.requestUpdate())
     );
   }
 

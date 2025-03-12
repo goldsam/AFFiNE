@@ -1,20 +1,21 @@
 import type { PropertyMetaConfig } from '@blocksuite/data-view';
-import type { Disposable } from '@blocksuite/global/slot';
+import type { DisposableMember } from '@blocksuite/global/disposable';
 import type { Block, BlockModel } from '@blocksuite/store';
 
 type PropertyMeta<
   T extends BlockModel = BlockModel,
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
   ColumnData extends NonNullable<unknown> = NonNullable<unknown>,
 > = {
   name: string;
   key: string;
-  metaConfig: PropertyMetaConfig<string, ColumnData, Value>;
+  metaConfig: PropertyMetaConfig<string, ColumnData, RawValue, JsonValue>;
   getColumnData?: (block: T) => ColumnData;
   setColumnData?: (block: T, data: ColumnData) => void;
-  get: (block: T) => Value;
-  set?: (block: T, value: Value) => void;
-  updated: (block: T, callback: () => void) => Disposable;
+  get: (block: T) => RawValue;
+  set?: (block: T, value: RawValue) => void;
+  updated: (block: T, callback: () => void) => DisposableMember;
 };
 export type BlockMeta<T extends BlockModel = BlockModel> = {
   selector: (block: Block) => boolean;

@@ -1,5 +1,7 @@
 import '../../plugins/config';
 
+import { randomUUID } from 'node:crypto';
+
 import { HttpStatus } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import ava, { TestFn } from 'ava';
@@ -83,6 +85,43 @@ test("should be able to redirect to oauth provider's login page", async t => {
   t.is(redirect.searchParams.get('response_type'), 'code');
   t.is(redirect.searchParams.get('prompt'), 'select_account');
   t.truthy(redirect.searchParams.get('state'));
+  // state should be a json string
+  const state = JSON.parse(redirect.searchParams.get('state')!);
+  t.is(state.provider, 'Google');
+  t.regex(
+    state.state,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+  );
+});
+
+test('should be able to redirect to oauth provider with client_nonce', async t => {
+  const { app } = t.context;
+
+  const res = await app
+    .POST('/api/oauth/preflight')
+    .send({ provider: 'Google', client: 'affine', client_nonce: '1234567890' })
+    .expect(HttpStatus.OK);
+
+  const { url } = res.body;
+
+  const redirect = new URL(url);
+  t.is(redirect.origin, 'https://accounts.google.com');
+
+  t.is(redirect.pathname, '/o/oauth2/v2/auth');
+  t.is(redirect.searchParams.get('client_id'), 'google-client-id');
+  t.is(
+    redirect.searchParams.get('redirect_uri'),
+    app.get(URLHelper).link('/oauth/callback')
+  );
+  t.is(redirect.searchParams.get('response_type'), 'code');
+  t.is(redirect.searchParams.get('prompt'), 'select_account');
+  t.truthy(redirect.searchParams.get('state'));
+  // state should be a json string
+  const state = JSON.parse(redirect.searchParams.get('state')!);
+  t.is(state.provider, 'Google');
+  t.is(state.client, 'affine');
+  t.falsy(state.clientNonce);
+  t.truthy(state.state);
 });
 
 test('should throw if provider is invalid', async t => {
@@ -246,13 +285,18 @@ test('should throw if provider is invalid in callback uri', async t => {
   t.pass();
 });
 
-function mockOAuthProvider(app: TestingApp, email: string) {
+function mockOAuthProvider(
+  app: TestingApp,
+  email: string,
+  clientNonce?: string
+) {
   const provider = app.get(GoogleOAuthProvider);
   const oauth = app.get(OAuthService);
 
   Sinon.stub(oauth, 'isValidState').resolves(true);
   Sinon.stub(oauth, 'getOAuthState').resolves({
     provider: OAuthProviderName.Google,
+    clientNonce,
   });
 
   // @ts-expect-error mock
@@ -292,6 +336,61 @@ test('should be able to sign up with oauth', async t => {
   t.truthy(user);
   t.is(user!.email, 'u2@affine.pro');
   t.is(user!.connectedAccounts[0].providerAccountId, '1');
+});
+
+test('should be able to sign up with oauth and client_nonce', async t => {
+  const { app, db } = t.context;
+
+  const clientNonce = randomUUID();
+  const userEmail = `${clientNonce}@affine.pro`;
+  mockOAuthProvider(app, userEmail, clientNonce);
+
+  await app
+    .POST('/api/oauth/callback')
+    .send({ code: '1', state: '1', client_nonce: clientNonce })
+    .expect(HttpStatus.OK);
+
+  const sessionUser = await currentUser(app);
+
+  t.truthy(sessionUser);
+  t.is(sessionUser!.email, userEmail);
+
+  const user = await db.user.findFirst({
+    select: {
+      email: true,
+      connectedAccounts: true,
+    },
+    where: {
+      email: userEmail,
+    },
+  });
+
+  t.truthy(user);
+  t.is(user!.email, userEmail);
+  t.is(user!.connectedAccounts[0].providerAccountId, '1');
+});
+
+test('should throw if client_nonce is invalid', async t => {
+  const { app } = t.context;
+
+  const clientNonce = randomUUID();
+  const userEmail = `${clientNonce}@affine.pro`;
+  mockOAuthProvider(app, userEmail, clientNonce);
+
+  await app
+    .POST('/api/oauth/callback')
+    .send({ code: '1', state: '1', client_nonce: 'invalid' })
+    .expect(HttpStatus.BAD_REQUEST)
+    .expect({
+      status: 400,
+      code: 'Bad Request',
+      type: 'BAD_REQUEST',
+      name: 'INVALID_AUTH_STATE',
+      message:
+        'Invalid auth state. You might start the auth progress from another device.',
+    });
+
+  t.pass();
 });
 
 test('should not throw if account registered', async t => {

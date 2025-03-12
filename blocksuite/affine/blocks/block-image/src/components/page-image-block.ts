@@ -191,7 +191,7 @@ export class ImageBlockPageComponent extends WithDisposable(ShadowlessElement) {
   private _handleSelection() {
     const selection = this._host.selection;
     this._disposables.add(
-      selection.slots.changed.on(selList => {
+      selection.slots.changed.subscribe(selList => {
         this._isSelected = selList.some(
           sel => sel.blockId === this.block.blockId && sel.is(ImageSelection)
         );
@@ -199,7 +199,7 @@ export class ImageBlockPageComponent extends WithDisposable(ShadowlessElement) {
     );
 
     this._disposables.add(
-      this._model.propsUpdated.on(() => {
+      this._model.propsUpdated.subscribe(() => {
         this.requestUpdate();
       })
     );

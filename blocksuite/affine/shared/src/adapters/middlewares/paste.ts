@@ -516,7 +516,7 @@ export const pasteMiddleware = (
 ): TransformerMiddleware => {
   return ({ slots }) => {
     let tr: PasteTr | undefined;
-    slots.beforeImport.on(payload => {
+    slots.beforeImport.subscribe(payload => {
       if (payload.type === 'slice') {
         const { snapshot } = payload;
         flatNote(snapshot);
@@ -531,7 +531,7 @@ export const pasteMiddleware = (
         }
       }
     });
-    slots.afterImport.on(payload => {
+    slots.afterImport.subscribe(payload => {
       if (tr && payload.type === 'slice') {
         tr.pasted();
         tr.focusPasted();

@@ -3,10 +3,7 @@ import type {
   EdgelessColorPickerButton,
   PickColorEvent,
 } from '@blocksuite/affine-components/color-picker';
-import {
-  packColor,
-  packColorsWithColorScheme,
-} from '@blocksuite/affine-components/color-picker';
+import { packColor } from '@blocksuite/affine-components/color-picker';
 import { renderToolbarSeparator } from '@blocksuite/affine-components/toolbar';
 import {
   type ColorScheme,
@@ -24,7 +21,6 @@ import {
   StrokeStyle,
 } from '@blocksuite/affine-model';
 import { FeatureFlagService } from '@blocksuite/affine-shared/services';
-import type { ColorEvent } from '@blocksuite/affine-shared/utils';
 import { WithDisposable } from '@blocksuite/global/lit';
 import {
   AddTextIcon,
@@ -50,7 +46,6 @@ import { choose } from 'lit/directives/choose.js';
 import { join } from 'lit/directives/join.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { when } from 'lit/directives/when.js';
 import countBy from 'lodash-es/countBy';
 import maxBy from 'lodash-es/maxBy';
 
@@ -232,11 +227,6 @@ export class EdgelessChangeConnectorButton extends WithDisposable(LitElement) {
     return this.edgeless.std.get(EdgelessCRUDIdentifier);
   }
 
-  private readonly _setConnectorColor = (e: ColorEvent) => {
-    const stroke = e.detail.value;
-    this._setConnectorProp('stroke', stroke);
-  };
-
   private readonly _setConnectorStroke = ({ type, value }: LineStyleEvent) => {
     if (type === 'size') {
       this._setConnectorStrokeWidth(value);
@@ -358,81 +348,45 @@ export class EdgelessChangeConnectorButton extends WithDisposable(LitElement) {
       ConnectorEndpoint.Rear,
       DEFAULT_REAR_END_POINT_STYLE
     );
+    const enableCustomColor = this.edgeless.doc
+      .get(FeatureFlagService)
+      .getFlag('enable_color_picker');
 
     return join(
       [
-        when(
-          this.edgeless.doc
-            .get(FeatureFlagService)
-            .getFlag('enable_color_picker'),
-          () => {
-            const { type, colors } = packColorsWithColorScheme(
-              colorScheme,
-              selectedColor,
-              elements[0].stroke
-            );
-
-            return html`
-              <edgeless-color-picker-button
-                class="stroke-color"
-                .label="${'Stroke style'}"
-                .pick=${this.pickColor}
-                .color=${selectedColor}
-                .colors=${colors}
-                .colorType=${type}
-                .theme=${colorScheme}
-                .hollowCircle=${true}
-              >
-                <div
-                  slot="other"
-                  class="line-styles"
-                  style=${styleMap({
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '8px',
-                    alignItems: 'center',
-                  })}
-                >
-                  ${LineStylesPanel({
-                    selectedLineSize: selectedLineSize,
-                    selectedLineStyle: selectedLineStyle,
-                    onClick: this._setConnectorStroke,
-                  })}
-                </div>
-                <editor-toolbar-separator
-                  slot="separator"
-                  data-orientation="horizontal"
-                ></editor-toolbar-separator>
-              </edgeless-color-picker-button>
-            `;
-          },
-          () => html`
-            <editor-menu-button
-              .contentPadding=${'8px'}
-              .button=${html`
-                <editor-icon-button
-                  aria-label="Stroke style"
-                  .tooltip=${'Stroke style'}
-                  .iconSize=${'20px'}
-                >
-                  <edgeless-color-button
-                    .color=${selectedColor}
-                  ></edgeless-color-button>
-                </editor-icon-button>
-              `}
+        html`
+          <edgeless-color-picker-button
+            class="stroke-color"
+            .label="${'Stroke style'}"
+            .pick=${this.pickColor}
+            .color=${selectedColor}
+            .theme=${colorScheme}
+            .hollowCircle=${true}
+            .originalColor=${elements[0].stroke}
+            .enableCustomColor=${enableCustomColor}
+          >
+            <div
+              slot="other"
+              class="line-styles"
+              style=${styleMap({
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '8px',
+                alignItems: 'center',
+              })}
             >
-              <stroke-style-panel
-                .theme=${colorScheme}
-                .strokeWidth=${selectedLineSize}
-                .strokeStyle=${selectedLineStyle}
-                .strokeColor=${selectedColor}
-                .setStrokeStyle=${this._setConnectorStroke}
-                .setStrokeColor=${this._setConnectorColor}
-              >
-              </stroke-style-panel>
-            </editor-menu-button>
-          `
-        ),
+              ${LineStylesPanel({
+                selectedLineSize: selectedLineSize,
+                selectedLineStyle: selectedLineStyle,
+                onClick: this._setConnectorStroke,
+              })}
+            </div>
+            <editor-toolbar-separator
+              slot="separator"
+              data-orientation="horizontal"
+            ></editor-toolbar-separator>
+          </edgeless-color-picker-button>
+        `,
 
         html`
           <editor-menu-button

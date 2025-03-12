@@ -110,7 +110,7 @@ export class WorkspaceRepositoryService extends Service {
 
     workspace.engine.start();
 
-    this.framework.emitEvent(WorkspaceInitialized, workspace);
+    workspaceScope.emitEvent(WorkspaceInitialized, workspace);
 
     flavourProvider?.onWorkspaceInitialized?.(workspace);
 

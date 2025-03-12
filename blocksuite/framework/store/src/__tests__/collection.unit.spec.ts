@@ -1,4 +1,4 @@
-import type { Slot } from '@blocksuite/global/slot';
+import type { Subject } from 'rxjs';
 import { assert, beforeEach, describe, expect, it, vi } from 'vitest';
 import { applyUpdate, type Doc, encodeStateAsUpdate } from 'yjs';
 
@@ -36,8 +36,13 @@ function serializCollection(doc: Doc): Record<string, any> {
   };
 }
 
-function waitOnce<T>(slot: Slot<T>) {
-  return new Promise<T>(resolve => slot.once(val => resolve(val)));
+function waitOnce<T>(slot: Subject<T>) {
+  return new Promise<T>(resolve => {
+    const subscription = slot.subscribe(val => {
+      subscription.unsubscribe();
+      resolve(val);
+    });
+  });
 }
 
 function createRoot(doc: Store) {
@@ -150,8 +155,8 @@ describe('basic', () => {
 
     const readyCallback = vi.fn();
     const rootAddedCallback = vi.fn();
-    doc.slots.ready.on(readyCallback);
-    doc.slots.rootAdded.on(rootAddedCallback);
+    doc.slots.ready.subscribe(readyCallback);
+    doc.slots.rootAdded.subscribe(rootAddedCallback);
 
     doc.load(() => {
       const rootId = doc.addBlock('affine:page', {
@@ -428,7 +433,7 @@ describe('addBlock', () => {
     );
 
     let called = false;
-    collection.slots.docListUpdated.on(() => {
+    collection.slots.docListUpdated.subscribe(() => {
       called = true;
     });
 

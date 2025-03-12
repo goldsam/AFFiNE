@@ -118,7 +118,7 @@ export class EventService<TextAttributes extends BaseTextAttributes> {
       this.editor as InlineEditor
     );
 
-    this.editor.slots.inputting.emit();
+    this.editor.slots.inputting.next();
   };
 
   private readonly _onClick = (event: MouseEvent) => {
@@ -180,7 +180,7 @@ export class EventService<TextAttributes extends BaseTextAttributes> {
       });
     }
 
-    this.editor.slots.inputting.emit();
+    this.editor.slots.inputting.next();
   };
 
   private readonly _onCompositionStart = () => {
@@ -215,14 +215,14 @@ export class EventService<TextAttributes extends BaseTextAttributes> {
     )
       return;
 
-    this.editor.slots.inputting.emit();
+    this.editor.slots.inputting.next();
   };
 
   private readonly _onKeyDown = (event: KeyboardEvent) => {
     const inlineRange = this.editor.getInlineRange();
     if (!inlineRange) return;
 
-    this.editor.slots.keydown.emit(event);
+    this.editor.slots.keydown.next(event);
 
     if (
       !event.shiftKey &&

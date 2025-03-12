@@ -9,11 +9,8 @@ import { EditorService } from '@affine/core/modules/editor';
 import { GuardService } from '@affine/core/modules/permissions';
 import { DebugLogger } from '@affine/debug';
 import { GfxControllerIdentifier } from '@blocksuite/affine/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/affine/global/disposable';
 import { Bound } from '@blocksuite/affine/global/gfx';
-import {
-  type Disposable,
-  DisposableGroup,
-} from '@blocksuite/affine/global/slot';
 import { RefNodeSlotsProvider } from '@blocksuite/affine/rich-text';
 import {
   FrameworkScope,
@@ -23,6 +20,7 @@ import {
 } from '@toeverything/infra';
 import clsx from 'clsx';
 import { lazy, Suspense, useCallback, useEffect } from 'react';
+import type { Subscription } from 'rxjs';
 
 import { WorkbenchService } from '../../../workbench';
 import type { DocReferenceInfo } from '../../entities/peek-view';
@@ -101,7 +99,7 @@ function DocPeekPreviewEditor({
       // doc change event inside peek view should be handled by peek view
       disposableGroup.add(
         // todo(@pengx17): seems not working
-        refNodeSlots.docLinkClicked.on(options => {
+        refNodeSlots.docLinkClicked.subscribe(options => {
           if (options.host !== editorContainer.host) {
             return;
           }
@@ -129,7 +127,7 @@ function DocPeekPreviewEditor({
   );
 
   useEffect(() => {
-    const disposables: Disposable[] = [];
+    const disposables: Subscription[] = [];
     const openHandler = () => {
       if (doc) {
         workbench.openDoc(doc.id);
@@ -137,9 +135,13 @@ function DocPeekPreviewEditor({
         // chat panel open is already handled in <DetailPageImpl />
       }
     };
-    disposables.push(AIProvider.slots.requestOpenWithChat.on(openHandler));
-    disposables.push(AIProvider.slots.requestSendWithChat.on(openHandler));
-    return () => disposables.forEach(d => d.dispose());
+    disposables.push(
+      AIProvider.slots.requestOpenWithChat.subscribe(openHandler)
+    );
+    disposables.push(
+      AIProvider.slots.requestSendWithChat.subscribe(openHandler)
+    );
+    return () => disposables.forEach(d => d.unsubscribe());
   }, [doc, peekView, workbench, workspace.id]);
 
   const openOutlinePanel = useCallback(() => {

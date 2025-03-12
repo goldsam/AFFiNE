@@ -7,8 +7,8 @@ import {
 } from '@blocksuite/affine-shared/utils';
 import { type BlockComponent, WidgetComponent } from '@blocksuite/block-std';
 import type { GfxModel } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { IVec, Point, Rect } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { computed, type ReadonlySignal, signal } from '@preact/signals-core';
 import { html, nothing } from 'lit';
 import { query, state } from 'lit/decorators.js';
@@ -100,10 +100,12 @@ export class AffineDragHandleWidget extends WidgetComponent<RootBlockModel> {
 
     this._anchorModelDisposables = new DisposableGroup();
     this._anchorModelDisposables.add(
-      blockModel.propsUpdated.on(() => this.hide())
+      blockModel.propsUpdated.subscribe(() => this.hide())
     );
 
-    this._anchorModelDisposables.add(blockModel.deleted.on(() => this.hide()));
+    this._anchorModelDisposables.add(
+      blockModel.deleted.subscribe(() => this.hide())
+    );
   };
 
   hide = (force = false) => {

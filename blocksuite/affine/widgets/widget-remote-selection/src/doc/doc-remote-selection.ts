@@ -303,14 +303,14 @@ export class AffineDocRemoteSelectionWidget extends WidgetComponent {
     );
 
     this.disposables.add(
-      this.std.store.slots.blockUpdated.on(() => {
+      this.std.store.slots.blockUpdated.subscribe(() => {
         this._updateSelectionsThrottled(this._remoteSelections.peek());
       })
     );
 
     const gfx = this.std.get(GfxControllerIdentifier);
     this.disposables.add(
-      gfx.viewport.viewportUpdated.on(() => {
+      gfx.viewport.viewportUpdated.subscribe(() => {
         const selections = this._remoteSelections.peek();
         this._updateSelections(selections);
       })

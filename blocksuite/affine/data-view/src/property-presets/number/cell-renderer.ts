@@ -17,6 +17,7 @@ import {
 
 export class NumberCell extends BaseCellRenderer<
   number,
+  number,
   NumberPropertyDataType
 > {
   @query('input')

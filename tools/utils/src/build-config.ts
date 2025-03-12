@@ -33,6 +33,10 @@ export function getBuildConfig(
         isMobileWeb: distribution === 'mobile',
         isIOS: distribution === 'ios',
         isAndroid: distribution === 'android',
+        isNative:
+          distribution === 'desktop' ||
+          distribution === 'ios' ||
+          distribution === 'android',
         isAdmin: distribution === 'admin',
 
         appBuildType: 'stable' as const,

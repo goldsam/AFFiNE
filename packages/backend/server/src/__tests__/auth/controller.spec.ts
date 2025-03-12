@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { HttpStatus } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import ava, { TestFn } from 'ava';
@@ -248,4 +250,97 @@ test('should be able to sign out multiple accounts in one session', async t => {
 
   session = await app.GET('/api/auth/session').expect(200);
   t.falsy(session.body.user);
+});
+
+test('should be able to sign in with email and client nonce', async t => {
+  const { app, mailer } = t.context;
+
+  const clientNonce = randomUUID();
+  const u1 = await app.createUser();
+  // @ts-expect-error mock
+  mailer.sendSignInMail.resolves({ rejected: [] });
+
+  const res = await app
+    .POST('/api/auth/sign-in')
+    .send({ email: u1.email, client_nonce: clientNonce })
+    .expect(200);
+
+  t.is(res.body.email, u1.email);
+  t.true(mailer.sendSignInMail.calledOnce);
+
+  const [, { url: signInLink }] = mailer.sendSignInMail.firstCall.args;
+  const url = new URL(signInLink);
+  const email = url.searchParams.get('email');
+  const token = url.searchParams.get('token');
+
+  await app
+    .POST('/api/auth/magic-link')
+    .send({ email, token, client_nonce: clientNonce })
+    .expect(201);
+
+  const session = await currentUser(app);
+  t.is(session?.id, u1.id);
+});
+
+test('should not be able to sign in with email and client nonce if invalid', async t => {
+  const { app, mailer } = t.context;
+
+  const clientNonce = randomUUID();
+  const u1 = await app.createUser();
+  // @ts-expect-error mock
+  mailer.sendSignInMail.resolves({ rejected: [] });
+
+  const res = await app
+    .POST('/api/auth/sign-in')
+    .send({ email: u1.email, client_nonce: clientNonce })
+    .expect(200);
+
+  t.is(res.body.email, u1.email);
+  t.true(mailer.sendSignInMail.calledOnce);
+
+  const [, { url: signInLink }] = mailer.sendSignInMail.firstCall.args;
+  const url = new URL(signInLink);
+  const email = url.searchParams.get('email');
+  const token = url.searchParams.get('token');
+
+  // invalid client nonce
+  await app
+    .POST('/api/auth/magic-link')
+    .send({ email, token, client_nonce: randomUUID() })
+    .expect(400)
+    .expect({
+      status: 400,
+      code: 'Bad Request',
+      type: 'BAD_REQUEST',
+      name: 'INVALID_AUTH_STATE',
+      message:
+        'Invalid auth state. You might start the auth progress from another device.',
+    });
+  // no client nonce
+  await app
+    .POST('/api/auth/magic-link')
+    .send({ email, token })
+    .expect(400)
+    .expect({
+      status: 400,
+      code: 'Bad Request',
+      type: 'BAD_REQUEST',
+      name: 'INVALID_AUTH_STATE',
+      message:
+        'Invalid auth state. You might start the auth progress from another device.',
+    });
+
+  const session = await currentUser(app);
+  t.falsy(session);
+});
+
+test('should not be able to sign in if token is invalid', async t => {
+  const { app } = t.context;
+
+  const res = await app
+    .POST('/api/auth/magic-link')
+    .send({ email: 'u1@affine.pro', token: 'invalid' })
+    .expect(400);
+
+  t.is(res.body.message, 'An invalid email token provided.');
 });

@@ -1,4 +1,4 @@
-import type { Slot } from '@blocksuite/global/slot';
+import type { Subject } from 'rxjs';
 
 import type { BlockModel, DraftModel, Store } from '../model/index.js';
 import type { AssetsManager } from './assets.js';
@@ -95,10 +95,10 @@ export type AfterImportPayload =
     };
 
 export type TransformerSlots = {
-  beforeImport: Slot<BeforeImportPayload>;
-  afterImport: Slot<AfterImportPayload>;
-  beforeExport: Slot<BeforeExportPayload>;
-  afterExport: Slot<AfterExportPayload>;
+  beforeImport: Subject<BeforeImportPayload>;
+  afterImport: Subject<AfterImportPayload>;
+  beforeExport: Subject<BeforeExportPayload>;
+  afterExport: Subject<AfterExportPayload>;
 };
 
 type TransformerMiddlewareOptions = {

@@ -9,9 +9,9 @@ import {
   generateKeyBetweenV2,
   GfxControllerIdentifier,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { Bound } from '@blocksuite/global/gfx';
 import { SignalWatcher, WithDisposable } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import type { Store } from '@blocksuite/store';
 import { css, html, nothing, type PropertyValues } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
@@ -326,7 +326,7 @@ export class FramePanelBody extends SignalWatcher(
     this._clearDocDisposables();
     this._docDisposables = new DisposableGroup();
     this._docDisposables.add(
-      doc.slots.blockUpdated.on(({ type, flavour }) => {
+      doc.slots.blockUpdated.subscribe(({ type, flavour }) => {
         if (flavour === 'affine:frame' && type !== 'update') {
           requestAnimationFrame(() => {
             this._updateFrames();

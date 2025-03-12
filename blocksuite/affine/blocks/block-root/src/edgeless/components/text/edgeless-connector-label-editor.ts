@@ -127,7 +127,7 @@ export class EdgelessConnectorLabelEditor extends WithDisposable(
         if (!this.inlineEditor) return;
         this.inlineEditor.selectAll();
 
-        this.inlineEditor.slots.renderComplete.on(() => {
+        this.inlineEditor.slots.renderComplete.subscribe(() => {
           this.requestUpdate();
         });
 
@@ -153,13 +153,13 @@ export class EdgelessConnectorLabelEditor extends WithDisposable(
         );
 
         this.disposables.add(
-          edgeless.service.surface.elementUpdated.on(({ id }) => {
+          edgeless.service.surface.elementUpdated.subscribe(({ id }) => {
             if (id === connector.id) this.requestUpdate();
           })
         );
 
         this.disposables.add(
-          edgeless.service.viewport.viewportUpdated.on(() => {
+          edgeless.service.viewport.viewportUpdated.subscribe(() => {
             this.requestUpdate();
           })
         );

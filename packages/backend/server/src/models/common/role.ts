@@ -1,4 +1,8 @@
 export enum DocRole {
+  /**
+   * `None` equals to `role = null`, it only exists to give a value that API can use
+   */
+  None = -(1 << 15),
   External = 0,
   Reader = 10,
   Editor = 20,

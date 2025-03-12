@@ -62,7 +62,7 @@ export class ImageEdgelessBlockComponent extends GfxBlockComponent<ImageBlockMod
     this.refreshData();
     this.contentEditable = 'false';
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'sourceId') {
           this.refreshData();
         }

@@ -39,7 +39,6 @@ import {
   droppable,
 } from '../../../../core/utils/wc-dnd/dnd-context.js';
 import type { Property } from '../../../../core/view-manager/property.js';
-import type { NumberPropertyDataType } from '../../../../property-presets/index.js';
 import { numberFormats } from '../../../../property-presets/number/utils/formats.js';
 import { ShowQuickSettingBarContextKey } from '../../../../widget-presets/quick-setting-bar/context.js';
 import { DEFAULT_COLUMN_TITLE_HEIGHT } from '../../consts.js';
@@ -222,12 +221,7 @@ export class DatabaseHeaderColumn extends SignalWatcher(
                     items: [
                       numberFormatConfig(this.column),
                       ...numberFormats.map(format => {
-                        const data = (
-                          this.column as Property<
-                            number,
-                            NumberPropertyDataType
-                          >
-                        ).data$.value;
+                        const data = this.column.data$.value;
                         return menu.action({
                           isSelected: data.format === format.type,
                           prefix: html`<span

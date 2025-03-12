@@ -178,7 +178,7 @@ export class EdgelessShapeTextEditor extends WithDisposable(ShadowlessElement) {
     this.element.textDisplay = false;
 
     this.disposables.add(
-      this.edgeless.service.viewport.viewportUpdated.on(() => {
+      this.edgeless.service.viewport.viewportUpdated.subscribe(() => {
         this.requestUpdate();
         this.updateComplete
           .then(() => {
@@ -208,7 +208,7 @@ export class EdgelessShapeTextEditor extends WithDisposable(ShadowlessElement) {
         }
 
         this.disposables.add(
-          this.inlineEditor.slots.renderComplete.on(() => {
+          this.inlineEditor.slots.renderComplete.subscribe(() => {
             this._updateElementWH();
           })
         );

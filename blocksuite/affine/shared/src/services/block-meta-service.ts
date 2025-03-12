@@ -2,7 +2,7 @@ import type { BlockMeta } from '@blocksuite/affine-model';
 import { type BlockModel, StoreExtension } from '@blocksuite/store';
 
 import { FeatureFlagService } from './feature-flag-service';
-import { UserProvider } from './user-service';
+import { WriterInfoProvider } from './user-service';
 
 /**
  * The service is used to add following info to the block.
@@ -21,7 +21,7 @@ export class BlockMetaService extends StoreExtension {
 
   override loaded() {
     this.store.disposableGroup.add(
-      this.store.slots.blockUpdated.on(({ type, id }) => {
+      this.store.slots.blockUpdated.subscribe(({ type, id }) => {
         if (!this.isBlockMetaEnabled) return;
 
         const model = this.store.getBlock(id)?.model;
@@ -43,20 +43,20 @@ export class BlockMetaService extends StoreExtension {
       return;
     }
 
-    const currentUser = this._getCurrentUser();
-    if (!currentUser) return;
+    const writer = this._getWriterInfo();
+    if (!writer) return;
     const now = getNow();
 
     this.store.withoutTransact(() => {
       const isFlatModel = model.schema.model.isFlatData;
       if (!isFlatModel) {
         model['meta:createdAt'] = now;
-        model['meta:createdBy'] = currentUser.id;
+        model['meta:createdBy'] = writer.id;
         return;
       }
 
       model.props['meta:createdAt'] = now;
-      model.props['meta:createdBy'] = currentUser.id;
+      model.props['meta:createdBy'] = writer.id;
     });
   };
 
@@ -65,33 +65,33 @@ export class BlockMetaService extends StoreExtension {
       return;
     }
 
-    const currentUser = this._getCurrentUser();
-    if (!currentUser) return;
+    const writer = this._getWriterInfo();
+    if (!writer) return;
     const now = getNow();
 
     this.store.withoutTransact(() => {
       const isFlatModel = model.schema.model.isFlatData;
       if (!isFlatModel) {
         model['meta:updatedAt'] = now;
-        model['meta:updatedBy'] = currentUser.id;
+        model['meta:updatedBy'] = writer.id;
         if (!model['meta:createdAt']) {
           model['meta:createdAt'] = now;
-          model['meta:createdBy'] = currentUser.id;
+          model['meta:createdBy'] = writer.id;
         }
         return;
       }
 
       model.props['meta:updatedAt'] = now;
-      model.props['meta:updatedBy'] = currentUser.id;
+      model.props['meta:updatedBy'] = writer.id;
       if (!model.props['meta:createdAt']) {
         model.props['meta:createdAt'] = now;
-        model.props['meta:createdBy'] = currentUser.id;
+        model.props['meta:createdBy'] = writer.id;
       }
     });
   };
 
-  private readonly _getCurrentUser = () => {
-    return this.store.getOptional(UserProvider)?.getCurrentUser();
+  private readonly _getWriterInfo = () => {
+    return this.store.getOptional(WriterInfoProvider)?.getWriterInfo();
   };
 }
 

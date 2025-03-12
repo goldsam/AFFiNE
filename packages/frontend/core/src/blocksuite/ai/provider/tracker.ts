@@ -3,6 +3,7 @@ import type { EditorHost } from '@blocksuite/affine/block-std';
 import type { GfxPrimitiveElementModel } from '@blocksuite/affine/block-std/gfx';
 import type { BlockModel } from '@blocksuite/affine/store';
 import { lowerCase, omit } from 'lodash-es';
+import type { Subject } from 'rxjs';
 
 import { AIProvider } from './ai-provider';
 
@@ -60,9 +61,9 @@ type AIActionEventProperties = {
   workspaceId: string;
 };
 
-type BlocksuiteActionEvent = Parameters<
-  Parameters<typeof AIProvider.slots.actions.on>[0]
->[0];
+type SubjectValue<T> = T extends Subject<infer U> ? U : never;
+
+type BlocksuiteActionEvent = SubjectValue<typeof AIProvider.slots.actions>;
 
 const trackAction = ({
   eventName,
@@ -252,15 +253,15 @@ const toTrackedOptions = (
 };
 
 export function setupTracker() {
-  AIProvider.slots.requestUpgradePlan.on(() => {
+  AIProvider.slots.requestUpgradePlan.subscribe(() => {
     track.$.paywall.aiAction.viewPlans();
   });
 
-  AIProvider.slots.requestLogin.on(() => {
+  AIProvider.slots.requestLogin.subscribe(() => {
     track.doc.editor.aiActions.requestSignIn();
   });
 
-  AIProvider.slots.actions.on(event => {
+  AIProvider.slots.actions.subscribe(event => {
     const properties = toTrackedOptions(event);
     if (properties) {
       trackAction(properties);

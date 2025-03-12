@@ -409,7 +409,7 @@ export class ChatSessionService {
   ): Promise<
     Array<{
       id: string;
-      parentSessionId?: string;
+      parentSessionId: string | null;
       promptName: string;
     }>
   > {
@@ -433,7 +433,7 @@ export class ChatSessionService {
       .then(sessions =>
         sessions.map(({ id, parentSessionId, promptName }) => ({
           id,
-          parentSessionId: parentSessionId || undefined,
+          parentSessionId: parentSessionId || null,
           promptName,
         }))
       );
@@ -548,7 +548,7 @@ export class ChatSessionService {
 
                   return {
                     sessionId: id,
-                    action: prompt.action || undefined,
+                    action: prompt.action || null,
                     tokens: tokenCost,
                     createdAt,
                     messages: preload.concat(ret.data),

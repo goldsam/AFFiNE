@@ -23,8 +23,10 @@ export class TagStore extends Store {
 
   subscribe(cb: () => void) {
     const disposable =
-      this.workspaceService.workspace.docCollection.slots.docListUpdated.on(cb);
-    return disposable.dispose;
+      this.workspaceService.workspace.docCollection.slots.docListUpdated.subscribe(
+        cb
+      );
+    return disposable.unsubscribe.bind(disposable);
   }
 
   constructor(private readonly workspaceService: WorkspaceService) {

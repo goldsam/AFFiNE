@@ -3,10 +3,7 @@ import type {
   EdgelessColorPickerButton,
   PickColorEvent,
 } from '@blocksuite/affine-components/color-picker';
-import {
-  packColor,
-  packColorsWithColorScheme,
-} from '@blocksuite/affine-components/color-picker';
+import { packColor } from '@blocksuite/affine-components/color-picker';
 import { renderToolbarSeparator } from '@blocksuite/affine-components/toolbar';
 import type {
   Color,
@@ -28,7 +25,6 @@ import {
   StrokeStyle,
 } from '@blocksuite/affine-model';
 import { FeatureFlagService } from '@blocksuite/affine-shared/services';
-import type { ColorEvent } from '@blocksuite/affine-shared/utils';
 import { WithDisposable } from '@blocksuite/global/lit';
 import {
   AddTextIcon,
@@ -42,7 +38,6 @@ import { cache } from 'lit/directives/cache.js';
 import { choose } from 'lit/directives/choose.js';
 import { join } from 'lit/directives/join.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { when } from 'lit/directives/when.js';
 import countBy from 'lodash-es/countBy';
 import isEqual from 'lodash-es/isEqual';
 import maxBy from 'lodash-es/maxBy';
@@ -143,22 +138,6 @@ function getMostCommonShapeStyle(elements: ShapeElementModel[]): ShapeStyle {
 export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
   static override styles = [changeShapeButtonStyles];
 
-  private readonly _setShapeFillColor = (e: ColorEvent) => {
-    const fillColor = e.detail.value;
-    const filled = !isTransparent(fillColor);
-    const color = this._getTextColor(fillColor, filled);
-    this.elements.forEach(ele =>
-      this.crud.updateElement(ele.id, { filled, fillColor, color })
-    );
-  };
-
-  private readonly _setShapeStrokeColor = (e: ColorEvent) => {
-    const strokeColor = e.detail.value;
-    this.elements.forEach(ele =>
-      this.crud.updateElement(ele.id, { strokeColor })
-    );
-  };
-
   private readonly _setShapeStyles = ({ type, value }: LineStyleEvent) => {
     if (type === 'size') {
       this._setShapeStrokeWidth(value);
@@ -191,10 +170,15 @@ export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
         return DefaultTheme.white;
       } else if (isEqual(fillColor, DefaultTheme.white)) {
         return DefaultTheme.black;
+      } else if (isEqual(fillColor, DefaultTheme.pureBlack)) {
+        return DefaultTheme.pureWhite;
+      } else if (isEqual(fillColor, DefaultTheme.pureWhite)) {
+        return DefaultTheme.pureBlack;
       }
     }
 
-    return DefaultTheme.black;
+    // aka `DefaultTheme.pureBlack`
+    return DefaultTheme.shapeTextColor;
   }
 
   private _setShapeStrokeStyle(strokeStyle: StrokeStyle) {
@@ -232,7 +216,7 @@ export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
     const _disposables = this._disposables;
 
     _disposables.add(
-      this._shapePanel.slots.select.on(shapeName => {
+      this._shapePanel.slots.select.subscribe(shapeName => {
         this.edgeless.doc.captureSync();
         this.elements.forEach(element => {
           this.crud.updateElement(element.id, {
@@ -249,12 +233,14 @@ export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
   ) {
     return (e: PickColorEvent) => {
       if (e.type === 'pick') {
-        const color = e.detail.value;
+        const value = e.detail.value;
+        const filled = field === 'fillColor' && !isTransparent(value);
         this.elements.forEach(ele => {
-          const props = packColor(field, color);
+          const props = packColor(field, value);
           // If `filled` can be set separately, this logic can be removed
-          if (field === 'fillColor' && !ele.filled) {
-            Object.assign(props, { filled: true });
+          if (field && !ele.filled) {
+            const color = this._getTextColor(value, filled);
+            Object.assign(props, { filled, color });
           }
           this.crud.updateElement(ele.id, props);
         });
@@ -277,6 +263,9 @@ export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
     const selectedLineStyle = getMostCommonLineStyle(elements);
     const selectedShapeStyle = getMostCommonShapeStyle(elements);
     const iconSize = { width: '20px', height: '20px' };
+    const enableCustomColor = this.edgeless.doc
+      .get(FeatureFlagService)
+      .getFlag('enable_color_picker');
 
     return join(
       [
@@ -320,129 +309,52 @@ export class EdgelessChangeShapeButton extends WithDisposable(LitElement) {
           </editor-menu-button>
         `,
 
-        when(
-          this.edgeless.doc
-            .get(FeatureFlagService)
-            .getFlag('enable_color_picker'),
-          () => {
-            const { type, colors } = packColorsWithColorScheme(
-              colorScheme,
-              selectedFillColor,
-              elements[0].fillColor
-            );
+        html`
+          <edgeless-color-picker-button
+            class="fill-color"
+            .label="${'Fill color'}"
+            .pick=${this.pickColor('fillColor')}
+            .color=${selectedFillColor}
+            .theme=${colorScheme}
+            .originalColor=${elements[0].fillColor}
+            .enableCustomColor=${enableCustomColor}
+          >
+          </edgeless-color-picker-button>
+        `,
 
-            return html`
-              <edgeless-color-picker-button
-                class="fill-color"
-                .label=${'Fill color'}
-                .pick=${this.pickColor('fillColor')}
-                .color=${selectedFillColor}
-                .colors=${colors}
-                .colorType=${type}
-                .theme=${colorScheme}
-              >
-              </edgeless-color-picker-button>
-            `;
-          },
-          () => html`
-            <editor-menu-button
-              .contentPadding=${'8px'}
-              .button=${html`
-                <editor-icon-button
-                  aria-label="Fill color"
-                  .tooltip=${'Fill color'}
-                >
-                  <edgeless-color-button
-                    .color=${selectedFillColor}
-                  ></edgeless-color-button>
-                </editor-icon-button>
-              `}
+        html`
+          <edgeless-color-picker-button
+            class="border-style"
+            .label="${'Border style'}"
+            .pick=${this.pickColor('strokeColor')}
+            .color=${selectedStrokeColor}
+            .theme=${colorScheme}
+            .hollowCircle=${true}
+            .originalColor=${elements[0].strokeColor}
+            .enableCustomColor=${enableCustomColor}
+          >
+            <div
+              slot="other"
+              class="line-styles"
+              style=${styleMap({
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '8px',
+                alignItems: 'center',
+              })}
             >
-              <edgeless-color-panel
-                role="listbox"
-                aria-label="Fill colors"
-                .value=${selectedFillColor}
-                .theme=${colorScheme}
-                @select=${this._setShapeFillColor}
-              >
-              </edgeless-color-panel>
-            </editor-menu-button>
-          `
-        ),
-
-        when(
-          this.edgeless.doc
-            .get(FeatureFlagService)
-            .getFlag('enable_color_picker'),
-          () => {
-            const { type, colors } = packColorsWithColorScheme(
-              colorScheme,
-              selectedStrokeColor,
-              elements[0].strokeColor
-            );
-
-            return html`
-              <edgeless-color-picker-button
-                class="border-style"
-                .label=${'Border style'}
-                .pick=${this.pickColor('strokeColor')}
-                .color=${selectedStrokeColor}
-                .colors=${colors}
-                .colorType=${type}
-                .theme=${colorScheme}
-                .hollowCircle=${true}
-              >
-                <div
-                  slot="other"
-                  class="line-styles"
-                  style=${styleMap({
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '8px',
-                    alignItems: 'center',
-                  })}
-                >
-                  ${LineStylesPanel({
-                    selectedLineSize: selectedLineSize,
-                    selectedLineStyle: selectedLineStyle,
-                    onClick: this._setShapeStyles,
-                  })}
-                </div>
-                <editor-toolbar-separator
-                  slot="separator"
-                  data-orientation="horizontal"
-                ></editor-toolbar-separator>
-              </edgeless-color-picker-button>
-            `;
-          },
-          () => html`
-            <editor-menu-button
-              .contentPadding=${'8px'}
-              .button=${html`
-                <editor-icon-button
-                  aria-label="Border style"
-                  .tooltip=${'Border style'}
-                >
-                  <edgeless-color-button
-                    .color=${selectedStrokeColor}
-                    .hollowCircle=${true}
-                  ></edgeless-color-button>
-                </editor-icon-button>
-              `}
-            >
-              <stroke-style-panel
-                .theme=${colorScheme}
-                .hollowCircle=${true}
-                .strokeWidth=${selectedLineSize}
-                .strokeStyle=${selectedLineStyle}
-                .strokeColor=${selectedStrokeColor}
-                .setStrokeStyle=${this._setShapeStyles}
-                .setStrokeColor=${this._setShapeStrokeColor}
-              >
-              </stroke-style-panel>
-            </editor-menu-button>
-          `
-        ),
+              ${LineStylesPanel({
+                selectedLineSize: selectedLineSize,
+                selectedLineStyle: selectedLineStyle,
+                onClick: this._setShapeStyles,
+              })}
+            </div>
+            <editor-toolbar-separator
+              slot="separator"
+              data-orientation="horizontal"
+            ></editor-toolbar-separator>
+          </edgeless-color-picker-button>
+        `,
 
         choose<string, TemplateResult<1> | typeof nothing>(
           this._showAddButtonOrTextMenu(),

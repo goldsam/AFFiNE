@@ -1,6 +1,6 @@
 import { createIdentifier } from '@blocksuite/global/di';
-import { Slot } from '@blocksuite/global/slot';
 import type { ExtensionType } from '@blocksuite/store';
+import { Subject } from 'rxjs';
 
 import type { RefNodeSlots } from '../inline/index.js';
 
@@ -8,7 +8,7 @@ export const RefNodeSlotsProvider =
   createIdentifier<RefNodeSlots>('AffineRefNodeSlots');
 
 const slots: RefNodeSlots = {
-  docLinkClicked: new Slot(),
+  docLinkClicked: new Subject(),
 };
 
 export const RefNodeSlotsExtension: ExtensionType = {

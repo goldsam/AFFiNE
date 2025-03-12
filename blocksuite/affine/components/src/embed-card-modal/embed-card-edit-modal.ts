@@ -258,7 +258,9 @@ export class EmbedCardEditModal extends SignalWatcher(
     super.connectedCallback();
 
     this.disposables.add(
-      this.host.std.get(EditorLifeCycleExtension).slots.unmounted.on(this._hide)
+      this.host.std
+        .get(EditorLifeCycleExtension)
+        .slots.unmounted.subscribe(this._hide)
     );
     this._updateInfo();
   }

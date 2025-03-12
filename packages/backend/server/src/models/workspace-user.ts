@@ -196,6 +196,14 @@ export class WorkspaceUserModel extends BaseModel {
     });
   }
 
+  async deleteByUserId(userId: string) {
+    await this.db.workspaceUserRole.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  }
+
   async get(workspaceId: string, userId: string) {
     return await this.db.workspaceUserRole.findUnique({
       where: {

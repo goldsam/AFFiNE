@@ -53,8 +53,11 @@ export interface DataSource {
   propertyReadonlyGet(propertyId: string): boolean;
   propertyReadonlyGet$(propertyId: string): ReadonlySignal<boolean>;
 
-  propertyMetaGet(type: string): PropertyMetaConfig;
-  propertyAdd(insertToPosition: InsertToPosition, type?: string): string;
+  propertyMetaGet(type: string): PropertyMetaConfig | undefined;
+  propertyAdd(
+    insertToPosition: InsertToPosition,
+    type?: string
+  ): string | undefined;
 
   propertyDuplicate(propertyId: string): string | undefined;
   propertyCanDuplicate(propertyId: string): boolean;
@@ -152,7 +155,7 @@ export abstract class DataSourceBase implements DataSource {
   abstract propertyAdd(
     insertToPosition: InsertToPosition,
     type?: string
-  ): string;
+  ): string | undefined;
 
   abstract propertyDataGet(propertyId: string): Record<string, unknown>;
 
@@ -179,7 +182,7 @@ export abstract class DataSourceBase implements DataSource {
 
   abstract propertyDuplicate(propertyId: string): string | undefined;
 
-  abstract propertyMetaGet(type: string): PropertyMetaConfig;
+  abstract propertyMetaGet(type: string): PropertyMetaConfig | undefined;
 
   abstract propertyNameGet(propertyId: string): string;
 

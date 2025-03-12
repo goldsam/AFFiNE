@@ -1,5 +1,5 @@
-import { Slot } from '@blocksuite/global/slot';
 import { signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 import * as Y from 'yjs';
 
 import type { YBlock } from '../model/block/types.js';
@@ -34,7 +34,7 @@ export class TestDoc implements Doc {
 
   private readonly _historyObserver = () => {
     this._updateCanUndoRedoSignals();
-    this.slots.historyUpdated.emit();
+    this.slots.historyUpdated.next();
   };
 
   private readonly _initSubDoc = () => {
@@ -45,7 +45,7 @@ export class TestDoc implements Doc {
       });
       this.rootDoc.getMap('spaces').set(this.id, subDoc);
       this._loaded = true;
-      this._onLoadSlot.emit();
+      this._onLoadSlot.next();
     } else {
       this._loaded = false;
       this.rootDoc.on('subdocs', this._onSubdocEvent);
@@ -56,7 +56,7 @@ export class TestDoc implements Doc {
 
   private _loaded!: boolean;
 
-  private readonly _onLoadSlot = new Slot();
+  private readonly _onLoadSlot = new Subject<void>();
 
   private readonly _onSubdocEvent = ({
     loaded,
@@ -71,7 +71,7 @@ export class TestDoc implements Doc {
     }
     this.rootDoc.off('subdocs', this._onSubdocEvent);
     this._loaded = true;
-    this._onLoadSlot.emit();
+    this._onLoadSlot.next();
   };
 
   /** Indicate whether the block tree is ready */
@@ -105,8 +105,8 @@ export class TestDoc implements Doc {
   readonly rootDoc: Y.Doc;
 
   readonly slots = {
-    historyUpdated: new Slot(),
-    yBlockUpdated: new Slot<
+    historyUpdated: new Subject<void>(),
+    yBlockUpdated: new Subject<
       | {
           type: 'add';
           id: string;
@@ -186,11 +186,11 @@ export class TestDoc implements Doc {
   }
 
   private _handleYBlockAdd(id: string) {
-    this.slots.yBlockUpdated.emit({ type: 'add', id });
+    this.slots.yBlockUpdated.next({ type: 'add', id });
   }
 
   private _handleYBlockDelete(id: string) {
-    this.slots.yBlockUpdated.emit({ type: 'delete', id });
+    this.slots.yBlockUpdated.next({ type: 'delete', id });
   }
 
   private _handleYEvent(event: Y.YEvent<YBlock | Y.Text | Y.Array<unknown>>) {
@@ -244,12 +244,12 @@ export class TestDoc implements Doc {
 
   private _destroy() {
     this._ySpaceDoc.destroy();
-    this._onLoadSlot.dispose();
+    this._onLoadSlot.complete();
     this._loaded = false;
   }
 
   dispose() {
-    this.slots.historyUpdated.dispose();
+    this.slots.historyUpdated.complete();
 
     if (this.ready) {
       this._yBlocks.unobserveDeep(this._handleYEvents);

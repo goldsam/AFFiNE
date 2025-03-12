@@ -28,6 +28,7 @@
     "@blocksuite/global": "workspace:*",
     "@preact/signals-core": "^1.8.0",
     "lit": "^3.2.0",
+    "rxjs": "^7.8.1",
     "yjs": "^13.6.21",
     "zod": "^3.23.8"
   },

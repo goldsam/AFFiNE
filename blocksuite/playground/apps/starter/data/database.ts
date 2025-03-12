@@ -79,11 +79,13 @@ export const database: InitFn = (collection: Workspace, id: string) => {
           { type: type, text: new Text(`Paragraph type ${type}`) },
           databaseId
         );
-        datasource.cellValueChange(
-          id,
-          richTextId,
-          new Text(`Paragraph type ${type}`)
-        );
+        if (richTextId) {
+          datasource.cellValueChange(
+            id,
+            richTextId,
+            new Text(`Paragraph type ${type}`)
+          );
+        }
       });
       const listTypes: ListType[] = ['numbered', 'bulleted', 'todo', 'toggle'];
 
@@ -93,11 +95,13 @@ export const database: InitFn = (collection: Workspace, id: string) => {
           { type: type, text: new Text(`List type ${type}`) },
           databaseId
         );
-        datasource.cellValueChange(
-          id,
-          richTextId,
-          new Text(`List type ${type}`)
-        );
+        if (richTextId) {
+          datasource.cellValueChange(
+            id,
+            richTextId,
+            new Text(`List type ${type}`)
+          );
+        }
       });
       // Add a paragraph after database
       doc.addBlock('affine:paragraph', {}, noteId);

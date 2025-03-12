@@ -13,6 +13,7 @@ import { ConnectedAccount } from '@prisma/client';
 import type { Request, Response } from 'express';
 
 import {
+  InvalidAuthState,
   InvalidOauthCallbackState,
   MissingOauthQueryParameter,
   OauthAccountAlreadyConnected,
@@ -43,14 +44,15 @@ export class OAuthController {
   @Post('/preflight')
   @HttpCode(HttpStatus.OK)
   async preflight(
-    @Body('provider') unknownProviderName?: string,
-    @Body('redirect_uri') redirectUri?: string
+    @Body('provider') unknownProviderName?: keyof typeof OAuthProviderName,
+    @Body('redirect_uri') redirectUri?: string,
+    @Body('client') client?: string,
+    @Body('client_nonce') clientNonce?: string
   ) {
     if (!unknownProviderName) {
       throw new MissingOauthQueryParameter({ name: 'provider' });
     }
 
-    // @ts-expect-error safe
     const providerName = OAuthProviderName[unknownProviderName];
     const provider = this.providerFactory.get(providerName);
 
@@ -61,10 +63,14 @@ export class OAuthController {
     const state = await this.oauth.saveOAuthState({
       provider: providerName,
       redirectUri,
+      client,
+      clientNonce,
     });
 
     return {
-      url: provider.getAuthUrl(state),
+      url: provider.getAuthUrl(
+        JSON.stringify({ state, client, provider: unknownProviderName })
+      ),
     };
   }
 
@@ -76,7 +82,8 @@ export class OAuthController {
     @Req() req: RawBodyRequest<Request>,
     @Res() res: Response,
     @Body('code') code?: string,
-    @Body('state') stateStr?: string
+    @Body('state') stateStr?: string,
+    @Body('client_nonce') clientNonce?: string
   ) {
     if (!code) {
       throw new MissingOauthQueryParameter({ name: 'code' });
@@ -94,6 +101,11 @@ export class OAuthController {
 
     if (!state) {
       throw new OauthStateExpired();
+    }
+
+    // TODO(@fengmk2): clientNonce should be required after the client version >= 0.21.0
+    if (state.clientNonce && state.clientNonce !== clientNonce) {
+      throw new InvalidAuthState();
     }
 
     if (!state.provider) {

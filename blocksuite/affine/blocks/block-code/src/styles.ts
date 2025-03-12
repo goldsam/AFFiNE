@@ -1,3 +1,4 @@
+import { scrollbarStyle } from '@blocksuite/affine-shared/styles';
 import { css } from 'lit';
 
 export const codeBlockStyles = css`
@@ -15,9 +16,7 @@ export const codeBlockStyles = css`
     padding: 12px;
   }
 
-  .affine-code-block-container rich-text {
-    overflow-x: hidden;
-  }
+  ${scrollbarStyle('.affine-code-block-container rich-text')}
 
   .affine-code-block-container .inline-editor {
     font-family: var(--affine-font-code-family);

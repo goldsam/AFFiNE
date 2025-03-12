@@ -82,14 +82,14 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
 
   private readonly _onBlackBackgroundChange = (checked: boolean) => {
     this.blackBackground = checked;
-    this.slots.navigatorSettingUpdated.emit({
+    this.slots.navigatorSettingUpdated.next({
       blackBackground: this.blackBackground,
     });
   };
 
   private readonly _onFillScreenChange = (checked: boolean) => {
     this.fillScreen = checked;
-    this.slots.navigatorSettingUpdated.emit({
+    this.slots.navigatorSettingUpdated.next({
       fillScreen: this.fillScreen,
     });
     this._editPropsStore.setStorage('presentFillScreen', this.fillScreen);
@@ -97,7 +97,7 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
 
   private readonly _onHideToolBarChange = (checked: boolean) => {
     this.hideToolbar = checked;
-    this.slots.navigatorSettingUpdated.emit({
+    this.slots.navigatorSettingUpdated.next({
       hideToolbar: this.hideToolbar,
     });
     this._editPropsStore.setStorage('presentHideToolbar', this.hideToolbar);
@@ -138,7 +138,7 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
         <div class="action-label">Fill Screen</div>
         <div class="toggle-button">
           <toggle-switch
-            .on=${this.fillScreen}
+            .subscribe=${this.fillScreen}
             .onChange=${this._onFillScreenChange}
           ></toggle-switch>
         </div>
@@ -153,7 +153,7 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
         <div class="action-label">Dark background</div>
         <div class="toggle-button">
           <toggle-switch
-            .on=${this.blackBackground}
+            .subscribe=${this.blackBackground}
             .onChange=${this._onBlackBackgroundChange}
           ></toggle-switch>
         </div>
@@ -162,7 +162,7 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
         <div class="action-label">Hide toolbar</div>
         <div class="toggle-button">
           <toggle-switch
-            .on=${this.hideToolbar}
+            .subscribe=${this.hideToolbar}
             .onChange=${this._onHideToolBarChange}
           ></toggle-switch>
         </div>
@@ -175,7 +175,7 @@ export class FramesSettingMenu extends WithDisposable(LitElement) {
       const docModeProvider = this.editorHost.std.get(DocModeProvider);
       if (docModeProvider.getEditorMode() === 'edgeless') {
         this.disposables.add(
-          this.slots.navigatorSettingUpdated.on(
+          this.slots.navigatorSettingUpdated.subscribe(
             ({ blackBackground, hideToolbar }) => {
               if (
                 blackBackground !== undefined &&

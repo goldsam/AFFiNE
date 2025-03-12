@@ -1,6 +1,6 @@
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
-import type { Slot } from '@blocksuite/global/slot';
 import { signal } from '@preact/signals-core';
+import type { Subject } from 'rxjs';
 import {
   Array as YArray,
   Map as YMap,
@@ -29,7 +29,7 @@ type CreateProxyOptions = {
   basePath?: string;
   onChange?: OnChange;
   transform: Transform;
-  onDispose: Slot;
+  onDispose: Subject<void>;
   shouldByPassSignal: () => boolean;
   shouldByPassYjs: () => boolean;
   byPassSignalUpdate: (fn: () => void) => void;
@@ -113,17 +113,19 @@ function createProxy(
             }
             const signalData = signal(value);
             root[signalKey] = signalData;
-            onDispose.once(
-              signalData.subscribe(next => {
-                if (!initialized()) {
-                  return;
-                }
-                byPassSignalUpdate(() => {
-                  proxy[p] = next;
-                  onChange?.(firstKey);
-                });
-              })
-            );
+            const unsubscribe = signalData.subscribe(next => {
+              if (!initialized()) {
+                return;
+              }
+              byPassSignalUpdate(() => {
+                proxy[p] = next;
+                onChange?.(firstKey);
+              });
+            });
+            const subscription = onDispose.subscribe(() => {
+              subscription.unsubscribe();
+              unsubscribe();
+            });
             return;
           }
           byPassSignalUpdate(() => {
@@ -464,7 +466,7 @@ export class ReactiveFlatYMap extends BaseReactiveYData<
 
   constructor(
     protected readonly _ySource: YMap<unknown>,
-    private readonly _onDispose: Slot,
+    private readonly _onDispose: Subject<void>,
     private readonly _onChange?: OnChange
   ) {
     super();
@@ -477,17 +479,19 @@ export class ReactiveFlatYMap extends BaseReactiveYData<
     Object.entries(source).forEach(([key, value]) => {
       const signalData = signal(value);
       source[`${key}$`] = signalData;
-      _onDispose.once(
-        signalData.subscribe(next => {
-          if (!this._initialized) {
-            return;
-          }
-          this._updateWithSkip(() => {
-            proxy[key] = next;
-            this._onChange?.(key);
-          });
-        })
-      );
+      const unsubscribe = signalData.subscribe(next => {
+        if (!this._initialized) {
+          return;
+        }
+        this._updateWithSkip(() => {
+          proxy[key] = next;
+          this._onChange?.(key);
+        });
+      });
+      const subscription = _onDispose.subscribe(() => {
+        subscription.unsubscribe();
+        unsubscribe();
+      });
     });
 
     this._proxy = proxy;

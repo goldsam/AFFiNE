@@ -148,7 +148,7 @@ export class AffineReference extends WithDisposable(ShadowlessElement) {
   readonly open = (event?: Partial<DocLinkClickedEvent>) => {
     if (!this.config.interactable) return;
 
-    this.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.emit({
+    this.std.getOptional(RefNodeSlotsProvider)?.docLinkClicked.next({
       ...this.referenceInfo,
       ...event,
       host: this.std.host,
@@ -205,7 +205,9 @@ export class AffineReference extends WithDisposable(ShadowlessElement) {
     const doc = this.doc;
     if (doc) {
       this._disposables.add(
-        doc.workspace.slots.docListUpdated.on(() => this._updateRefMeta(doc))
+        doc.workspace.slots.docListUpdated.subscribe(() =>
+          this._updateRefMeta(doc)
+        )
       );
     }
 
@@ -215,7 +217,9 @@ export class AffineReference extends WithDisposable(ShadowlessElement) {
 
         // observe yText update
         this.disposables.add(
-          this.inlineEditor.slots.textChange.on(() => this._updateRefMeta(doc))
+          this.inlineEditor.slots.textChange.subscribe(() =>
+            this._updateRefMeta(doc)
+          )
         );
       })
       .catch(console.error);

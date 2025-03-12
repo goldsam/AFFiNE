@@ -10,6 +10,7 @@ import {
   SidebarScrollableContainer,
 } from '@affine/core/modules/app-sidebar/views';
 import { ExternalMenuLinkItem } from '@affine/core/modules/app-sidebar/views/menu-item/external-menu-link-item';
+import { AuthService } from '@affine/core/modules/cloud';
 import { WorkspaceDialogService } from '@affine/core/modules/dialogs';
 import {
   CollapsibleSection,
@@ -43,6 +44,7 @@ import {
   workspaceWrapper,
 } from './index.css';
 import { AppSidebarJournalButton } from './journal-button';
+import { NotificationButton } from './notification-button';
 import { TemplateDocEntrance } from './template-doc-entrance';
 import { TrashButton } from './trash-button';
 import { UpdaterButton } from './updater-button';
@@ -87,10 +89,15 @@ const AllDocsButton = () => {
  *
  */
 export const RootAppSidebar = memo((): ReactElement => {
-  const { workbenchService, cMDKQuickSearchService } = useServices({
-    WorkbenchService,
-    CMDKQuickSearchService,
-  });
+  const { workbenchService, cMDKQuickSearchService, authService } = useServices(
+    {
+      WorkbenchService,
+      CMDKQuickSearchService,
+      AuthService,
+    }
+  );
+
+  const sessionStatus = useLiveData(authService.session.status$);
   const t = useI18n();
   const workspaceDialogService = useService(WorkspaceDialogService);
   const workbench = workbenchService.workbench;
@@ -159,6 +166,7 @@ export const RootAppSidebar = memo((): ReactElement => {
         </div>
         <AllDocsButton />
         <AppSidebarJournalButton />
+        {sessionStatus === 'authenticated' && <NotificationButton />}
         <MenuItem
           data-testid="slider-bar-workspace-setting-button"
           icon={<SettingsIcon />}

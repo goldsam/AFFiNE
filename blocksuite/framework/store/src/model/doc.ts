@@ -1,4 +1,4 @@
-import type { Slot } from '@blocksuite/global/slot';
+import type { Subject } from 'rxjs';
 import type * as Y from 'yjs';
 
 import type { AwarenessStore } from '../yjs/awareness.js';
@@ -24,8 +24,8 @@ export interface Doc {
   dispose(): void;
 
   slots: {
-    historyUpdated: Slot;
-    yBlockUpdated: Slot<
+    historyUpdated: Subject<void>;
+    yBlockUpdated: Subject<
       | {
           type: 'add';
           id: string;

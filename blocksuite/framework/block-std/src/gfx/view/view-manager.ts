@@ -1,4 +1,4 @@
-import { DisposableGroup } from '@blocksuite/global/slot';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 
 import { onSurfaceAdded } from '../../utils/gfx.js';
 import type { GfxController } from '../controller.js';
@@ -70,14 +70,14 @@ export class ViewManager extends GfxExtension {
       };
 
       this._disposable.add(
-        surface.elementAdded.on(payload => {
+        surface.elementAdded.subscribe(payload => {
           const model = surface.getElementById(payload.id)!;
           createView(model);
         })
       );
 
       this._disposable.add(
-        surface.elementRemoved.on(elem => {
+        surface.elementRemoved.subscribe(elem => {
           const view = this._viewMap.get(elem.id);
           this._viewMap.delete(elem.id);
           view?.onDestroyed();
@@ -85,13 +85,13 @@ export class ViewManager extends GfxExtension {
       );
 
       this._disposable.add(
-        surface.localElementAdded.on(model => {
+        surface.localElementAdded.subscribe(model => {
           createView(model);
         })
       );
 
       this._disposable.add(
-        surface.localElementDeleted.on(model => {
+        surface.localElementDeleted.subscribe(model => {
           const view = this._viewMap.get(model.id);
           this._viewMap.delete(model.id);
           view?.onDestroyed();

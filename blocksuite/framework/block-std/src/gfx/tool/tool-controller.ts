@@ -1,8 +1,9 @@
 import type { ServiceIdentifier } from '@blocksuite/global/di';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { BlockSuiteError, ErrorCode } from '@blocksuite/global/exceptions';
 import type { IBound, IPoint } from '@blocksuite/global/gfx';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { Signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
 
 import type { PointerEventState } from '../../event/index.js';
 import type { GfxController } from '../controller.js';
@@ -79,7 +80,7 @@ export const eventTarget = Symbol('eventTarget');
 export class ToolController extends GfxExtension {
   static override key = 'ToolController';
 
-  private readonly _builtInHookSlot = new Slot<BuiltInSlotContext>();
+  private readonly _builtInHookSlot = new Subject<BuiltInSlotContext>();
 
   private readonly _disposableGroup = new DisposableGroup();
 
@@ -441,7 +442,7 @@ export class ToolController extends GfxExtension {
       );
     });
 
-    this._builtInHookSlot.on(evt => {
+    this._builtInHookSlot.subscribe(evt => {
       hooks[evt.event]?.forEach(hook => hook(evt));
     });
 
@@ -499,7 +500,7 @@ export class ToolController extends GfxExtension {
     const beforeUpdateCtx = this._createBuiltInHookCtx('beforeToolUpdate', {
       toolName: toolNameStr,
     });
-    this._builtInHookSlot.emit(beforeUpdateCtx.slotCtx);
+    this._builtInHookSlot.next(beforeUpdateCtx.slotCtx);
 
     if (beforeUpdateCtx.prevented) {
       return;
@@ -528,7 +529,7 @@ export class ToolController extends GfxExtension {
     const afterUpdateCtx = this._createBuiltInHookCtx('toolUpdate', {
       toolName: toolNameStr,
     });
-    this._builtInHookSlot.emit(afterUpdateCtx.slotCtx);
+    this._builtInHookSlot.next(afterUpdateCtx.slotCtx);
   }
 
   override unmounted(): void {
@@ -537,7 +538,7 @@ export class ToolController extends GfxExtension {
       tool.unmounted();
       tool['disposable'].dispose();
     });
-    this._builtInHookSlot.dispose();
+    this._builtInHookSlot.complete();
   }
 }
 

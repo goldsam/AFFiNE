@@ -8,9 +8,9 @@ import {
   ShadowlessElement,
 } from '@blocksuite/block-std';
 import { GfxControllerIdentifier } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { Bound, deserializeXYWH } from '@blocksuite/global/gfx';
 import { WithDisposable } from '@blocksuite/global/lit';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { type Query, type Store } from '@blocksuite/store';
 import { css, html, nothing, type PropertyValues } from 'lit';
 import { property, query, state } from 'lit/decorators.js';
@@ -122,7 +122,7 @@ export class FramePreview extends WithDisposable(ShadowlessElement) {
       override mounted() {
         const std = this.std;
         const { view } = std;
-        view.viewUpdated.on(payload => {
+        view.viewUpdated.subscribe(payload => {
           if (
             payload.type !== 'block' ||
             payload.method !== 'add' ||
@@ -131,7 +131,8 @@ export class FramePreview extends WithDisposable(ShadowlessElement) {
             return;
           }
           const viewport = std.get(GfxControllerIdentifier).viewport;
-          viewport.sizeUpdated.once(() => {
+          const subscription = viewport.sizeUpdated.subscribe(() => {
+            subscription.unsubscribe();
             refreshViewport();
           });
         });
@@ -186,7 +187,7 @@ export class FramePreview extends WithDisposable(ShadowlessElement) {
     this._clearFrameDisposables();
     this._frameDisposables = new DisposableGroup();
     this._frameDisposables.add(
-      frame.propsUpdated.on(
+      frame.propsUpdated.subscribe(
         debounce(this._updateFrameViewportWH, 10, { leading: true })
       )
     );

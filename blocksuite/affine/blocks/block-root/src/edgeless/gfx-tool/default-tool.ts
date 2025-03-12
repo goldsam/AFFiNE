@@ -42,9 +42,9 @@ import {
   isGfxGroupCompatibleModel,
   type PointTestOptions,
 } from '@blocksuite/block-std/gfx';
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { IVec } from '@blocksuite/global/gfx';
 import { Bound, getCommonBoundWithRotation, Vec } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import { noop } from '@blocksuite/global/utils';
 import { effect } from '@preact/signals-core';
 import clamp from 'lodash-es/clamp';
@@ -598,7 +598,7 @@ export class DefaultTool extends BaseTool {
     // If the viewport updates when dragging, should update the dragging area and selection
     if (this.dragType === DefaultModeDragType.Selecting) {
       this._disposables.add(
-        this.gfx.viewport.viewportUpdated.on(() => {
+        this.gfx.viewport.viewportUpdated.subscribe(() => {
           if (
             this.dragType === DefaultModeDragType.Selecting &&
             this.controller.dragging$.peek() &&
@@ -613,7 +613,7 @@ export class DefaultTool extends BaseTool {
 
     if (this.dragType === DefaultModeDragType.ContentMoving) {
       this._disposables.add(
-        this.gfx.viewport.viewportMoved.on(delta => {
+        this.gfx.viewport.viewportMoved.subscribe(delta => {
           if (
             this.dragType === DefaultModeDragType.ContentMoving &&
             this.controller.dragging$.peek() &&

@@ -193,7 +193,7 @@ function buildPageResponseConfig<T extends keyof BlockSuitePresets.AIActions>(
           icon: ChatWithAiIcon(),
           handler: () => {
             reportResponse('result:continue-in-chat');
-            AIProvider.slots.requestOpenWithChat.emit({ host });
+            AIProvider.slots.requestOpenWithChat.next({ host });
             panel.hide();
           },
         },
@@ -258,11 +258,11 @@ export function buildFinishConfig<T extends keyof BlockSuitePresets.AIActions>(
 export function buildErrorConfig(panel: AffineAIPanelWidget) {
   return {
     upgrade: () => {
-      AIProvider.slots.requestUpgradePlan.emit({ host: panel.host });
+      AIProvider.slots.requestUpgradePlan.next({ host: panel.host });
       panel.hide();
     },
     login: () => {
-      AIProvider.slots.requestLogin.emit({ host: panel.host });
+      AIProvider.slots.requestLogin.next({ host: panel.host });
       panel.hide();
     },
     cancel: () => {

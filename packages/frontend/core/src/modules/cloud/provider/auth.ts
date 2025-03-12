@@ -1,12 +1,17 @@
 import { createIdentifier } from '@toeverything/infra';
 
 export interface AuthProvider {
-  signInMagicLink(email: string, token: string): Promise<void>;
+  signInMagicLink(
+    email: string,
+    token: string,
+    clientNonce?: string
+  ): Promise<void>;
 
   signInOauth(
     code: string,
     state: string,
-    provider: string
+    provider: string,
+    clientNonce?: string
   ): Promise<{ redirectUri?: string }>;
 
   signInPassword(credential: {

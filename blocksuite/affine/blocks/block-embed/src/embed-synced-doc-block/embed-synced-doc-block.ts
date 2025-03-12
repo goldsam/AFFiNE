@@ -129,7 +129,7 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
       override mounted(): void {
         const { view } = this.std;
-        view.viewUpdated.on(payload => {
+        view.viewUpdated.subscribe(payload => {
           if (
             payload.type !== 'block' ||
             payload.view.model.flavour !== 'affine:embed-synced-doc'
@@ -355,7 +355,7 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
     this.std
       .getOptional(RefNodeSlotsProvider)
-      ?.docLinkClicked.emit({ ...event, pageId, host: this.host });
+      ?.docLinkClicked.next({ ...event, pageId, host: this.host });
   };
 
   refreshData = () => {
@@ -464,7 +464,10 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
     if (!this._error && !syncedDoc.root) {
       await new Promise<void>(resolve => {
-        syncedDoc.slots.rootAdded.once(() => resolve());
+        const subscription = syncedDoc.slots.rootAdded.subscribe(() => {
+          subscription.unsubscribe();
+          resolve();
+        });
       });
     }
 
@@ -504,7 +507,7 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
     this.contentEditable = 'false';
 
     this.disposables.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'pageId' || key === 'style') {
           this._load().catch(e => {
             console.error(e);
@@ -516,7 +519,7 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
     this._setDocUpdatedAt();
     this.disposables.add(
-      this.doc.workspace.slots.docListUpdated.on(() => {
+      this.doc.workspace.slots.docListUpdated.subscribe(() => {
         this._setDocUpdatedAt();
       })
     );
@@ -535,7 +538,7 @@ export class EmbedSyncedDocBlockComponent extends EmbedBlockComponent<EmbedSynce
 
     this.syncedDoc &&
       this.disposables.add(
-        this.syncedDoc.slots.blockUpdated.on(() => {
+        this.syncedDoc.slots.blockUpdated.subscribe(() => {
           this._isEmptySyncedDoc = isEmptyDoc(this.syncedDoc, this.editorMode);
         })
       );

@@ -261,7 +261,9 @@ export class Editor extends Entity {
       scrollViewport?.removeEventListener('scroll', saveScrollPosition);
     });
     if (gfx) {
-      unsubs.push(gfx.viewport.viewportUpdated.on(saveScrollPosition).dispose);
+      const subscription =
+        gfx.viewport.viewportUpdated.subscribe(saveScrollPosition);
+      unsubs.push(subscription.unsubscribe.bind(subscription));
     }
 
     // update selection when focusAt$ changed

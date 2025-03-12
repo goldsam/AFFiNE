@@ -214,7 +214,7 @@ export class PageRootBlockComponent extends BlockComponent<
       (entries: ResizeObserverEntry[]) => {
         for (const { target } of entries) {
           if (target === viewportElement) {
-            viewportService.emit(viewport);
+            viewportService.next(viewport);
             break;
           }
         }
@@ -416,7 +416,7 @@ export class PageRootBlockComponent extends BlockComponent<
     );
     noteModels.forEach(note => {
       this.disposables.add(
-        note.propsUpdated.on(({ key }) => {
+        note.propsUpdated.subscribe(({ key }) => {
           if (key === 'displayMode') {
             this.requestUpdate();
           }

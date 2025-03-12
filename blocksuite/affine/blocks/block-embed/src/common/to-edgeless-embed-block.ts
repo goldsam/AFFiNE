@@ -54,14 +54,14 @@ export function toEdgelessEmbedBlock<
       super.connectedCallback();
 
       this._disposables.add(
-        this.edgelessSlots.elementResizeStart.on(() => {
+        this.edgelessSlots.elementResizeStart.subscribe(() => {
           this._isResizing = true;
           this._showOverlay = true;
         })
       );
 
       this._disposables.add(
-        this.edgelessSlots.elementResizeEnd.on(() => {
+        this.edgelessSlots.elementResizeEnd.subscribe(() => {
           this._isResizing = false;
           this._showOverlay =
             this._isResizing || this._isDragging || !this.selected$.peek();

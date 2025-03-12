@@ -109,7 +109,7 @@ export const EditorChatPanel = forwardRef(function EditorChatPanel(
     const docModeService = editor.host.std.get(DocModeProvider);
     const refNodeService = editor.host.std.getOptional(RefNodeSlotsProvider);
     const disposable = [
-      refNodeService?.docLinkClicked.on(({ host }) => {
+      refNodeService?.docLinkClicked.subscribe(({ host }) => {
         if (host === editor.host) {
           (chatPanelRef.current as ChatPanel).doc = editor.doc;
         }
@@ -120,7 +120,7 @@ export const EditorChatPanel = forwardRef(function EditorChatPanel(
       }, editor.doc.id),
     ];
 
-    return () => disposable.forEach(d => d?.dispose());
+    return () => disposable.forEach(d => d?.unsubscribe());
   }, [editor, framework]);
 
   return <div className={styles.root} ref={containerRef} />;

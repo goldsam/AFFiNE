@@ -361,13 +361,13 @@ export class EdgelessElementToolbarWidget extends WidgetComponent<
     this.moreGroups = getMoreMenuConfig(this.std).configure(this.moreGroups);
 
     _disposables.add(
-      edgeless.service.viewport.viewportUpdated.on(() => {
+      edgeless.service.viewport.viewportUpdated.subscribe(() => {
         this._recalculatePosition();
       })
     );
 
     _disposables.add(
-      this.selection.slots.updated.on(() => {
+      this.selection.slots.updated.subscribe(() => {
         if (
           this.selection.selectedIds.length === 0 ||
           this.selection.editing ||
@@ -383,18 +383,18 @@ export class EdgelessElementToolbarWidget extends WidgetComponent<
     );
 
     _disposables.add(
-      this.edgeless.service.surface.elementAdded.on(
+      this.edgeless.service.surface.elementAdded.subscribe(
         this._updateOnSelectedChange
       )
     );
     _disposables.add(
-      this.edgeless.service.surface.elementUpdated.on(
+      this.edgeless.service.surface.elementUpdated.subscribe(
         this._updateOnSelectedChange
       )
     );
 
     _disposables.add(
-      this.doc.slots.blockUpdated.on(this._updateOnSelectedChange)
+      this.doc.slots.blockUpdated.subscribe(this._updateOnSelectedChange)
     );
 
     _disposables.add(
@@ -410,19 +410,19 @@ export class EdgelessElementToolbarWidget extends WidgetComponent<
     );
 
     _disposables.add(
-      edgeless.slots.elementResizeStart.on(() => {
+      edgeless.slots.elementResizeStart.subscribe(() => {
         this._dragging = true;
       })
     );
     _disposables.add(
-      edgeless.slots.elementResizeEnd.on(() => {
+      edgeless.slots.elementResizeEnd.subscribe(() => {
         this._dragging = false;
         this._recalculatePosition();
       })
     );
 
     _disposables.add(
-      edgeless.slots.readonlyUpdated.on(() => this.requestUpdate())
+      edgeless.slots.readonlyUpdated.subscribe(() => this.requestUpdate())
     );
 
     this.updateComplete

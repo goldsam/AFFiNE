@@ -22,14 +22,14 @@ export class AttachmentEdgelessBlockComponent extends toGfxBlockComponent(
     super.connectedCallback();
 
     this._disposables.add(
-      this.slots.elementResizeStart.on(() => {
+      this.slots.elementResizeStart.subscribe(() => {
         this._isResizing = true;
         this._showOverlay = true;
       })
     );
 
     this._disposables.add(
-      this.slots.elementResizeEnd.on(() => {
+      this.slots.elementResizeEnd.subscribe(() => {
         this._isResizing = false;
         this._showOverlay =
           this._isResizing || this._isDragging || !this.selected$.peek();

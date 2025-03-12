@@ -52,7 +52,7 @@ function getAIEdgelessRootWatcher(framework: FrameworkProvider) {
     override mounted() {
       super.mounted();
       const { view } = this.std;
-      view.viewUpdated.on(payload => {
+      view.viewUpdated.subscribe(payload => {
         if (payload.type !== 'widget' || payload.method !== 'add') {
           return;
         }

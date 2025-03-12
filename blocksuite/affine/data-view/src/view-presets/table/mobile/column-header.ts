@@ -23,7 +23,6 @@ import { html } from 'lit/static-html.js';
 
 import { inputConfig, typeConfig } from '../../../core/common/property-menu.js';
 import type { Property } from '../../../core/view-manager/property.js';
-import type { NumberPropertyDataType } from '../../../property-presets/index.js';
 import { numberFormats } from '../../../property-presets/number/utils/formats.js';
 import { DEFAULT_COLUMN_TITLE_HEIGHT } from '../consts.js';
 import type { TableColumn, TableSingleView } from '../table-view-manager.js';
@@ -91,12 +90,7 @@ export class MobileTableColumnHeader extends SignalWatcher(
                     items: [
                       numberFormatConfig(this.column),
                       ...numberFormats.map(format => {
-                        const data = (
-                          this.column as Property<
-                            number,
-                            NumberPropertyDataType
-                          >
-                        ).data$.value;
+                        const data = this.column.data$.value;
                         return menu.action({
                           isSelected: data.format === format.type,
                           prefix: html`<span

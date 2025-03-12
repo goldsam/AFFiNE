@@ -671,9 +671,3 @@ export class EdgelessColorPicker extends SignalWatcher(
 
   accessor rgba$ = computed(() => hsvaToRgba(this.hsva$.value));
 }
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'edgeless-color-picker': EdgelessColorPicker;
-  }
-}

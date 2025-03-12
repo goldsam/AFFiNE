@@ -152,7 +152,7 @@ export class EdgelessRootService extends RootService implements SurfaceContext {
       effect(() => {
         if (readonly !== doc.readonly) {
           readonly = doc.readonly;
-          slots.readonlyUpdated.emit(readonly);
+          slots.readonlyUpdated.next(readonly);
         }
       })
     );

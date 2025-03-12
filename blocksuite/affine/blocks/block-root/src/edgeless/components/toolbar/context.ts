@@ -1,11 +1,11 @@
 import type { ColorScheme } from '@blocksuite/affine-model';
-import type { Slot } from '@blocksuite/global/slot';
 import { createContext } from '@lit/context';
+import type { Subject } from 'rxjs';
 
 import type { EdgelessToolbarWidget } from './edgeless-toolbar.js';
 
 export interface EdgelessToolbarSlots {
-  resize: Slot<{ w: number; h: number }>;
+  resize: Subject<{ w: number; h: number }>;
 }
 
 export const edgelessToolbarSlotsContext = createContext<EdgelessToolbarSlots>(

@@ -7,7 +7,7 @@ import { createIcon } from '../../core/utils/uni-icon.js';
 import { textInputStyle, textStyle } from './cell-renderer.css.js';
 import { textPropertyModelConfig } from './define.js';
 
-export class TextCell extends BaseCellRenderer<string> {
+export class TextCell extends BaseCellRenderer<string, string> {
   @query('input')
   private accessor _inputEle!: HTMLInputElement;
 

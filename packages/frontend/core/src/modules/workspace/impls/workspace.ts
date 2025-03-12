@@ -2,7 +2,6 @@ import {
   BlockSuiteError,
   ErrorCode,
 } from '@blocksuite/affine/global/exceptions';
-import { Slot } from '@blocksuite/affine/global/slot';
 import { NoopLogger } from '@blocksuite/affine/global/utils';
 import {
   type CreateBlocksOptions,
@@ -19,6 +18,7 @@ import {
   type BlobSource,
   MemoryBlobSource,
 } from '@blocksuite/affine/sync';
+import { Subject } from 'rxjs';
 import type { Awareness } from 'y-protocols/awareness.js';
 import * as Y from 'yjs';
 
@@ -46,9 +46,11 @@ export class WorkspaceImpl implements Workspace {
   meta: WorkspaceMeta;
 
   slots = {
-    docListUpdated: new Slot(),
-    docRemoved: new Slot<string>(),
-    docCreated: new Slot<string>(),
+    /* eslint-disable rxjs/finnish */
+    docListUpdated: new Subject<void>(),
+    docRemoved: new Subject<string>(),
+    docCreated: new Subject<string>(),
+    /* eslint-enable rxjs/finnish */
   };
 
   get docs() {
@@ -82,7 +84,7 @@ export class WorkspaceImpl implements Workspace {
   }
 
   private _bindDocMetaEvents() {
-    this.meta.docMetaAdded.on(docId => {
+    this.meta.docMetaAdded.subscribe(docId => {
       const doc = new DocImpl({
         id: docId,
         collection: this,
@@ -91,14 +93,14 @@ export class WorkspaceImpl implements Workspace {
       this.blockCollections.set(doc.id, doc);
     });
 
-    this.meta.docMetaUpdated.on(() => this.slots.docListUpdated.emit());
+    this.meta.docMetaUpdated.subscribe(() => this.slots.docListUpdated.next());
 
-    this.meta.docMetaRemoved.on(id => {
+    this.meta.docMetaRemoved.subscribe(id => {
       const doc = this._getDoc(id);
       if (!doc) return;
       this.blockCollections.delete(id);
       doc.remove();
-      this.slots.docRemoved.emit(id);
+      this.slots.docRemoved.next(id);
     });
   }
 
@@ -126,7 +128,7 @@ export class WorkspaceImpl implements Workspace {
       createDate: Date.now(),
       tags: [],
     });
-    this.slots.docCreated.emit(docId);
+    this.slots.docCreated.next(docId);
     return this.getDoc(docId, {
       id: docId,
       query,

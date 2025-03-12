@@ -1,10 +1,10 @@
-import { Slot } from '@blocksuite/affine/global/slot';
 import {
   createYProxy,
   type DocMeta,
   type DocsPropertiesMeta,
   type WorkspaceMeta,
 } from '@blocksuite/affine/store';
+import { Subject } from 'rxjs';
 import type * as Y from 'yjs';
 
 type MetaState = {
@@ -15,10 +15,12 @@ type MetaState = {
 };
 
 export class WorkspaceMetaImpl implements WorkspaceMeta {
-  commonFieldsUpdated = new Slot();
-  docMetaAdded = new Slot<string>();
-  docMetaRemoved = new Slot<string>();
-  docMetaUpdated = new Slot();
+  /* eslint-disable rxjs/finnish */
+  commonFieldsUpdated = new Subject<void>();
+  docMetaAdded = new Subject<string>();
+  docMetaRemoved = new Subject<string>();
+  docMetaUpdated = new Subject<void>();
+  /* eslint-enable rxjs/finnish */
 
   private readonly _handleDocCollectionMetaEvents = (
     events: Y.YEvent<Y.Array<unknown> | Y.Text | Y.Map<unknown>>[]
@@ -81,7 +83,7 @@ export class WorkspaceMetaImpl implements WorkspaceMeta {
 
   setProperties(meta: DocsPropertiesMeta) {
     this._proxy.properties = meta;
-    this.docMetaUpdated.emit();
+    this.docMetaUpdated.next();
   }
 
   get docMetas() {
@@ -108,7 +110,7 @@ export class WorkspaceMetaImpl implements WorkspaceMeta {
   }
 
   private _handleCommonFieldsEvent() {
-    this.commonFieldsUpdated.emit();
+    this.commonFieldsUpdated.next();
   }
 
   private _handleDocMetaEvent() {
@@ -118,7 +120,7 @@ export class WorkspaceMetaImpl implements WorkspaceMeta {
 
     docMetas.forEach(docMeta => {
       if (!_prevDocs.has(docMeta.id)) {
-        this.docMetaAdded.emit(docMeta.id);
+        this.docMetaAdded.next(docMeta.id);
       }
       newDocs.add(docMeta.id);
     });
@@ -126,13 +128,13 @@ export class WorkspaceMetaImpl implements WorkspaceMeta {
     _prevDocs.forEach(prevDocId => {
       const isRemoved = newDocs.has(prevDocId) === false;
       if (isRemoved) {
-        this.docMetaRemoved.emit(prevDocId);
+        this.docMetaRemoved.next(prevDocId);
       }
     });
 
     this._prevDocs = newDocs;
 
-    this.docMetaUpdated.emit();
+    this.docMetaUpdated.next();
   }
 
   addDocMeta(doc: DocMeta, index?: number) {

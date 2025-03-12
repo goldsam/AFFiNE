@@ -1,9 +1,11 @@
 import {
   Args,
+  createUnionType,
   Field,
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
 } from '@nestjs/graphql';
@@ -168,8 +170,28 @@ class CreateUserInput {
   email!: string;
 
   @Field(() => String, { nullable: true })
-  name!: string | null;
+  name?: string;
 }
+
+@InputType()
+class ImportUsersInput {
+  @Field(() => [CreateUserInput])
+  users!: CreateUserInput[];
+}
+
+@ObjectType()
+class UserImportFailedType {
+  @Field(() => String)
+  email!: string;
+
+  @Field(() => String)
+  error!: string;
+}
+
+const UserImportResultType = createUnionType({
+  name: 'UserImportResultType',
+  types: () => [UserType, UserImportFailedType],
+});
 
 @Admin()
 @Resolver(() => UserType)
@@ -202,7 +224,9 @@ export class UserManagementResolver {
     description: 'Get user by id',
   })
   async getUser(@Args('id') id: string) {
-    const user = await this.models.user.get(id);
+    const user = await this.models.user.get(id, {
+      withDisabled: true,
+    });
 
     if (!user) {
       return null;
@@ -217,7 +241,9 @@ export class UserManagementResolver {
     nullable: true,
   })
   async getUserByEmail(@Args('email') email: string) {
-    const user = await this.models.user.getUserByEmail(email);
+    const user = await this.models.user.getUserByEmail(email, {
+      withDisabled: true,
+    });
 
     if (!user) {
       return null;
@@ -241,6 +267,27 @@ export class UserManagementResolver {
     return this.getUser(id);
   }
 
+  @Mutation(() => [UserImportResultType], {
+    description: 'import users',
+  })
+  async importUsers(
+    @Args({ name: 'input', type: () => ImportUsersInput })
+    input: ImportUsersInput
+  ): Promise<(typeof UserImportResultType)[]> {
+    const results = await this.models.user.importUsers(input.users);
+
+    return results.map((result, i) => {
+      if (result.status === 'fulfilled') {
+        return sessionUser(result.value);
+      } else {
+        return {
+          email: input.users[i].email,
+          error: result.reason.message,
+        };
+      }
+    });
+  }
+
   @Mutation(() => DeleteAccount, {
     description: 'Delete a user account',
   })
@@ -256,7 +303,7 @@ export class UserManagementResolver {
   }
 
   @Mutation(() => UserType, {
-    description: 'Update a user',
+    description: 'Update an user',
   })
   async updateUser(
     @Args('id') id: string,
@@ -281,5 +328,19 @@ export class UserManagementResolver {
         name: input.name,
       })
     );
+  }
+
+  @Mutation(() => UserType, {
+    description: 'Ban an user',
+  })
+  async banUser(@Args('id') id: string): Promise<UserType> {
+    return sessionUser(await this.models.user.ban(id));
+  }
+
+  @Mutation(() => UserType, {
+    description: 'Reenable an banned user',
+  })
+  async enableUser(@Args('id') id: string): Promise<UserType> {
+    return sessionUser(await this.models.user.enable(id));
   }
 }

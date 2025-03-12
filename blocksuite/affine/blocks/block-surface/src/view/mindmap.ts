@@ -61,7 +61,7 @@ export class MindMapView extends GfxElementModelView<MindmapElementModel> {
     });
 
     this.disposable.add(
-      this.model.propsUpdated.on(({ key }) => {
+      this.model.propsUpdated.subscribe(({ key }) => {
         if (key === 'layoutType' || key === 'style') {
           updateButtons();
         }
@@ -69,7 +69,7 @@ export class MindMapView extends GfxElementModelView<MindmapElementModel> {
     );
 
     this.disposable.add(
-      this.surface.elementUpdated.on(payload => {
+      this.surface.elementUpdated.subscribe(payload => {
         if (this.model.children.has(payload.id)) {
           if (payload.props['xywh']) {
             updateButtons();
@@ -142,7 +142,7 @@ export class MindMapView extends GfxElementModelView<MindmapElementModel> {
   private _setVisibleOnSelection() {
     let lastNode: null | string = null;
     this.disposable.add(
-      this.gfx.selection.slots.updated.on(() => {
+      this.gfx.selection.slots.updated.subscribe(() => {
         const elm = this.gfx.selection.firstElement;
 
         if (lastNode) {

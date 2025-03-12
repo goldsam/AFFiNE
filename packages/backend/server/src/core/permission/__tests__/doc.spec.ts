@@ -111,6 +111,44 @@ test('should return [External] if doc is public', async t => {
   t.is(role, DocRole.External);
 });
 
+test('should return null if doc role is [None]', async t => {
+  await models.doc.setDefaultRole(ws.id, 'doc1', DocRole.None);
+
+  await models.workspaceUser.set(
+    ws.id,
+    user.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Accepted
+  );
+
+  const role = await ac.getRole({
+    workspaceId: ws.id,
+    docId: 'doc1',
+    userId: user.id,
+  });
+
+  t.is(role, null);
+});
+
+test('should return [External] if doc role is [None] but doc is public', async t => {
+  await models.doc.setDefaultRole(ws.id, 'doc1', DocRole.None);
+  await models.workspaceUser.set(
+    ws.id,
+    user.id,
+    WorkspaceRole.Collaborator,
+    WorkspaceMemberStatus.Accepted
+  );
+  await models.doc.publish(ws.id, 'doc1');
+
+  const role = await ac.getRole({
+    workspaceId: ws.id,
+    docId: 'doc1',
+    userId: 'random-user-id',
+  });
+
+  t.is(role, DocRole.External);
+});
+
 test('should return mapped permissions', async t => {
   const { permissions } = await ac.role({
     workspaceId: ws.id,

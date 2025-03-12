@@ -1,5 +1,7 @@
-import { type Disposable, Slot } from '@blocksuite/global/slot';
+import type { Disposable } from '@blocksuite/global/disposable';
 import { computed, type Signal, signal } from '@preact/signals-core';
+import { Subject } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import type { Text } from '../../reactive/index.js';
 import type { Store } from '../store/store.js';
@@ -57,9 +59,9 @@ export class BlockModel<
     }, new Map<string, number>())
   );
 
-  created = new Slot();
+  created = new Subject<void>();
 
-  deleted = new Slot();
+  deleted = new Subject<void>();
 
   id!: string;
 
@@ -76,7 +78,7 @@ export class BlockModel<
 
   pop!: (prop: keyof Props & string) => void;
 
-  propsUpdated = new Slot<{ key: string }>();
+  propsUpdated = new Subject<{ key: string }>();
 
   stash!: (prop: keyof Props & string) => void;
 
@@ -124,26 +126,30 @@ export class BlockModel<
 
   constructor() {
     super();
-    this._onCreated = this.created.once(() => {
-      this._children.value = this.yBlock.get('sys:children').toArray();
-      this.yBlock.get('sys:children').observe(event => {
-        this._children.value = event.target.toArray();
-      });
-      this.yBlock.observe(event => {
-        if (event.keysChanged.has('sys:children')) {
-          this._children.value = this.yBlock.get('sys:children').toArray();
-        }
-      });
-    });
-    this._onDeleted = this.deleted.once(() => {
-      this._onCreated.dispose();
-    });
+    this._onCreated = {
+      dispose: this.created.pipe(take(1)).subscribe(() => {
+        this._children.value = this.yBlock.get('sys:children').toArray();
+        this.yBlock.get('sys:children').observe(event => {
+          this._children.value = event.target.toArray();
+        });
+        this.yBlock.observe(event => {
+          if (event.keysChanged.has('sys:children')) {
+            this._children.value = this.yBlock.get('sys:children').toArray();
+          }
+        });
+      }).unsubscribe,
+    };
+    this._onDeleted = {
+      dispose: this.deleted.pipe(take(1)).subscribe(() => {
+        this._onCreated.dispose();
+      }).unsubscribe,
+    };
   }
 
   dispose() {
-    this.created.dispose();
-    this.deleted.dispose();
-    this.propsUpdated.dispose();
+    this.created.complete();
+    this.deleted.complete();
+    this.propsUpdated.complete();
   }
 
   firstChild(): BlockModel | null {

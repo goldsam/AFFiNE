@@ -161,7 +161,7 @@ export class AffineFrameTitle extends SignalWatcher(
     this._nestedFrame = this._isInsideFrame();
 
     _disposables.add(
-      doc.slots.blockUpdated.on(payload => {
+      doc.slots.blockUpdated.subscribe(payload => {
         if (
           (payload.type === 'update' &&
             payload.props.key === 'xywh' &&
@@ -182,14 +182,14 @@ export class AffineFrameTitle extends SignalWatcher(
     );
 
     _disposables.add(
-      this.model.propsUpdated.on(() => {
+      this.model.propsUpdated.subscribe(() => {
         this._xywh = this.model.xywh;
         this.requestUpdate();
       })
     );
 
     _disposables.add(
-      gfx.selection.slots.updated.on(() => {
+      gfx.selection.slots.updated.subscribe(() => {
         this._editing =
           gfx.selection.selectedIds[0] === this.model.id &&
           gfx.selection.editing;
@@ -197,7 +197,7 @@ export class AffineFrameTitle extends SignalWatcher(
     );
 
     _disposables.add(
-      gfx.viewport.viewportUpdated.on(({ zoom }) => {
+      gfx.viewport.viewportUpdated.subscribe(({ zoom }) => {
         this._zoom = zoom;
         this.requestUpdate();
       })

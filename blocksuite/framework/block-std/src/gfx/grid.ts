@@ -1,10 +1,10 @@
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import type { IBound } from '@blocksuite/global/gfx';
 import {
   Bound,
   getBoundWithRotation,
   intersects,
 } from '@blocksuite/global/gfx';
-import { DisposableGroup } from '@blocksuite/global/slot';
 import type { BlockModel } from '@blocksuite/store';
 
 import { compare } from '../utils/layer.js';
@@ -385,7 +385,7 @@ export class GridManager extends GfxExtension {
     };
 
     disposables.add(
-      store.slots.blockUpdated.on(payload => {
+      store.slots.blockUpdated.subscribe(payload => {
         if (payload.type === 'add' && canBeRenderedAsGfxBlock(payload.model)) {
           this.add(payload.model);
         }
@@ -441,19 +441,19 @@ export class GridManager extends GfxExtension {
       );
 
       disposables.add(
-        surface.elementAdded.on(payload => {
+        surface.elementAdded.subscribe(payload => {
           this.add(surface.getElementById(payload.id)!);
         })
       );
 
       disposables.add(
-        surface.elementRemoved.on(payload => {
+        surface.elementRemoved.subscribe(payload => {
           this.remove(payload.model);
         })
       );
 
       disposables.add(
-        surface.elementUpdated.on(payload => {
+        surface.elementUpdated.subscribe(payload => {
           if (
             payload.props['xywh'] ||
             payload.props['externalXYWH'] ||
@@ -465,13 +465,13 @@ export class GridManager extends GfxExtension {
       );
 
       disposables.add(
-        surface.localElementAdded.on(elm => {
+        surface.localElementAdded.subscribe(elm => {
           this.add(elm);
         })
       );
 
       disposables.add(
-        surface.localElementUpdated.on(payload => {
+        surface.localElementUpdated.subscribe(payload => {
           if (payload.props['xywh'] || payload.props['responseExtension']) {
             this.update(payload.model);
           }
@@ -479,7 +479,7 @@ export class GridManager extends GfxExtension {
       );
 
       disposables.add(
-        surface.localElementDeleted.on(elm => {
+        surface.localElementDeleted.subscribe(elm => {
           this.remove(elm);
         })
       );

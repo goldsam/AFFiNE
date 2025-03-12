@@ -5,9 +5,10 @@ import type { Cell } from '../view-manager/cell.js';
 
 export interface CellRenderProps<
   Data extends NonNullable<unknown> = NonNullable<unknown>,
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
 > {
-  cell: Cell<Value, Data>;
+  cell: Cell<RawValue, JsonValue, Data>;
   isEditing$: ReadonlySignal<boolean>;
   selectCurrentCell: (editing: boolean) => void;
 }
@@ -27,12 +28,17 @@ export interface DataViewCellLifeCycle {
 
 export type DataViewCellComponent<
   Data extends NonNullable<unknown> = NonNullable<unknown>,
-  Value = unknown,
-> = UniComponent<CellRenderProps<Data, Value>, DataViewCellLifeCycle>;
+  RawValue = unknown,
+  JsonValue = unknown,
+> = UniComponent<
+  CellRenderProps<Data, RawValue, JsonValue>,
+  DataViewCellLifeCycle
+>;
 
 export type CellRenderer<
   Data extends NonNullable<unknown> = NonNullable<unknown>,
-  Value = unknown,
+  RawValue = unknown,
+  JsonValue = unknown,
 > = {
-  view: DataViewCellComponent<Data, Value>;
+  view: DataViewCellComponent<Data, RawValue, JsonValue>;
 };

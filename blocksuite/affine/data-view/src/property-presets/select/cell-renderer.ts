@@ -13,7 +13,11 @@ import {
   selectPropertyModelConfig,
 } from './define.js';
 
-export class SelectCell extends BaseCellRenderer<string, SelectPropertyData> {
+export class SelectCell extends BaseCellRenderer<
+  string,
+  string,
+  SelectPropertyData
+> {
   closePopup?: () => void;
   private readonly popTagSelect = () => {
     this.closePopup = popTagSelect(popupTargetFromElement(this), {

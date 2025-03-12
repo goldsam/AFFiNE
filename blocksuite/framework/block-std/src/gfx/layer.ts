@@ -1,8 +1,9 @@
+import { DisposableGroup } from '@blocksuite/global/disposable';
 import { Bound } from '@blocksuite/global/gfx';
-import { DisposableGroup, Slot } from '@blocksuite/global/slot';
 import { assertType } from '@blocksuite/global/utils';
 import { generateKeyBetween } from 'fractional-indexing';
 import last from 'lodash-es/last';
+import { Subject } from 'rxjs';
 
 import {
   compare,
@@ -101,7 +102,7 @@ export class LayerManager extends GfxExtension {
   layers: Layer[] = [];
 
   slots = {
-    layerUpdated: new Slot<{
+    layerUpdated: new Subject<{
       type: 'delete' | 'add' | 'update';
       initiatingElement: GfxModel | GfxLocalElementModel;
     }>(),
@@ -588,7 +589,7 @@ export class LayerManager extends GfxExtension {
       element.childElements.forEach(child => child && this._updateLayer(child));
     }
     this._buildCanvasLayers();
-    this.slots.layerUpdated.emit({
+    this.slots.layerUpdated.next({
       type: 'add',
       initiatingElement: element,
     });
@@ -650,7 +651,7 @@ export class LayerManager extends GfxExtension {
 
     if (isGroup) {
       this._reset();
-      this.slots.layerUpdated.emit({
+      this.slots.layerUpdated.next({
         type: 'delete',
         initiatingElement: element as GfxModel,
       });
@@ -673,14 +674,14 @@ export class LayerManager extends GfxExtension {
     this._removeFromLayer(element, deleteType);
 
     this._buildCanvasLayers();
-    this.slots.layerUpdated.emit({
+    this.slots.layerUpdated.next({
       type: 'delete',
       initiatingElement: element,
     });
   }
 
   override unmounted() {
-    this.slots.layerUpdated.dispose();
+    this.slots.layerUpdated.complete();
     this._disposable.dispose();
   }
 
@@ -784,7 +785,7 @@ export class LayerManager extends GfxExtension {
   ) {
     if (this._updateLayer(element, props)) {
       this._buildCanvasLayers();
-      this.slots.layerUpdated.emit({
+      this.slots.layerUpdated.next({
         type: 'update',
         initiatingElement: element,
       });
@@ -795,7 +796,7 @@ export class LayerManager extends GfxExtension {
     const store = this._doc;
 
     this._disposable.add(
-      store.slots.blockUpdated.on(payload => {
+      store.slots.blockUpdated.subscribe(payload => {
         if (payload.type === 'add') {
           const block = store.getBlockById(payload.id)!;
 
@@ -854,34 +855,34 @@ export class LayerManager extends GfxExtension {
       );
 
       this._disposable.add(
-        surface.elementAdded.on(payload =>
+        surface.elementAdded.subscribe(payload =>
           this.add(surface.getElementById(payload.id)!)
         )
       );
       this._disposable.add(
-        surface.elementUpdated.on(payload => {
+        surface.elementUpdated.subscribe(payload => {
           if (payload.props['index'] || payload.props['childIds']) {
             this.update(surface.getElementById(payload.id)!, payload.props);
           }
         })
       );
       this._disposable.add(
-        surface.elementRemoved.on(payload => this.delete(payload.model!))
+        surface.elementRemoved.subscribe(payload => this.delete(payload.model!))
       );
       this._disposable.add(
-        surface.localElementAdded.on(elm => {
+        surface.localElementAdded.subscribe(elm => {
           this.add(elm);
         })
       );
       this._disposable.add(
-        surface.localElementUpdated.on(payload => {
+        surface.localElementUpdated.subscribe(payload => {
           if (payload.props['index'] || payload.props['groupId']) {
             this.update(payload.model, payload.props);
           }
         })
       );
       this._disposable.add(
-        surface.localElementDeleted.on(elm => {
+        surface.localElementDeleted.subscribe(elm => {
           this.delete(elm);
         })
       );

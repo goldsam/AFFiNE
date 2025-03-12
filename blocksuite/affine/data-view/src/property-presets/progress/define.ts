@@ -6,20 +6,24 @@ export const progressPropertyType = propertyType('progress');
 
 export const progressPropertyModelConfig = progressPropertyType.modelConfig({
   name: 'Progress',
-  valueSchema: zod.number().optional(),
-  type: () => t.number.instance(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) => value?.toString() ?? '',
-  cellFromString: ({ value }) => {
-    const num = value ? Number(value) : NaN;
-    return {
-      value: isNaN(num) ? null : num,
-    };
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
   },
-  cellToJson: ({ value }) => value ?? null,
-  cellFromJson: ({ value }) => {
-    if (typeof value !== 'number') return undefined;
-    return value;
+  jsonValue: {
+    schema: zod.number(),
+    isEmpty: () => false,
+    type: () => t.number.instance(),
   },
-  isEmpty: () => false,
+  rawValue: {
+    schema: zod.number(),
+    default: () => 0,
+    toString: ({ value }) => value.toString(),
+    fromString: ({ value }) => {
+      const num = value ? Number(value) : NaN;
+      return { value: isNaN(num) ? 0 : num };
+    },
+    toJson: ({ value }) => value,
+    fromJson: ({ value }) => value,
+  },
 });
