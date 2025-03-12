@@ -1,21 +1,32 @@
-import { Popover, uniReactRoot } from '@affine/component';
+import { notify, Popover, uniReactRoot } from '@affine/component';
 import { Button } from '@affine/component/ui/button';
 import { Menu, MenuItem } from '@affine/component/ui/menu';
 import { Upload } from '@affine/core/components/pure/file-upload';
 import {
+  type Cell,
   type CellRenderProps,
   createIcon,
   type DataViewCellLifeCycle,
   HostContextKey,
 } from '@blocksuite/affine/blocks/database';
+import type { BlobEngine } from '@blocksuite/affine/sync';
 import {
   DeleteIcon,
   DownloadIcon,
   FileIcon,
-  MoreVerticalIcon,
+  MoreHorizontalIcon,
   PlusIcon,
 } from '@blocksuite/icons/rc';
+import {
+  computed,
+  type ReadonlySignal,
+  type Signal,
+  signal,
+} from '@preact/signals-core';
 import { generateFractionalIndexingKeyBetween } from '@toeverything/infra';
+import { cssVarV2 } from '@toeverything/theme/v2';
+import { fileTypeFromBuffer, type FileTypeResult } from 'file-type';
+import { nanoid } from 'nanoid';
 import type { ForwardRefRenderFunction, MouseEvent, ReactNode } from 'react';
 import {
   forwardRef,
@@ -23,100 +34,318 @@ import {
   useEffect,
   useImperativeHandle,
   useMemo,
-  useState,
 } from 'react';
 
-import { useSignal } from '../../../../modules/doc-info/utils';
-import type { FileCellType } from './define';
+import { useSignalValue } from '../../../../modules/doc-info/utils';
+import type {
+  FileCellJsonValueType,
+  FileCellRawValueType,
+  FileItemType,
+} from './define';
 import { filePropertyModelConfig } from './define';
 import * as styles from './style.css';
 
-const isImageFile = (filename: string) => {
-  const extension = filename.split('.').pop()?.toLowerCase();
+interface FileUploadProgress {
+  name: string;
+  progress: number;
+}
+interface FileLoadData {
+  blob: Blob;
+  url: string;
+  fileType?: FileTypeResult;
+}
+class FileUploadManager {
+  private readonly uploadProgressMap: Map<string, Signal<FileUploadProgress>> =
+    new Map();
+  private readonly fileLoadMap: Map<string, Signal<FileLoadData | undefined>> =
+    new Map();
+
+  constructor(private readonly blobSync: BlobEngine) {}
+
+  uploadFile(file: File, onComplete: (blobId?: string) => void): string {
+    const tempId = nanoid();
+
+    const progress = signal<FileUploadProgress>({
+      progress: 0,
+      name: file.name,
+    });
+    this.uploadProgressMap.set(tempId, progress);
+    this.startUpload(file, tempId)
+      .then(blobId => {
+        this.uploadProgressMap.delete(tempId);
+        onComplete?.(blobId);
+      })
+      .catch(() => {
+        this.uploadProgressMap.delete(tempId);
+        onComplete?.();
+      });
+    return tempId;
+  }
+
+  async startUpload(file: File, fileId: string): Promise<string | undefined> {
+    let progress = this.uploadProgressMap.get(fileId);
+    if (!progress) {
+      return;
+    }
+    progress.value = {
+      ...progress.value,
+      progress: 10,
+    };
+
+    const arrayBuffer = await file.arrayBuffer();
+    progress = this.uploadProgressMap.get(fileId);
+    if (!progress) {
+      return;
+    }
+    progress.value = {
+      ...progress.value,
+      progress: 30,
+    };
+
+    const blob = new Blob([arrayBuffer], {
+      type: file.type,
+    });
+
+    this.simulateUploadProgress(fileId);
+
+    const uploadedId = await this.blobSync.set(blob);
+    progress = this.uploadProgressMap.get(fileId);
+    if (!progress) {
+      return;
+    }
+    progress.value = {
+      ...progress.value,
+      progress: 100,
+    };
+
+    return uploadedId;
+  }
+
+  getUploadProgress(
+    fileId: string
+  ): ReadonlySignal<FileUploadProgress> | undefined {
+    return this.uploadProgressMap.get(fileId);
+  }
+
+  async getFileBlob(blobId: string): Promise<Blob | null> {
+    return this.blobSync?.get(blobId);
+  }
+
+  getFileUrl(blobId: string): ReadonlySignal<FileLoadData | undefined> {
+    let fileLoadData = this.fileLoadMap.get(blobId);
+    if (fileLoadData) {
+      return fileLoadData;
+    }
+    const blobPromise = this.getFileBlob(blobId);
+    fileLoadData = signal<FileLoadData | undefined>(undefined);
+    this.fileLoadMap.set(blobId, fileLoadData);
+    blobPromise
+      .then(async blob => {
+        if (!blob) {
+          return;
+        }
+        const fileType = await fileTypeFromBuffer(await blob.arrayBuffer());
+        fileLoadData.value = {
+          blob,
+          url: URL.createObjectURL(blob),
+          fileType,
+        };
+      })
+      .catch(() => {});
+    return fileLoadData;
+  }
+
+  private simulateUploadProgress(fileId: string): void {
+    setTimeout(() => {
+      const progress = this.uploadProgressMap.get(fileId);
+      if (!progress || progress.value.progress >= 100) return;
+      const next =
+        (100 - progress.value.progress) / 10 + progress.value.progress;
+      progress.value = {
+        ...progress.value,
+        progress: Math.min(next, 100),
+      };
+      this.simulateUploadProgress(fileId);
+    }, 10);
+  }
+
+  dispose(): void {
+    this.fileLoadMap.forEach(fileLoadData => {
+      const url = fileLoadData.value?.url;
+      if (url) {
+        URL.revokeObjectURL(url);
+      }
+    });
+
+    this.uploadProgressMap.clear();
+    this.fileLoadMap.clear();
+  }
+}
+
+type FileItemDoneType = FileItemType & {
+  type: 'done';
+};
+type FileItemUploadingType = {
+  id: string;
+  type: 'uploading';
+  name: string;
+  order: string;
+};
+type FileItemRenderType = FileItemDoneType | FileItemUploadingType;
+const CircularProgress = ({ progress }: { progress: number }) => {
+  const circumference = 2 * Math.PI * 10;
+
   return (
-    extension === 'jpg' ||
-    extension === 'jpeg' ||
-    extension === 'png' ||
-    extension === 'gif' ||
-    extension === 'webp' ||
-    extension === 'svg' ||
-    extension === 'bmp'
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      className={styles.progressSvg}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill="none"
+        stroke={cssVarV2.loading.background}
+        strokeWidth="4"
+      />
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill="none"
+        stroke={cssVarV2.loading.foreground}
+        strokeWidth="4"
+        strokeDasharray={`${(progress / 100) * circumference} ${circumference}`}
+        strokeLinecap="round"
+        className={styles.progressCircle}
+      />
+    </svg>
   );
 };
 
+class FileCellManager {
+  private readonly cell: Cell<FileCellRawValueType, FileCellJsonValueType, {}>;
+  readonly selectCurrentCell: (editing: boolean) => void;
+  private readonly blobSync?: BlobEngine;
+  private readonly uploadingFiles = signal<
+    Record<string, FileItemUploadingType>
+  >({});
+  readonly isEditing: ReadonlySignal<boolean>;
+  readonly fileUploadManager: FileUploadManager | undefined;
+  doneFiles = computed(() => this.cell.value$.value ?? {});
+
+  get readonly() {
+    return this.cell.property.readonly$;
+  }
+
+  constructor(
+    props: CellRenderProps<{}, FileCellRawValueType, FileCellJsonValueType>
+  ) {
+    this.cell = props.cell;
+    this.selectCurrentCell = props.selectCurrentCell;
+    this.isEditing = props.isEditing$;
+    this.blobSync = this.cell?.view?.contextGet
+      ? this.cell.view.contextGet(HostContextKey)?.doc.blobSync
+      : undefined;
+
+    this.fileUploadManager = this.blobSync
+      ? new FileUploadManager(this.blobSync)
+      : undefined;
+  }
+
+  dispose(): void {
+    this.fileUploadManager?.dispose();
+  }
+
+  removeFile = (file: FileItemRenderType, e?: MouseEvent): void => {
+    e?.stopPropagation();
+
+    if (file.type === 'uploading') {
+      const newTemp = { ...this.uploadingFiles.value };
+      delete newTemp[file.id];
+      this.uploadingFiles.value = newTemp;
+      return;
+    }
+
+    const value = { ...this.cell.value$.value };
+    delete value[file.id];
+    this.cell.valueSet(value);
+  };
+
+  uploadFile = (file: File): void => {
+    console.log('uploadFile', file);
+    if (!this.fileUploadManager) {
+      return;
+    }
+    const lastFile = this.fileList.value[this.fileList.value.length - 1];
+    const order = generateFractionalIndexingKeyBetween(
+      lastFile?.order || null,
+      null
+    );
+
+    const fileId = this.fileUploadManager.uploadFile(file, blobId => {
+      if (blobId) {
+        if (this.doneFiles.value[blobId]) {
+          notify.error({
+            title: 'File already exists',
+            message: 'The file has already been uploaded',
+          });
+        } else {
+          this.cell.valueSet({
+            ...this.cell.value$.value,
+            [blobId]: {
+              name: file.name,
+              id: blobId,
+              order,
+            },
+          });
+        }
+      }
+      this.removeFile(tempFile);
+    });
+    const tempFile: FileItemUploadingType = {
+      id: fileId,
+      type: 'uploading',
+      name: file.name,
+      order,
+    };
+    this.uploadingFiles.value = {
+      ...this.uploadingFiles.value,
+      [fileId]: tempFile,
+    };
+  };
+
+  setUploadingFiles = (files: Record<string, FileItemUploadingType>): void => {
+    this.uploadingFiles.value = files;
+  };
+
+  fileList = computed(() => {
+    const uploadingList = Object.values(this.uploadingFiles.value);
+    const doneList = Object.values(this.doneFiles.value).map<FileItemDoneType>(
+      file => ({
+        ...file,
+        type: 'done',
+      })
+    );
+    return [...doneList, ...uploadingList].sort((a, b) =>
+      a.order > b.order ? 1 : -1
+    );
+  });
+}
+
 const FileCellComponent: ForwardRefRenderFunction<
   DataViewCellLifeCycle,
-  CellRenderProps<{}, FileCellType>
+  CellRenderProps<{}, FileCellRawValueType, FileCellJsonValueType>
 > = (props, ref): ReactNode => {
-  const { selectCurrentCell, cell } = props;
-
-  const value = useSignal(cell.value$);
-  const isEditing = useSignal(props.isEditing$);
-  const fileList = useMemo(
-    () =>
-      Object.values(value ?? {}).sort((a, b) => (a.order > b.order ? 1 : -1)),
-    [value]
-  );
-
-  const [readonly] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const [fileUrls, setFileUrls] = useState<Record<string, string>>({});
-  const [fileLoadingStates, setFileLoadingStates] = useState<
-    Record<string, boolean>
-  >({});
-
-  const loadFileUrl = useCallback(
-    async (fileId: string, fileName: string) => {
-      if (!isImageFile(fileName)) return;
-
-      if (fileUrls[fileId] || fileLoadingStates[fileId]) return;
-
-      setFileLoadingStates(prev => ({ ...prev, [fileId]: true }));
-
-      try {
-        if (cell?.view?.contextGet) {
-          const blobSync = cell.view.contextGet(HostContextKey)?.doc.blobSync;
-          if (blobSync) {
-            try {
-              const blob = await blobSync.get(fileId);
-              if (blob) {
-                const url = URL.createObjectURL(blob);
-                setFileUrls(prev => ({ ...prev, [fileId]: url }));
-              }
-            } catch (error) {
-              console.error('Failed to retrieve file', error);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error loading file URL', error);
-      } finally {
-        setFileLoadingStates(prev => ({ ...prev, [fileId]: false }));
-      }
-    },
-    [cell, fileLoadingStates, fileUrls]
-  );
-
-  useEffect(() => {
-    fileList.forEach(file => {
-      if (isImageFile(file.name)) {
-        void loadFileUrl(file.id, file.name).catch(err => {
-          console.error('Failed to load file URL:', err);
-        });
-      }
-    });
-  }, [fileList, loadFileUrl]);
+  const manager = useMemo(() => new FileCellManager(props), []);
 
   useEffect(() => {
     return () => {
-      Object.values(fileUrls).forEach(url => {
-        if (url.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
-        }
-      });
+      manager.dispose();
     };
-  }, [fileUrls]);
+  }, [manager]);
 
   useImperativeHandle(
     ref,
@@ -132,273 +361,255 @@ const FileCellComponent: ForwardRefRenderFunction<
     }),
     []
   );
+  const fileList = useSignalValue(manager.fileList);
+  const isEditing = useSignalValue(manager.isEditing);
+  const renderPopoverContent = () => {
+    if (fileList.length === 0) {
+      return (
+        <div className={styles.uploadPopoverContainer}>
+          <Upload
+            fileChange={file => {
+              manager.uploadFile(file);
+            }}
+          >
+            <Button variant="primary" className={styles.uploadButton}>
+              Choose a file
+            </Button>
+          </Upload>
 
-  const processFileUpload = async (file: File) => {
-    try {
-      setIsUploading(true);
-
-      let sourceId = Date.now().toString();
-
-      try {
-        const blobSync =
-          props.cell.view.contextGet(HostContextKey)?.doc.blobSync;
-        if (blobSync) {
-          const blob = new Blob([await file.arrayBuffer()], {
-            type: file.type,
-          });
-          const uploadedId = await blobSync.set(blob);
-          if (uploadedId) {
-            sourceId = uploadedId;
-          }
-        }
-      } catch (err) {
-        console.error('Failed to get document context', err);
-      }
-
-      let order: string;
-      const lastFile = fileList[fileList.length - 1];
-      order = generateFractionalIndexingKeyBetween(
-        lastFile?.order || null,
-        null
+          <div className={styles.fileInfoContainer}>
+            <div className={styles.fileSizeInfo}>
+              The maximum size per file is 100MB
+            </div>
+            <a
+              href="#"
+              className={styles.upgradeLink}
+              onClick={e => e.stopPropagation()}
+            >
+              Upgrade to Pro
+            </a>
+          </div>
+        </div>
       );
-
-      const newFile = {
-        name: file.name,
-        id: sourceId,
-        order,
-      };
-
-      cell.valueSet({
-        ...value,
-        [sourceId]: newFile,
-      });
-    } catch (error) {
-      console.error('File upload failed', error);
-    } finally {
-      setIsUploading(false);
     }
+    return (
+      <div className={styles.filePopoverContainer}>
+        <div className={styles.fileListContainer}>
+          {fileList.map(file => (
+            <FileListItem
+              key={file.id}
+              file={file}
+              handleRemoveFile={manager.removeFile}
+              fileUploadManager={manager.fileUploadManager}
+            />
+          ))}
+        </div>
+        <div className={styles.uploadContainer}>
+          <Upload
+            fileChange={file => {
+              manager.uploadFile(file);
+            }}
+          >
+            <div className={styles.uploadButtonStyle}>
+              <PlusIcon width={20} height={20} />
+              <span>Add a file or image</span>
+            </div>
+          </Upload>
+        </div>
+      </div>
+    );
   };
 
-  const handleRemoveFile = useCallback(
-    (fileId: string, e?: MouseEvent) => {
-      e?.stopPropagation();
-      const value = { ...cell.value$.value };
-      delete value[fileId];
-      console.log(value);
-      cell.valueSet(value);
-    },
-    [cell]
+  return (
+    <div style={{ overflow: 'hidden' }}>
+      <Popover
+        open={isEditing}
+        onOpenChange={open => {
+          manager.selectCurrentCell(open);
+        }}
+        contentOptions={{
+          className: styles.filePopoverContent,
+        }}
+        content={renderPopoverContent()}
+      >
+        <div></div>
+      </Popover>
+      <div className={styles.cellContainer}>
+        {fileList.map(file => (
+          <div key={file.id} className={styles.fileItemCell}>
+            <FilePreview
+              file={file}
+              fileUploadManager={manager.fileUploadManager}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
+};
 
-  const handleDownloadFile = useCallback((fileId: string, e?: MouseEvent) => {
-    e?.stopPropagation();
-    console.log(fileId);
-  }, []);
-
-  const renderFileItem = (
-    file: { id: string; name: string },
-    isEditable = false
-  ) => {
-    const fileUrl = fileUrls[file.id];
-    const isLoading = fileLoadingStates[file.id];
-
-    const renderFileContent = () => {
-      if (isLoading) {
-        return <div className={styles.fileImageLoading}>loading...</div>;
-      }
-
-      if (isImageFile(file.name)) {
-        return (
-          <img
-            src={fileUrl}
-            alt={file.name}
-            className={
-              isEditable
-                ? styles.fileImagePreviewInPopover
-                : styles.fileImagePreview
-            }
-          />
-        );
-      } else {
-        return isEditable ? (
-          <FileIcon className={styles.fileIcon} width={24} height={24} />
-        ) : (
-          <div className={styles.fileCardName}>{file.name}</div>
-        );
-      }
+const useFilePreview = (
+  file: FileItemRenderType,
+  fileUploadManager?: FileUploadManager
+) => {
+  const uploadProgress = useSignalValue(
+    file.type === 'uploading'
+      ? fileUploadManager?.getUploadProgress(file.id)
+      : undefined
+  );
+  const loadFileData = useSignalValue(
+    file.type === 'done' ? fileUploadManager?.getFileUrl(file.id) : undefined
+  );
+  if (uploadProgress != null) {
+    return {
+      preview: (
+        <div className={styles.progressIconContainer}>
+          <CircularProgress progress={uploadProgress.progress} />
+        </div>
+      ),
+      fileType: 'uploading',
     };
+  }
+  if (loadFileData == null) {
+    return {
+      preview: null,
+      fileType: 'loading',
+    };
+  }
+  if (loadFileData.fileType?.mime.startsWith('image/')) {
+    return {
+      preview: (
+        <img
+          className={styles.imagePreviewIcon}
+          src={loadFileData.url}
+          alt={file.name}
+        />
+      ),
+      fileType: 'image',
+    };
+  }
 
-    const menuItems = (
-      <>
-        {isImageFile(file.name) && (
-          <MenuItem
-            onClick={() => {
-              console.log('Preview image:', file.id);
-            }}
-            prefixIcon={<FileIcon width={16} height={16} />}
-          >
-            Preview
-          </MenuItem>
-        )}
+  return {
+    preview: <FileIcon width={18} height={18} />,
+    fileType: 'file',
+  };
+};
+
+export const FileListItem = (props: {
+  file: FileItemRenderType;
+  handleRemoveFile: (file: FileItemRenderType, e?: MouseEvent) => void;
+  fileUploadManager?: FileUploadManager;
+}) => {
+  const { file, handleRemoveFile, fileUploadManager } = props;
+
+  const { preview, fileType } = useFilePreview(file, fileUploadManager);
+
+  const handleDownloadFile = useCallback(
+    async (fileId: string, e?: MouseEvent) => {
+      e?.stopPropagation();
+
+      try {
+        const blob = await fileUploadManager?.getFileBlob(fileId);
+        if (!blob) {
+          console.error('Failed to download: blob not found');
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        document.body.append(a);
+        a.click();
+
+        setTimeout(() => {
+          a.remove();
+          URL.revokeObjectURL(url);
+        }, 100);
+      } catch (error) {
+        console.error('Download failed', error);
+      }
+    },
+    [fileUploadManager, file.name]
+  );
+  const menuItems = (
+    <>
+      {fileType === 'image' && (
+        <MenuItem
+          onClick={() => {
+            console.log('Preview image:', file.id);
+          }}
+          prefixIcon={<FileIcon width={16} height={16} />}
+        >
+          Preview
+        </MenuItem>
+      )}
+      {fileType === 'file' && (
         <MenuItem
           onClick={e => {
-            handleDownloadFile(file.id, e);
+            void handleDownloadFile(file.id, e).catch(error => {
+              console.error('Download failed:', error);
+            });
           }}
           prefixIcon={<DownloadIcon width={16} height={16} />}
         >
           Download
         </MenuItem>
-        <MenuItem
-          onClick={e => {
-            handleRemoveFile(file.id, e);
-          }}
-          prefixIcon={<DeleteIcon width={16} height={16} />}
-        >
-          Delete
-        </MenuItem>
-      </>
-    );
+      )}
+      <MenuItem
+        onClick={e => {
+          handleRemoveFile(file, e);
+        }}
+        prefixIcon={<DeleteIcon width={16} height={16} />}
+      >
+        Delete
+      </MenuItem>
+    </>
+  );
 
-    if (isEditable) {
-      return (
-        <div className={styles.fileItemContent}>
-          {renderFileContent()}
-          <div className={styles.fileInfo}>
-            <div className={styles.fileName}>{file.name}</div>
-          </div>
-          <Menu items={menuItems} rootOptions={{ modal: false }}>
-            <Button
-              variant="plain"
-              size="default"
-              className={styles.menuButton}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-            >
-              <MoreVerticalIcon width={16} height={16} />
-            </Button>
-          </Menu>
-        </div>
-      );
-    }
-
-    return renderFileContent();
-  };
-
-  const FilePopoverContent = (
-    <div className={styles.filePopoverContainer}>
-      <div className={styles.filePopoverContent}>
-        {isUploading ? (
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingWrapper}>
-              <div className={styles.loadingSpinner}></div>
-              <span>Loading...</span>
-            </div>
-          </div>
+  return (
+    <div className={styles.fileItem}>
+      <div className={styles.fileItemContent}>
+        {fileType === 'image' ? (
+          <div className={styles.fileItemImagePreview}>{preview}</div>
         ) : (
           <>
-            {fileList.length === 0 && (
-              <>
-                <Upload
-                  fileChange={file => {
-                    void processFileUpload(file).catch(error => {
-                      console.error('File upload failed', error);
-                    });
-                  }}
-                >
-                  <Button variant="primary" className={styles.uploadButton}>
-                    Choose a file
-                  </Button>
-                </Upload>
-
-                <div className={styles.fileInfoContainer}>
-                  <div className={styles.fileSizeInfo}>
-                    The maximum size per file is 100MB
-                  </div>
-                  <a
-                    href="#"
-                    className={styles.upgradeLink}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    Upgrade to Pro
-                  </a>
-                </div>
-              </>
-            )}
-
-            {fileList.length > 0 && (
-              <>
-                <div>
-                  <div className={styles.fileListTitle}>Uploaded files</div>
-                  <div className={styles.fileListContainer}>
-                    {fileList.map((file: { id: string; name: string }) => (
-                      <div key={file.id} className={styles.fileItem}>
-                        {renderFileItem(file, true)}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {!readonly && (
-                  <Upload
-                    fileChange={file => {
-                      void processFileUpload(file).catch(error => {
-                        console.error('File upload failed', error);
-                      });
-                    }}
-                  >
-                    <div className={styles.addFileButton}>
-                      <PlusIcon width={14} height={14} />
-                      <span>Add another file</span>
-                    </div>
-                  </Upload>
-                )}
-              </>
-            )}
+            {preview}
+            <div className={styles.fileNameStyle}>{file.name}</div>
           </>
         )}
       </div>
-    </div>
-  );
-
-  const renderMenu = () => {
-    return null;
-  };
-
-  return (
-    <div>
-      <Popover
-        open={isEditing}
-        onOpenChange={open => {
-          if (open) {
-            selectCurrentCell(true);
-          } else {
-            selectCurrentCell(false);
-          }
-        }}
-        content={FilePopoverContent}
-      >
-        <div></div>
-      </Popover>
-      <div className={styles.cellContainer}>
-        {fileList.length === 0 ? null : (
-          <div className={styles.fileListCell}>
-            {fileList.map(file => (
-              <div key={file.id} className={styles.fileItemCell}>
-                {renderFileItem(file)}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      {renderMenu()}
+      <Menu items={menuItems} rootOptions={{ modal: false }}>
+        <div
+          className={styles.menuButton}
+          onClick={(e: MouseEvent) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+        >
+          <MoreHorizontalIcon width={16} height={16} />
+        </div>
+      </Menu>
     </div>
   );
 };
 
+const FilePreview = (props: {
+  file: FileItemRenderType;
+  fileUploadManager?: FileUploadManager;
+}) => {
+  const { file, fileUploadManager } = props;
+  const { preview, fileType } = useFilePreview(file, fileUploadManager);
+  if (fileType === 'file') {
+    return <div className={styles.filePreviewContainer}>{file.name}</div>;
+  }
+  if (fileType === 'image') {
+    return <div className={styles.imagePreviewContainer}>{preview}</div>;
+  }
+  return preview;
+};
+
 const FileCell = forwardRef(FileCellComponent);
-FileCell.displayName = 'FileCell';
 
 export const filePropertyConfig = filePropertyModelConfig.createPropertyMeta({
   icon: createIcon('FileIcon'),

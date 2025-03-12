@@ -198,6 +198,9 @@ export class DatabaseBlockDataSource extends DataSourceBase {
       return getIcon(model);
     }
     const type = this.propertyTypeGet(propertyId);
+    if (!type) {
+      return;
+    }
     if (type === 'title') {
       const model = this.getModelById(rowId);
       return model?.text;
@@ -379,7 +382,7 @@ export class DatabaseBlockDataSource extends DataSourceBase {
   }
 
   propertyMetaGet(type: string): PropertyMetaConfig | undefined {
-    return databaseBlockAllPropertyMap[type];
+    return DatabaseBlockDataSource.propertiesMap.value[type];
   }
 
   propertyNameGet(propertyId: string): string {

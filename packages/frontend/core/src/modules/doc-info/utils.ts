@@ -24,10 +24,14 @@ export function signalToObservable<T>(
     };
   });
 }
-
-export function useSignal<T>(signal: ReadonlySignal<T>) {
-  const [value, setValue] = useState<T>(signal.value);
+export function useSignalValue<T>(signal: ReadonlySignal<T>): T;
+export function useSignalValue<T>(signal?: ReadonlySignal<T>): T | undefined;
+export function useSignalValue<T>(signal?: ReadonlySignal<T>): T | undefined {
+  const [value, setValue] = useState<T | undefined>(signal?.value);
   useEffect(() => {
+    if (signal == null) {
+      return;
+    }
     return signal.subscribe(value => {
       setValue(value);
     });

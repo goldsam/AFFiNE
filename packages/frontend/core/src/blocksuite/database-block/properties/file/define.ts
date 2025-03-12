@@ -3,34 +3,42 @@ import zod from 'zod';
 
 export const fileColumnType = propertyType('file');
 
-const FileCellTypeSchema = zod
-  .record(
-    zod.object({
-      id: zod.string(),
-      name: zod.string(),
-      order: zod.string(),
-    })
-  )
-  .optional();
-export type FileCellType = zod.TypeOf<typeof FileCellTypeSchema>;
+export const FileItemSchema = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  order: zod.string(),
+});
+
+export type FileItemType = zod.TypeOf<typeof FileItemSchema>;
+const FileCellRawValueTypeSchema = zod.record(zod.string(), FileItemSchema);
+export const FileCellJsonValueTypeSchema = zod.array(zod.string());
+export type FileCellRawValueType = zod.TypeOf<
+  typeof FileCellRawValueTypeSchema
+>;
+export type FileCellJsonValueType = zod.TypeOf<
+  typeof FileCellJsonValueTypeSchema
+>;
 export const filePropertyModelConfig = fileColumnType.modelConfig({
   name: 'File',
-  valueSchema: FileCellTypeSchema,
-  type: () => t.richText.instance(),
-  defaultData: () => ({}),
-  cellToString: ({ value }) =>
-    Object.values(value ?? {})
-      ?.map(v => v.name)
-      .join(',') ?? '',
-  cellFromString: () => {
-    return {
-      value: undefined,
-    };
+  propertyData: {
+    schema: zod.object({}),
+    default: () => ({}),
   },
-  cellToJson: ({ value }) => {
-    if (!value) return null;
-    return Object.values(value).map(v => v.name);
+  rawValue: {
+    schema: FileCellRawValueTypeSchema,
+    default: () => ({}) as FileCellRawValueType,
+    fromString: () => ({
+      value: {},
+    }),
+    toString: ({ value }) =>
+      Object.values(value ?? {})
+        ?.map(v => v.name)
+        .join(',') ?? '',
+    toJson: ({ value }) => Object.values(value ?? {}).map(v => v.name),
   },
-  cellFromJson: () => undefined,
-  isEmpty: ({ value }) => value == null,
+  jsonValue: {
+    schema: FileCellJsonValueTypeSchema,
+    type: () => t.array.instance(t.string.instance()),
+    isEmpty: ({ value }) => value.length === 0,
+  },
 });
