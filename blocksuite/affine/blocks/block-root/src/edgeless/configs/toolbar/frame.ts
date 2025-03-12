@@ -1,5 +1,5 @@
 import { EdgelessFrameManagerIdentifier } from '@blocksuite/affine-block-frame';
-import { EdgelessCRUDExtension } from '@blocksuite/affine-block-surface';
+import { EdgelessCRUDIdentifier } from '@blocksuite/affine-block-surface';
 import {
   packColor,
   type PickColorEvent,
@@ -156,7 +156,9 @@ const builtinSurfaceToolbarConfig = {
             const color = e.detail.value;
             for (const model of models) {
               const props = packColor(field, color);
-              ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, props);
+              ctx.std
+                .get(EdgelessCRUDIdentifier)
+                .updateElement(model.id, props);
             }
             return;
           }

@@ -17,17 +17,17 @@ export type LineDetailType =
 
 const LINE_STYLE_LIST = [
   {
-    name: 'Solid',
+    key: 'Solid',
     value: StrokeStyle.Solid,
     icon: StraightLineIcon(),
   },
   {
-    name: 'Dash',
+    key: 'Dash',
     value: StrokeStyle.Dash,
     icon: DashLineIcon(),
   },
   {
-    name: 'None',
+    key: 'None',
     value: StrokeStyle.None,
     icon: BanIcon(),
   },
@@ -63,7 +63,7 @@ export class EdgelessLineStylesPanel extends LitElement {
       ${repeat(
         LINE_STYLE_LIST.filter(item => lineStyles.includes(item.value)),
         item => item.value,
-        ({ name, icon, value }) => {
+        ({ key, icon, value }) => {
           const active = lineStyle === value;
           const classInfo = {
             'line-style-button': true,
@@ -74,7 +74,7 @@ export class EdgelessLineStylesPanel extends LitElement {
           return html`
             <editor-icon-button
               class=${classMap(classInfo)}
-              .tooltip="${name}"
+              .tooltip="${key}"
               .withHover=${active}
               @click=${() => this.select({ type: 'style', value })}
             >

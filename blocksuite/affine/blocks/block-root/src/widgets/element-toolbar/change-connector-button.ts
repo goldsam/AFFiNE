@@ -12,8 +12,8 @@ import {
   ConnectorEndpoint,
   type ConnectorLabelProps,
   ConnectorMode,
-  DEFAULT_FRONT_END_POINT_STYLE,
-  DEFAULT_REAR_END_POINT_STYLE,
+  DEFAULT_FRONT_ENDPOINT_STYLE,
+  DEFAULT_REAR_ENDPOINT_STYLE,
   DefaultTheme,
   LineWidth,
   PointStyle,
@@ -341,12 +341,12 @@ export class EdgelessChangeConnectorButton extends WithDisposable(LitElement) {
     const selectedStartPointStyle = getMostCommonEndpointStyle(
       elements,
       ConnectorEndpoint.Front,
-      DEFAULT_FRONT_END_POINT_STYLE
+      DEFAULT_FRONT_ENDPOINT_STYLE
     );
     const selectedEndPointStyle = getMostCommonEndpointStyle(
       elements,
       ConnectorEndpoint.Rear,
-      DEFAULT_REAR_END_POINT_STYLE
+      DEFAULT_REAR_ENDPOINT_STYLE
     );
     const enableCustomColor = this.edgeless.doc
       .get(FeatureFlagService)

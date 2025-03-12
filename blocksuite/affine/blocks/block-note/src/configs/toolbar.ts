@@ -1,5 +1,5 @@
 import {
-  EdgelessCRUDExtension,
+  EdgelessCRUDIdentifier,
   EdgelessLegacySlotIdentifier,
 } from '@blocksuite/affine-block-surface';
 import {
@@ -167,7 +167,9 @@ const builtinSurfaceToolbarConfig = {
             const color = e.detail.value;
             for (const model of models) {
               const props = packColor(field, color);
-              ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, props);
+              ctx.std
+                .get(EdgelessCRUDIdentifier)
+                .updateElement(model.id, props);
             }
             return;
           }
@@ -226,7 +228,7 @@ const builtinSurfaceToolbarConfig = {
 
               const shadowType = e.detail;
               for (const model of models) {
-                ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, {
+                ctx.std.get(EdgelessCRUDIdentifier).updateElement(model.id, {
                   edgeless: {
                     ...model.edgeless,
                     style: {
@@ -265,7 +267,7 @@ const builtinSurfaceToolbarConfig = {
               if (type === 'size') {
                 const borderSize = value;
                 for (const model of models) {
-                  ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, {
+                  ctx.std.get(EdgelessCRUDIdentifier).updateElement(model.id, {
                     edgeless: {
                       ...model.edgeless,
                       style: {
@@ -280,7 +282,7 @@ const builtinSurfaceToolbarConfig = {
 
               const borderStyle = value;
               for (const model of models) {
-                ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, {
+                ctx.std.get(EdgelessCRUDIdentifier).updateElement(model.id, {
                   edgeless: {
                     ...model.edgeless,
                     style: {
@@ -321,7 +323,7 @@ const builtinSurfaceToolbarConfig = {
 
               const borderRadius = e.detail;
               for (const model of models) {
-                ctx.std.get(EdgelessCRUDExtension).updateElement(model.id, {
+                ctx.std.get(EdgelessCRUDIdentifier).updateElement(model.id, {
                   edgeless: {
                     ...model.edgeless,
                     style: {
