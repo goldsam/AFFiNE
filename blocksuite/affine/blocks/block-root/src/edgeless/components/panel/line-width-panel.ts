@@ -14,21 +14,7 @@ interface Config {
   count: number;
 }
 
-export class LineWidthEvent extends Event {
-  detail: LineWidth;
-
-  constructor(
-    type: string,
-    {
-      detail,
-      composed,
-      bubbles,
-    }: { detail: LineWidth; composed: boolean; bubbles: boolean }
-  ) {
-    super(type, { bubbles, composed });
-    this.detail = detail;
-  }
-}
+export class LineWidthEvent extends CustomEvent<LineWidth> {}
 
 export class EdgelessLineWidthPanel extends WithDisposable(LitElement) {
   static override styles = css`

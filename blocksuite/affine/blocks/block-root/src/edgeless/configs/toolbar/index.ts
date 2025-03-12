@@ -16,6 +16,11 @@ export const EdgelessElementToolbarExtension: ExtensionType[] = [
   createFrameToolbarConfig(FrameBlockSchema.model.flavour),
 
   ToolbarModuleExtension({
+    id: BlockFlavourIdentifier('affine:surface:group'),
+    config: builtinGroupToolbarConfig,
+  }),
+
+  ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:brush'),
     config: builtinBrushToolbarConfig,
   }),
@@ -23,11 +28,6 @@ export const EdgelessElementToolbarExtension: ExtensionType[] = [
   ToolbarModuleExtension({
     id: BlockFlavourIdentifier('affine:surface:connector'),
     config: builtinConnectorToolbarConfig,
-  }),
-
-  ToolbarModuleExtension({
-    id: BlockFlavourIdentifier('affine:surface:group'),
-    config: builtinGroupToolbarConfig,
   }),
 
   ToolbarModuleExtension({
