@@ -6,6 +6,10 @@ import type { Extension } from '@blocksuite/store';
 
 import type { PointerEventState } from '../../event/index.js';
 import type { EditorHost } from '../../view/index.js';
+import type {
+  DragMoveContext,
+  GfxViewTransformInterface,
+} from '../element-transform/view-transform.js';
 import type { GfxController } from '../index.js';
 import type { GfxElementGeometry, PointTestOptions } from '../model/base.js';
 import type { GfxPrimitiveElementModel } from '../model/surface/element-model.js';
@@ -33,7 +37,7 @@ export class GfxElementModelView<
       | GfxLocalElementModel,
     RendererContext = object,
   >
-  implements GfxElementGeometry, Extension
+  implements GfxElementGeometry, Extension, GfxViewTransformInterface
 {
   static type: string;
 
@@ -165,6 +169,14 @@ export class GfxElementModelView<
   }
 
   onCreated() {}
+
+  onDragMoveDelta = ({ dx, dy, currentBound }: DragMoveContext) => {
+    this.model.xywh = currentBound.moveDelta(dx, dy).serialize();
+  };
+
+  onResize = () => {};
+
+  onRotate = () => {};
 
   /**
    * Called when the view is destroyed.
