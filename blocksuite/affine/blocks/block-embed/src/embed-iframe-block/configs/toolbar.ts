@@ -40,10 +40,7 @@ export const builtinToolbarConfig = {
           id: 'inline',
           label: 'Inline view',
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              EmbedIframeBlockModel
-            );
+            const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
             if (!model) return;
 
             const { title, caption, url, parent } = model;
@@ -75,10 +72,7 @@ export const builtinToolbarConfig = {
           id: 'card',
           label: 'Card view',
           run(ctx) {
-            const model = ctx.getCurrentModelByType(
-              BlockSelection,
-              EmbedIframeBlockModel
-            );
+            const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
             if (!model) return;
 
             const { url, caption, parent } = model;
@@ -117,10 +111,7 @@ export const builtinToolbarConfig = {
         },
       ],
       content(ctx) {
-        const model = ctx.getCurrentModelByType(
-          BlockSelection,
-          EmbedIframeBlockModel
-        );
+        const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
         if (!model) return null;
 
         const actions = this.actions.map(action => ({ ...action }));
@@ -150,9 +141,7 @@ export const builtinToolbarConfig = {
       tooltip: 'Caption',
       icon: CaptionIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          EmbedIframeBlockComponent
-        );
+        const component = ctx.getCurrentBlockByType(EmbedIframeBlockComponent);
         component?.captionEditor?.show();
 
         ctx.track('OpenedCaptionEditor', {
@@ -170,7 +159,7 @@ export const builtinToolbarConfig = {
           label: 'Copy',
           icon: CopyIcon(),
           run(ctx) {
-            const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+            const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
             if (!model) return;
 
             const slice = Slice.fromModels(ctx.store, [model]);
@@ -185,7 +174,7 @@ export const builtinToolbarConfig = {
           label: 'Duplicate',
           icon: DuplicateIcon(),
           run(ctx) {
-            const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+            const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
             if (!model) return;
 
             const { flavour, parent } = model;
@@ -203,9 +192,7 @@ export const builtinToolbarConfig = {
       label: 'Reload',
       icon: ResetIcon(),
       run(ctx) {
-        const component = ctx.getCurrentBlockComponentBy(
-          EmbedIframeBlockComponent
-        );
+        const component = ctx.getCurrentBlockByType(EmbedIframeBlockComponent);
         component?.refreshData().catch(console.error);
       },
     },
@@ -216,7 +203,7 @@ export const builtinToolbarConfig = {
       icon: DeleteIcon(),
       variant: 'destructive',
       run(ctx) {
-        const model = ctx.getCurrentBlockBy(BlockSelection)?.model;
+        const model = ctx.getCurrentModelByType(EmbedIframeBlockModel);
         if (!model) return;
 
         ctx.store.deleteBlock(model);
