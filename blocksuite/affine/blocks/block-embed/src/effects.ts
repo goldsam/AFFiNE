@@ -9,6 +9,7 @@ import { EmbedIframeCreateModal } from './embed-iframe-block/components/embed-if
 import { EmbedIframeErrorCard } from './embed-iframe-block/components/embed-iframe-error-card';
 import { EmbedIframeLinkEditPopup } from './embed-iframe-block/components/embed-iframe-link-edit-popup';
 import { EmbedIframeLoadingCard } from './embed-iframe-block/components/embed-iframe-loading-card';
+import { EmbedEdgelessIframeBlockComponent } from './embed-iframe-block/embed-edgeless-iframe-block';
 import { EmbedIframeBlockComponent } from './embed-iframe-block/embed-iframe-block';
 import { EmbedLinkedDocBlockComponent } from './embed-linked-doc-block';
 import { EmbedEdgelessLinkedDocBlockComponent } from './embed-linked-doc-block/embed-edgeless-linked-doc-block';
@@ -78,6 +79,10 @@ export function effects() {
     EmbedSyncedDocBlockComponent
   );
 
+  customElements.define(
+    'affine-embed-edgeless-iframe-block',
+    EmbedEdgelessIframeBlockComponent
+  );
   customElements.define('affine-embed-iframe-block', EmbedIframeBlockComponent);
   customElements.define(
     'affine-embed-iframe-create-modal',

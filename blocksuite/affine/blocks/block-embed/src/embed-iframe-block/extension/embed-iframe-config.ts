@@ -8,21 +8,19 @@ import type { ExtensionType } from '@blocksuite/store';
  * The options for the iframe
  * @example
  * {
- *   defaultWidth: '100%',
- *   defaultHeight: '152px',
+ *   widthInSurface: 640,
+ *   heightInSurface: 152,
+ *   heightInNote: 152,
+ *   widthPercent: 100,
  *   style: 'border-radius: 12px;',
  *   allow: 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',
  * }
- * <iframe
- *   width="100%"
- *   height="152px"
- *   style="border-radius: 12px;"
- *   allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
- * ></iframe>
  */
 export type IframeOptions = {
-  defaultWidth?: string;
-  defaultHeight?: string;
+  widthInSurface: number; // the default width of embed iframe in surface, in pixels
+  heightInSurface: number; // the default height of embed iframe in surface, in pixels
+  heightInNote: number; // the default height of embed iframe in note, in pixels
+  widthPercent: number; // the width percentage of embed iframe relative to parent container width, normalized to 0-100
   style?: string;
   referrerpolicy?: string;
   scrolling?: boolean;

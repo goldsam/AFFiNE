@@ -3,19 +3,32 @@ import type { Command } from '@blocksuite/block-std';
 
 import { insertEmbedCard } from '../../common/insert-embed-card.js';
 
+export type LinkableFlavour =
+  | 'affine:bookmark'
+  | 'affine:embed-linked-doc'
+  | 'affine:embed-iframe'
+  | 'affine:embed-figma'
+  | 'affine:embed-github'
+  | 'affine:embed-loom'
+  | 'affine:embed-youtube';
+
 export type InsertedLinkType = {
-  flavour?: 'affine:bookmark' | 'affine:embed-linked-doc';
+  flavour: LinkableFlavour;
 } | null;
 
-export const insertEmbedLinkedDocCommand: Command<{
-  docId: string;
-  params?: ReferenceParams;
-}> = (ctx, next) => {
+export const insertEmbedLinkedDocCommand: Command<
+  {
+    docId: string;
+    params?: ReferenceParams;
+  },
+  { blockId: string }
+> = (ctx, next) => {
   const { docId, params, std } = ctx;
   const flavour = 'affine:embed-linked-doc';
   const targetStyle: EmbedCardStyle = 'vertical';
   const props: Record<string, unknown> = { pageId: docId };
   if (params) props.params = params;
-  insertEmbedCard(std, { flavour, targetStyle, props });
-  next();
+  const blockId = insertEmbedCard(std, { flavour, targetStyle, props });
+  if (!blockId) return;
+  next({ blockId });
 };

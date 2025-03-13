@@ -441,6 +441,7 @@ export class EdgelessClipboardController extends PageClipboard {
     this.registerBlock('affine:embed-html', this._createHtmlEmbedBlock);
     this.registerBlock('affine:embed-loom', this._createLoomEmbedBlock);
     this.registerBlock('affine:embed-youtube', this._createYoutubeEmbedBlock);
+    this.registerBlock('affine:embed-iframe', this._createIframeEmbedBlock);
 
     // internal links
     this.registerBlock(
@@ -879,6 +880,36 @@ export class EdgelessClipboardController extends PageClipboard {
       this.surface.model.id
     );
     return embedYoutubeId;
+  }
+
+  private _createIframeEmbedBlock(embedIframe: BlockSnapshot) {
+    const {
+      xywh,
+      caption,
+      url,
+      title,
+      description,
+      iframeUrl,
+      scale,
+      width,
+      height,
+    } = embedIframe.props;
+
+    return this.crud.addBlock(
+      'affine:embed-iframe',
+      {
+        url,
+        iframeUrl,
+        xywh,
+        caption,
+        title,
+        description,
+        scale,
+        width,
+        height,
+      },
+      this.surface.model.id
+    );
   }
 
   private async _edgelessToCanvas(

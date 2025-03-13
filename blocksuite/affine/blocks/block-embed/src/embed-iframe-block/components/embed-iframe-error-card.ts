@@ -19,6 +19,7 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
     }
 
     .affine-embed-iframe-error-card {
+      container: affine-embed-iframe-error-card / inline-size;
       display: flex;
       box-sizing: border-box;
       width: 100%;
@@ -123,6 +124,12 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
       .error-banner {
         width: 204px;
         height: 102px;
+      }
+
+      @container affine-embed-iframe-error-card (width < 480px) {
+        .error-banner {
+          display: none;
+        }
       }
     }
   `;

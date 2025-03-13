@@ -14,6 +14,7 @@ export class EmbedIframeLoadingCard extends LitElement {
     }
 
     .affine-embed-iframe-loading-card {
+      container: affine-embed-iframe-loading-card / inline-size;
       display: flex;
       box-sizing: border-box;
       width: 100%;
@@ -84,6 +85,12 @@ export class EmbedIframeLoadingCard extends LitElement {
             fill: black;
             fill-opacity: 0.07;
           }
+        }
+      }
+
+      @container affine-embed-iframe-loading-card (width < 480px) {
+        .loading-banner {
+          display: none;
         }
       }
     }

@@ -1,8 +1,13 @@
 import {
   type InsertedLinkType,
+  insertEmbedIframeCommand,
   insertEmbedLinkedDocCommand,
+  type LinkableFlavour,
 } from '@blocksuite/affine-block-embed';
-import { QuickSearchProvider } from '@blocksuite/affine-shared/services';
+import {
+  FeatureFlagService,
+  QuickSearchProvider,
+} from '@blocksuite/affine-shared/services';
 import type { Command } from '@blocksuite/block-std';
 
 import { insertBookmarkCommand } from './insert-bookmark';
@@ -36,10 +41,33 @@ export const insertLinkByQuickSearchCommand: Command<
 
       // add normal link;
       if ('externalUrl' in result) {
-        std.command.exec(insertBookmarkCommand, { url: result.externalUrl });
-        return {
-          flavour: 'affine:bookmark',
-        };
+        const featureFlagService = std.get(FeatureFlagService);
+        const enableEmbedIframeBlock = featureFlagService.getFlag(
+          'enable_embed_iframe_block'
+        );
+        if (enableEmbedIframeBlock) {
+          // try to insert embed iframe block first
+          const [success, { flavour }] = std.command
+            .chain()
+            .try(chain => [
+              chain.pipe(insertEmbedIframeCommand, { url: result.externalUrl }),
+              chain.pipe(insertBookmarkCommand, { url: result.externalUrl }),
+            ])
+            .run();
+          if (!success || !flavour) return null;
+          return {
+            flavour: flavour as LinkableFlavour,
+          };
+        } else {
+          const [success, { flavour }] = std.command.exec(
+            insertBookmarkCommand,
+            { url: result.externalUrl }
+          );
+          if (!success || !flavour) return null;
+          return {
+            flavour: flavour as LinkableFlavour,
+          };
+        }
       }
 
       return null;

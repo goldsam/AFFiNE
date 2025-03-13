@@ -4,8 +4,10 @@ import {
   validateEmbedIframeUrl,
 } from '../../utils';
 
-const GOOGLE_DRIVE_DEFAULT_WIDTH = '100%';
-const GOOGLE_DRIVE_DEFAULT_HEIGHT = '480px';
+const GOOGLE_DRIVE_DEFAULT_WIDTH_IN_SURFACE = 640;
+const GOOGLE_DRIVE_DEFAULT_HEIGHT_IN_SURFACE = 480;
+const GOOGLE_DRIVE_DEFAULT_WIDTH_PERCENT = 100;
+const GOOGLE_DRIVE_DEFAULT_HEIGHT_IN_NOTE = 480;
 const GOOGLE_DRIVE_EMBED_FOLDER_URL =
   'https://drive.google.com/embeddedfolderview';
 const GOOGLE_DRIVE_EMBED_FILE_URL = 'https://drive.google.com/file/d/';
@@ -181,8 +183,10 @@ const googleDriveConfig = {
   },
   useOEmbedUrlDirectly: true,
   options: {
-    defaultWidth: GOOGLE_DRIVE_DEFAULT_WIDTH,
-    defaultHeight: GOOGLE_DRIVE_DEFAULT_HEIGHT,
+    widthInSurface: GOOGLE_DRIVE_DEFAULT_WIDTH_IN_SURFACE,
+    heightInSurface: GOOGLE_DRIVE_DEFAULT_HEIGHT_IN_SURFACE,
+    widthPercent: GOOGLE_DRIVE_DEFAULT_WIDTH_PERCENT,
+    heightInNote: GOOGLE_DRIVE_DEFAULT_HEIGHT_IN_NOTE,
     allowFullscreen: true,
     style: 'border: none; border-radius: 8px;',
   },

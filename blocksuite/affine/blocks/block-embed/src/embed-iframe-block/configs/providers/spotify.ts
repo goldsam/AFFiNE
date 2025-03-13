@@ -4,8 +4,10 @@ import {
   validateEmbedIframeUrl,
 } from '../../utils';
 
-const SPOTIFY_DEFAULT_WIDTH = '100%';
-const SPOTIFY_DEFAULT_HEIGHT = '152px';
+const SPOTIFY_DEFAULT_WIDTH_IN_SURFACE = 640;
+const SPOTIFY_DEFAULT_HEIGHT_IN_SURFACE = 152;
+const SPOTIFY_DEFAULT_HEIGHT_IN_NOTE = 152;
+const SPOTIFY_DEFAULT_WIDTH_PERCENT = 100;
 
 // https://developer.spotify.com/documentation/embeds/reference/oembed
 const spotifyEndpoint = 'https://open.spotify.com/oembed';
@@ -30,8 +32,10 @@ const spotifyConfig = {
   },
   useOEmbedUrlDirectly: false,
   options: {
-    defaultWidth: SPOTIFY_DEFAULT_WIDTH,
-    defaultHeight: SPOTIFY_DEFAULT_HEIGHT,
+    widthInSurface: SPOTIFY_DEFAULT_WIDTH_IN_SURFACE,
+    heightInSurface: SPOTIFY_DEFAULT_HEIGHT_IN_SURFACE,
+    heightInNote: SPOTIFY_DEFAULT_HEIGHT_IN_NOTE,
+    widthPercent: SPOTIFY_DEFAULT_WIDTH_PERCENT,
     allow:
       'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture',
     style: 'border-radius: 8px;',

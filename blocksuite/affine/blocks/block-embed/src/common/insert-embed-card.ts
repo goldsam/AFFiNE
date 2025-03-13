@@ -48,7 +48,13 @@ export function insertEmbedCard(
     const parent = host.doc.getParent(block.model);
     if (!parent) return;
     const index = parent.children.indexOf(block.model);
-    host.doc.addBlock(flavour as never, props, parent, index + 1);
+    const cardId = host.doc.addBlock(
+      flavour as never,
+      props,
+      parent,
+      index + 1
+    );
+    return cardId;
   } else {
     const rootId = std.store.root?.id;
     if (!rootId) return;
@@ -85,5 +91,7 @@ export function insertEmbedCard(
       // @ts-expect-error FIXME: resolve after gfx tool refactor
       'default'
     );
+
+    return cardId;
   }
 }
