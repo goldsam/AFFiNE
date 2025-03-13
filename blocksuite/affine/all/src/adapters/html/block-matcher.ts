@@ -5,6 +5,7 @@ import { DividerBlockHtmlAdapterExtension } from '@blocksuite/affine-block-divid
 import {
   EmbedFigmaBlockHtmlAdapterExtension,
   EmbedGithubBlockHtmlAdapterExtension,
+  EmbedIframeBlockHtmlAdapterExtension,
   EmbedLinkedDocHtmlAdapterExtension,
   EmbedLoomBlockHtmlAdapterExtension,
   EmbedSyncedDocBlockHtmlAdapterExtension,
@@ -27,6 +28,7 @@ export const defaultBlockHtmlAdapterMatchers = [
   EmbedFigmaBlockHtmlAdapterExtension,
   EmbedLoomBlockHtmlAdapterExtension,
   EmbedGithubBlockHtmlAdapterExtension,
+  EmbedIframeBlockHtmlAdapterExtension,
   BookmarkBlockHtmlAdapterExtension,
   DatabaseBlockHtmlAdapterExtension,
   TableBlockHtmlAdapterExtension,

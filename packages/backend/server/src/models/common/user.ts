@@ -5,3 +5,10 @@ export const publicUserSelect = {
   name: true,
   avatarUrl: true,
 } satisfies Prisma.UserSelect;
+
+export const workspaceUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  avatarUrl: true,
+} satisfies Prisma.UserSelect;

@@ -3,6 +3,7 @@ import { getStreamAsBuffer } from 'get-stream';
 
 import {
   Cache,
+  Config,
   MailService,
   NotFound,
   OnEvent,
@@ -33,7 +34,8 @@ export class WorkspaceService {
     private readonly doc: DocReader,
     private readonly mailer: MailService,
     private readonly models: Models,
-    private readonly url: URLHelper
+    private readonly url: URLHelper,
+    private readonly config: Config
   ) {}
 
   async getInviteInfo(inviteId: string): Promise<InviteInfo> {
@@ -134,10 +136,15 @@ export class WorkspaceService {
 
     const owner = await this.models.workspaceUser.getOwner(target.workspace.id);
 
+    const inviteUrl = this.url.link(`/invite/${inviteId}`);
+    if (this.config.node.dev) {
+      // make it easier to test in dev mode
+      this.logger.debug(`Invite link: ${inviteUrl}`);
+    }
     await this.mailer.sendMemberInviteMail(target.email, {
       workspace: target.workspace,
       user: owner,
-      url: this.url.link(`/invite/${inviteId}`),
+      url: inviteUrl,
     });
   }
 

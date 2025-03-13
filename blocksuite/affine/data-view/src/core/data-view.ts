@@ -63,9 +63,7 @@ export class DataViewRenderer extends SignalWatcher(
     }
   `;
 
-  private readonly _view = signal<{
-    expose: DataViewInstance;
-  }>();
+  private readonly _view = signal<DataViewInstance>();
 
   @property({ attribute: false })
   accessor config!: DataViewRendererConfig;
@@ -121,7 +119,7 @@ export class DataViewRenderer extends SignalWatcher(
   });
 
   focusFirstCell = () => {
-    this.view?.expose.focusFirstCell();
+    this.view?.focusFirstCell();
   };
 
   openDetailPanel = (ops: {
@@ -224,7 +222,7 @@ export class DataView {
   private readonly _ref = createRef<DataViewRenderer>();
 
   get expose() {
-    return this._ref.value?.view?.expose;
+    return this._ref.value?.view;
   }
 
   render(props: DataViewRendererConfig) {

@@ -29,10 +29,12 @@ export interface Doc {
       | {
           type: 'add';
           id: string;
+          isLocal: boolean;
         }
       | {
           type: 'delete';
           id: string;
+          isLocal: boolean;
         }
     >;
   };

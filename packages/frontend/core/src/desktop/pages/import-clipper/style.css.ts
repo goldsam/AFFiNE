@@ -12,6 +12,10 @@ export const container = style({
   padding: '16px',
 });
 
+export const authHeader = style({
+  width: '100%',
+});
+
 export const buttonContainer = style({
   paddingTop: '16px',
 });

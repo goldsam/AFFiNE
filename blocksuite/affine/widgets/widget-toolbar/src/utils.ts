@@ -240,11 +240,11 @@ function renderActions(
   return actions
     .map(action => {
       let content: TemplateResult | null = null;
-      if ('content' in action && action.content) {
+      if ('content' in action) {
         if (typeof action.content === 'function') {
           content = action.content(context);
         } else {
-          content = action.content;
+          content = action.content ?? null;
         }
         return content;
       }
@@ -254,12 +254,21 @@ function renderActions(
 
         if (!combined.length) return content;
 
-        const ordered = orderBy(combined, ['score', 'id'], ['asc', 'asc']);
+        const ordered = orderBy(combined, ['id', 'score'], ['asc', 'asc']);
 
         return repeat(
           ordered,
-          b => b.id,
-          b => render(b, context)
+          a => a.id,
+          a => {
+            if ('content' in a) {
+              if (typeof a.content === 'function') {
+                return a.content(context);
+              } else {
+                return a.content ?? null;
+              }
+            }
+            return render(a, context);
+          }
         );
       }
 

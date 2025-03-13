@@ -65,6 +65,7 @@ export const DeleteAccountDialog = ({
               onClick={onDelete}
               size="sm"
               variant="destructive"
+              disabled={input !== email}
             >
               Delete
             </Button>

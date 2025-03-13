@@ -12,9 +12,9 @@ import {
   cutByKeyboard,
   pasteByKeyboard,
   pressArrowLeft,
-  pressArrowRight,
   pressBackspace,
   pressEnter,
+  pressEscape,
   selectAllByKeyboard,
   SHORT_KEY,
   type,
@@ -107,7 +107,7 @@ test.describe('reference node', () => {
     );
     const { linkedDocPopover } = getLinkedDocPopover(page);
     await expect(linkedDocPopover).toBeVisible();
-    await pressArrowRight(page);
+    await pressEscape(page);
     await expect(linkedDocPopover).toBeHidden();
     await type(page, '@');
     await expect(linkedDocPopover).toBeVisible();
@@ -380,11 +380,6 @@ test.describe('linked page popover', () => {
     await type(page, '@');
     await expect(linkedDocPopover).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(linkedDocPopover).toBeHidden();
-
-    await type(page, '@');
-    await expect(linkedDocPopover).toBeVisible();
-    await page.keyboard.press('ArrowRight');
     await expect(linkedDocPopover).toBeHidden();
 
     await type(page, '@');

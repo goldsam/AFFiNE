@@ -85,7 +85,7 @@ export const DocPropertyIconNames = [
   'edgeless',
   'journal',
   'payment',
-  'createdEdited',
+  'member',
 ] as const satisfies fromLibIconName<LibIconComponentName>[];
 
 export type DocPropertyIconName = (typeof DocPropertyIconNames)[number];

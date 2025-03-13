@@ -5,7 +5,7 @@ import { groupBy } from 'lodash-es';
 
 import { EventBus, PaginationInput } from '../base';
 import { BaseModel } from './base';
-import { WorkspaceRole } from './common';
+import { WorkspaceRole, workspaceUserSelect } from './common';
 
 export { WorkspaceMemberStatus };
 
@@ -236,7 +236,9 @@ export class WorkspaceUserModel extends BaseModel {
   async getOwner(workspaceId: string) {
     const role = await this.db.workspaceUserRole.findFirst({
       include: {
-        user: true,
+        user: {
+          select: workspaceUserSelect,
+        },
       },
       where: {
         workspaceId,
@@ -254,7 +256,9 @@ export class WorkspaceUserModel extends BaseModel {
   async getAdmins(workspaceId: string) {
     const list = await this.db.workspaceUserRole.findMany({
       include: {
-        user: true,
+        user: {
+          select: workspaceUserSelect,
+        },
       },
       where: {
         workspaceId,
@@ -291,7 +295,9 @@ export class WorkspaceUserModel extends BaseModel {
     return await Promise.all([
       this.db.workspaceUserRole.findMany({
         include: {
-          user: true,
+          user: {
+            select: workspaceUserSelect,
+          },
         },
         where: {
           workspaceId,
@@ -317,7 +323,7 @@ export class WorkspaceUserModel extends BaseModel {
     pagination: PaginationInput
   ) {
     return await this.db.workspaceUserRole.findMany({
-      include: { user: true },
+      include: { user: { select: workspaceUserSelect } },
       where: {
         workspaceId,
         status: WorkspaceMemberStatus.Accepted,

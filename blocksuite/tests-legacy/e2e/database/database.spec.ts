@@ -525,13 +525,7 @@ test.describe('readonly mode', () => {
     await switchColumnType(page, 'Text');
     await initDatabaseDynamicRowWithData(page, '', true);
 
-    const cell = getDatabaseCell(page, {
-      rowIndex: 0,
-      columnType: 'rich-text',
-    });
-    await cell.click();
     await pressEnter(page);
-    await waitNextFrame(page, 100);
     await type(page, '123');
     await waitNextFrame(page, 100);
     await pressEnter(page);

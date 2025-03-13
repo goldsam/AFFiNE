@@ -1,11 +1,16 @@
-import { ScrollArea } from '@affine/admin/components/ui/scroll-area';
 import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from '@affine/admin/components/ui/table';
-import type { ColumnDef, PaginationState } from '@tanstack/react-table';
+import type {
+  ColumnDef,
+  ColumnFiltersState,
+  PaginationState,
+} from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
@@ -37,6 +42,9 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const usersCount = useUserCount();
 
+  const [rowSelection, setRowSelection] = useState({});
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
   const [tableData, setTableData] = useState(data);
   const table = useReactTable({
     data: tableData,
@@ -46,8 +54,13 @@ export function DataTable<TData, TValue>({
     rowCount: usersCount,
     enableFilters: true,
     onPaginationChange: onPaginationChange,
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
+    onColumnFiltersChange: setColumnFilters,
     state: {
       pagination,
+      rowSelection,
+      columnFilters,
     },
   });
 
@@ -57,24 +70,72 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col gap-4 py-5 px-6 h-full">
-      <DataTableToolbar setDataTable={setTableData} data={data} />
-      <ScrollArea className="rounded-md border max-h-[75vh] h-full">
+      <DataTableToolbar setDataTable={setTableData} data={data} table={table} />
+      <div className="rounded-md border max-h-[75vh] h-full overflow-auto">
         <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id} className="flex items-center">
+                {headerGroup.headers.map(header => {
+                  let columnClassName = '';
+                  if (header.id === 'select') {
+                    columnClassName = 'w-[40px] flex-shrink-0';
+                  } else if (header.id === 'info') {
+                    columnClassName = 'flex-1';
+                  } else if (header.id === 'property') {
+                    columnClassName = 'flex-1';
+                  } else if (header.id === 'actions') {
+                    columnClassName =
+                      'w-[40px] flex-shrink-0 justify-center mr-6';
+                  }
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className={`${columnClassName} py-2 text-xs flex items-center h-9`}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map(row => (
-                <TableRow
-                  key={row.id}
-                  className="flex items-center justify-between"
-                >
-                  {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                <TableRow key={row.id} className="flex items-center">
+                  {row.getVisibleCells().map(cell => {
+                    let columnClassName = '';
+                    if (cell.column.id === 'select') {
+                      columnClassName = 'w-[40px] flex-shrink-0';
+                    } else if (cell.column.id === 'info') {
+                      columnClassName = 'flex-1';
+                    } else if (cell.column.id === 'property') {
+                      columnClassName = 'flex-1';
+                    } else if (cell.column.id === 'actions') {
+                      columnClassName =
+                        'w-[40px] flex-shrink-0 justify-center mr-6';
+                    }
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={`${columnClassName} flex items-center`}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -89,7 +150,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
-      </ScrollArea>
+      </div>
 
       <DataTablePagination table={table} />
     </div>

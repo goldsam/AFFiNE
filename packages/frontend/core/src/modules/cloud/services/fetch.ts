@@ -85,7 +85,7 @@ export class FetchService extends Service {
           stacktrace: error.stack,
         });
       } else {
-        if (res.headers.get('Content-Type') === 'application/json') {
+        if (res.headers.get('Content-Type')?.startsWith('application/json')) {
           throw UserFriendlyError.fromAny(await res.json());
         } else {
           throw UserFriendlyError.fromAny(await res.text());

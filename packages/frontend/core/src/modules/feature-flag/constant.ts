@@ -123,6 +123,17 @@ export const AFFINE_FLAGS = {
     configurable: isCanaryBuild,
     defaultState: false,
   },
+  enable_embed_iframe_block: {
+    category: 'blocksuite',
+    bsFlag: 'enable_embed_iframe_block',
+    displayName:
+      'com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.name',
+    description:
+      'com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.description',
+    configurable: isCanaryBuild,
+    defaultState: false,
+  },
+
   enable_emoji_folder_icon: {
     category: 'affine',
     displayName:

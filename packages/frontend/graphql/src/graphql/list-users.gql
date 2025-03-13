@@ -3,6 +3,7 @@ query listUsers($filter: ListUserInput!) {
     id
     name
     email
+    disabled
     features
     hasPassword
     emailVerified

@@ -13,7 +13,7 @@ export type DeltaOperation = {
   retain?: number;
 } & OptionalAttributes;
 
-export type OnTextChange = (data: Y.Text) => void;
+export type OnTextChange = (data: Y.Text, isLocal: boolean) => void;
 
 export class Text {
   private readonly _deltas$: Signal<DeltaOperation[]>;
@@ -67,10 +67,17 @@ export class Text {
 
     this._length$ = signal(length);
     this._deltas$ = signal(this._yText.doc ? this._yText.toDelta() : []);
-    this._yText.observe(() => {
+    this._yText.observe(event => {
+      const isLocal =
+        !event.transaction.origin ||
+        !this._yText.doc ||
+        event.transaction.origin instanceof Y.UndoManager ||
+        event.transaction.origin.proxy
+          ? true
+          : event.transaction.origin === this._yText.doc.clientID;
       this._length$.value = this._yText.length;
       this._deltas$.value = this._yText.toDelta();
-      this._onChange?.(this._yText);
+      this._onChange?.(this._yText, isLocal);
     });
   }
 

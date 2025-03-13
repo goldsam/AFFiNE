@@ -13,17 +13,13 @@ export interface ViewportState {
   viewportY: number;
 }
 
-export interface SentenceLayout {
-  text: string;
-  rects: TextRect[];
-}
-
-export interface ParagraphLayout {
-  sentences: SentenceLayout[];
+export interface BlockLayout extends Record<string, unknown> {
+  type: string;
+  rect?: Rect;
 }
 
 export interface ViewportLayout {
-  paragraphs: ParagraphLayout[];
+  blocks: BlockLayout[];
   rect: Rect;
 }
 
@@ -46,3 +42,61 @@ export type RenderingState =
   | 'zooming'
   | 'rendering'
   | 'ready';
+
+export type MessageBitmapPainted = {
+  type: 'bitmapPainted';
+  bitmap: ImageBitmap;
+  version: number;
+};
+
+export type MessagePaintError = {
+  type: 'paintError';
+  error: string;
+  blockType: string;
+};
+
+export type WorkerToHostMessage = MessageBitmapPainted | MessagePaintError;
+
+export type MessagePaint = {
+  type: 'paintLayout';
+  data: {
+    layout: ViewportLayout;
+    width: number;
+    height: number;
+    dpr: number;
+    zoom: number;
+    version: number;
+  };
+};
+
+export interface BlockLayoutPainter {
+  paint(
+    ctx: OffscreenCanvasRenderingContext2D,
+    block: BlockLayout,
+    layoutBaseX: number,
+    layoutBaseY: number
+  ): void;
+}
+
+export interface RendererOptions {
+  zoomThreshold: number;
+  debounceTime: number;
+}
+
+export interface BlockPainterConfig {
+  type: string;
+  path: string;
+}
+
+export interface TurboRendererConfig {
+  options?: Partial<RendererOptions>;
+}
+
+export type MessageRegisterPainter = {
+  type: 'registerPainter';
+  data: {
+    painterConfigs: BlockPainterConfig[];
+  };
+};
+
+export type HostToWorkerMessage = MessagePaint | MessageRegisterPainter;

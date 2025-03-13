@@ -1,8 +1,12 @@
 import type { BlockMeta } from '@blocksuite/affine-model';
 import { type BlockModel, StoreExtension } from '@blocksuite/store';
+import { filter, groupBy, mergeMap, throttleTime } from 'rxjs/operators';
 
 import { FeatureFlagService } from './feature-flag-service';
 import { WriterInfoProvider } from './user-service';
+
+// 30 seconds
+const BLOCK_META_THROTTLE_TIME = 30 * 1000;
 
 /**
  * The service is used to add following info to the block.
@@ -21,20 +25,27 @@ export class BlockMetaService extends StoreExtension {
 
   override loaded() {
     this.store.disposableGroup.add(
-      this.store.slots.blockUpdated.subscribe(({ type, id }) => {
-        if (!this.isBlockMetaEnabled) return;
+      this.store.slots.blockUpdated
+        .pipe(
+          filter(payload => payload.isLocal),
+          groupBy(payload => `${payload.type}-${payload.id}`),
+          mergeMap(group => group.pipe(throttleTime(BLOCK_META_THROTTLE_TIME)))
+        )
+        .subscribe(payload => {
+          const { type, id } = payload;
+          if (!this.isBlockMetaEnabled) return;
 
-        const model = this.store.getBlock(id)?.model;
-        if (!model) return;
+          const model = this.store.getBlock(id)?.model;
+          if (!model) return;
 
-        if (type === 'add') {
-          return this._onBlockCreated(model);
-        }
+          if (type === 'add') {
+            return this._onBlockCreated(model);
+          }
 
-        if (type === 'update') {
-          return this._onBlockUpdated(model);
-        }
-      })
+          if (type === 'update') {
+            return this._onBlockUpdated(model);
+          }
+        })
     );
   }
 
@@ -76,6 +87,8 @@ export class BlockMetaService extends StoreExtension {
         model['meta:updatedBy'] = writer.id;
         if (!model['meta:createdAt']) {
           model['meta:createdAt'] = now;
+        }
+        if (!model['meta:createdBy']) {
           model['meta:createdBy'] = writer.id;
         }
         return;
@@ -85,6 +98,8 @@ export class BlockMetaService extends StoreExtension {
       model.props['meta:updatedBy'] = writer.id;
       if (!model.props['meta:createdAt']) {
         model.props['meta:createdAt'] = now;
+      }
+      if (!model.props['meta:createdBy']) {
         model.props['meta:createdBy'] = writer.id;
       }
     });

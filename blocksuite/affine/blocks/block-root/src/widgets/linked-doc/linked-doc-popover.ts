@@ -179,6 +179,14 @@ export class LinkedDocPopover extends SignalWatcher(
     createKeydownObserver({
       target: eventSource,
       signal: keydownObserverAbortController.signal,
+      interceptor: (event, next) => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        next();
+      },
       onInput: isComposition => {
         if (isComposition) {
           this._updateLinkedDocGroup().catch(console.error);

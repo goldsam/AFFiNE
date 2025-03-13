@@ -5,6 +5,8 @@ import {
   type Text,
 } from '@blocksuite/store';
 
+import type { BlockMeta } from '../../utils/types';
+
 export type ParagraphType =
   | 'text'
   | 'quote'
@@ -19,7 +21,7 @@ export type ParagraphProps = {
   type: ParagraphType;
   text: Text;
   collapsed: boolean;
-};
+} & BlockMeta;
 
 export const ParagraphBlockSchema = defineBlockSchema({
   flavour: 'affine:paragraph',
@@ -27,6 +29,10 @@ export const ParagraphBlockSchema = defineBlockSchema({
     type: 'text',
     text: internal.Text(),
     collapsed: false,
+    'meta:createdAt': undefined,
+    'meta:createdBy': undefined,
+    'meta:updatedAt': undefined,
+    'meta:updatedBy': undefined,
   }),
   metadata: {
     version: 1,

@@ -109,10 +109,12 @@ export class DocImpl implements Doc {
       | {
           type: 'add';
           id: string;
+          isLocal: boolean;
         }
       | {
           type: 'delete';
           id: string;
+          isLocal: boolean;
         }
     >(),
   };
@@ -175,12 +177,12 @@ export class DocImpl implements Doc {
     return (readonly?.toString() as 'true' | 'false') ?? 'false';
   }
 
-  private _handleYBlockAdd(id: string) {
-    this.slots.yBlockUpdated.next({ type: 'add', id });
+  private _handleYBlockAdd(id: string, isLocal: boolean) {
+    this.slots.yBlockUpdated.next({ type: 'add', id, isLocal });
   }
 
-  private _handleYBlockDelete(id: string) {
-    this.slots.yBlockUpdated.next({ type: 'delete', id });
+  private _handleYBlockDelete(id: string, isLocal: boolean) {
+    this.slots.yBlockUpdated.next({ type: 'delete', id, isLocal });
   }
 
   private _handleYEvent(event: Y.YEvent<YBlock | Y.Text | Y.Array<unknown>>) {
@@ -188,14 +190,21 @@ export class DocImpl implements Doc {
     if (event.target !== this._yBlocks) {
       return;
     }
+    const isLocal =
+      !event.transaction.origin ||
+      !this._yBlocks.doc ||
+      event.transaction.origin instanceof Y.UndoManager ||
+      event.transaction.origin.proxy
+        ? true
+        : event.transaction.origin === this._yBlocks.doc.clientID;
     event.keys.forEach((value, id) => {
       try {
         if (value.action === 'add') {
-          this._handleYBlockAdd(id);
+          this._handleYBlockAdd(id, isLocal);
           return;
         }
         if (value.action === 'delete') {
-          this._handleYBlockDelete(id);
+          this._handleYBlockDelete(id, isLocal);
           return;
         }
       } catch (e) {
@@ -317,7 +326,7 @@ export class DocImpl implements Doc {
     this._initYBlocks();
 
     this._yBlocks.forEach((_, id) => {
-      this._handleYBlockAdd(id);
+      this._handleYBlockAdd(id, false);
     });
 
     initFn?.();

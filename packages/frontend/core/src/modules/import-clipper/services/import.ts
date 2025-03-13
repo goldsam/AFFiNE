@@ -13,6 +13,7 @@ export interface ClipperInput {
   contentMarkdown: string;
   contentHtml: string;
   attachments: Record<string, Blob>;
+  workspace?: 'select-by-user' | 'last-open-workspace';
 }
 
 export class ImportClipperService extends Service {
@@ -37,6 +38,7 @@ export class ImportClipperService extends Service {
     const docsService = workspace.scope.get(DocsService);
     if (docId) {
       // only support page mode for now
+      await docsService.changeDocTitle(docId, clipperInput.title);
       docsService.list.setPrimaryMode(docId, 'page');
       workspace.engine.doc.addPriority(workspace.id, 100);
       workspace.engine.doc.addPriority(docId, 100);

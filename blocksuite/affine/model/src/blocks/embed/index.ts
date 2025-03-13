@@ -1,6 +1,7 @@
 export * from './figma/index';
 export * from './github/index';
 export * from './html/index';
+export * from './iframe/index';
 export * from './linked-doc/index';
 export * from './loom/index';
 export * from './synced-doc/index';

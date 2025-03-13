@@ -62,7 +62,7 @@ export class ReactiveYArray extends BaseReactiveYData<
 
         if (this._stashed.has(index)) {
           const result = Reflect.set(target, p, value, receiver);
-          this._options.onChange?.(this._proxy);
+          this._options.onChange?.(this._proxy, true);
           return result;
         }
 
@@ -196,7 +196,7 @@ export class ReactiveYMap extends BaseReactiveYData<UnRecord, YMap<unknown>> {
 
         if (this._stashed.has(p)) {
           const result = Reflect.set(target, p, value, receiver);
-          this._options.onChange?.(this._proxy);
+          this._options.onChange?.(this._proxy, true);
           return result;
         }
 

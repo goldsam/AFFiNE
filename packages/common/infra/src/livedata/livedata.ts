@@ -144,9 +144,13 @@ export class LiveData<T = unknown>
   static fromSignal<T>(signal: ReadonlySignal<T>): LiveData<T> {
     return LiveData.from(
       new Observable(subscriber => {
-        signal.subscribe(value => {
+        const unsubscribe = signal.subscribe(value => {
           subscriber.next(value);
         });
+
+        return () => {
+          unsubscribe();
+        };
       }),
       signal.value
     );

@@ -11,20 +11,8 @@ import {
   WrongSignInMethod,
 } from '../base';
 import { BaseModel } from './base';
-import { WorkspaceRole } from './common';
+import { publicUserSelect, WorkspaceRole, workspaceUserSelect } from './common';
 import type { Workspace } from './workspace';
-
-const publicUserSelect = {
-  id: true,
-  name: true,
-  avatarUrl: true,
-} satisfies Prisma.UserSelect;
-const workspaceUserSelect = {
-  id: true,
-  name: true,
-  email: true,
-  avatarUrl: true,
-} satisfies Prisma.UserSelect;
 
 type CreateUserInput = Omit<Prisma.UserCreateInput, 'name'> & { name?: string };
 type UpdateUserInput = Omit<Partial<Prisma.UserCreateInput>, 'id'>;

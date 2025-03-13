@@ -152,10 +152,7 @@ export function patchQuickSearchService(framework: FrameworkProvider) {
       overrideFn(BookmarkSlashMenuConfigIdentifier);
 
       const modifyFn = (item: SlashMenuItem): SlashMenuItem => {
-        if (
-          'action' in item &&
-          (item.name === 'Linked Doc' || item.name === 'Link')
-        ) {
+        if ('action' in item && item.name === 'Link') {
           item.action = ({ std }) => {
             const [success, { insertedLinkType }] = std.command.exec(
               insertLinkByQuickSearchCommand

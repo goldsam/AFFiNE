@@ -5,8 +5,8 @@ import {
   CardTitle,
 } from '@affine/admin/components/ui/card';
 import { ScrollArea } from '@affine/admin/components/ui/scroll-area';
-import { Separator } from '@affine/admin/components/ui/separator';
 
+import { Header } from '../header';
 import { AboutAFFiNE } from './about';
 import type {
   DatabaseConfig,
@@ -18,10 +18,7 @@ import { useServerServiceConfigs } from './use-server-service-configs';
 export function ConfigPage() {
   return (
     <div className=" h-screen flex-1 space-y-1 flex-col flex">
-      <div className="flex items-center justify-between px-6 py-3 max-md:ml-9">
-        <div className="text-base font-medium">Config</div>
-      </div>
-      <Separator />
+      <Header title="Server" />
       <ScrollArea>
         <ServerServiceConfig />
         <AboutAFFiNE />

@@ -24,7 +24,6 @@ import { MemberSearchService } from '@affine/core/modules/permissions';
 import { WorkspaceService } from '@affine/core/modules/workspace';
 import track from '@affine/track';
 import type { DocTitle } from '@blocksuite/affine/fragments/doc-title';
-import { ViewportTurboRendererExtension } from '@blocksuite/affine/gfx/turbo-renderer';
 import type { DocMode } from '@blocksuite/affine/model';
 import type { Store } from '@blocksuite/affine/store';
 import {
@@ -70,6 +69,7 @@ import {
   type ReferenceReactRenderer,
 } from '../extensions/reference-renderer';
 import { patchSideBarService } from '../extensions/side-bar-service';
+import { patchTurboRendererExtension } from '../extensions/turbo-renderer';
 import { patchUserExtensions } from '../extensions/user';
 import { patchUserListExtensions } from '../extensions/user-list';
 import { BiDirectionalLinkPanel } from './bi-directional-link-panel';
@@ -171,7 +171,7 @@ const usePatchSpecs = (mode: DocMode) => {
           : [],
         patchDatabaseBlockConfigService(),
         mode === 'edgeless' && enableTurboRenderer
-          ? [ViewportTurboRendererExtension]
+          ? patchTurboRendererExtension()
           : [],
       ].flat()
     );

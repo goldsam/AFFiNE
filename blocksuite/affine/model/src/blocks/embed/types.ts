@@ -3,6 +3,7 @@ import type { BlockModel } from '@blocksuite/store';
 import { EmbedFigmaModel } from './figma';
 import { EmbedGithubModel } from './github';
 import type { EmbedHtmlModel } from './html';
+import type { EmbedIframeBlockModel } from './iframe/';
 import { EmbedLinkedDocModel } from './linked-doc';
 import { EmbedLoomModel } from './loom';
 import { EmbedSyncedDocModel } from './synced-doc';
@@ -24,11 +25,13 @@ export type ExternalEmbedModel = (typeof ExternalEmbedModels)[number];
 
 export type InternalEmbedModel = (typeof InternalEmbedModels)[number];
 
-export type LinkableEmbedModel = InstanceType<
+export type EmbedCardModel = InstanceType<
   ExternalEmbedModel | InternalEmbedModel
 >;
 
-export type BuiltInEmbedModel = LinkableEmbedModel | EmbedHtmlModel;
+export type LinkableEmbedModel = EmbedCardModel | EmbedIframeBlockModel;
+
+export type BuiltInEmbedModel = EmbedCardModel | EmbedHtmlModel;
 
 export function isExternalEmbedModel(
   model: BlockModel

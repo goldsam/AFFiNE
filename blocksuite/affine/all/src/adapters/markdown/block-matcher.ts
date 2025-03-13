@@ -5,6 +5,7 @@ import { DividerBlockMarkdownAdapterExtension } from '@blocksuite/affine-block-d
 import {
   EmbedFigmaMarkdownAdapterExtension,
   EmbedGithubMarkdownAdapterExtension,
+  EmbedIframeBlockMarkdownAdapterExtension,
   EmbedLinkedDocMarkdownAdapterExtension,
   EmbedLoomMarkdownAdapterExtension,
   EmbedSyncedDocMarkdownAdapterExtension,
@@ -27,6 +28,7 @@ export const defaultBlockMarkdownAdapterMatchers = [
   EmbedLoomMarkdownAdapterExtension,
   EmbedSyncedDocMarkdownAdapterExtension,
   EmbedYoutubeMarkdownAdapterExtension,
+  EmbedIframeBlockMarkdownAdapterExtension,
   ListBlockMarkdownAdapterExtension,
   ParagraphBlockMarkdownAdapterExtension,
   BookmarkBlockMarkdownAdapterExtension,

@@ -1,12 +1,12 @@
 import type { I18nString } from '@affine/i18n';
 import {
   CheckBoxCheckLinearIcon,
-  CreatedEditedIcon,
   DateTimeIcon,
   EdgelessIcon,
   FileIcon,
   HistoryIcon,
   LongerIcon,
+  MemberIcon,
   NumberIcon,
   TagIcon,
   TemplateIcon,
@@ -61,13 +61,13 @@ export const DocPropertyTypes = {
     description: 'com.affine.page-properties.property.date.tooltips',
   },
   createdBy: {
-    icon: CreatedEditedIcon,
+    icon: MemberIcon,
     value: CreatedByValue,
     name: 'com.affine.page-properties.property.createdBy',
     description: 'com.affine.page-properties.property.createdBy.tooltips',
   },
   updatedBy: {
-    icon: CreatedEditedIcon,
+    icon: MemberIcon,
     value: UpdatedByValue,
     name: 'com.affine.page-properties.property.updatedBy',
     description: 'com.affine.page-properties.property.updatedBy.tooltips',

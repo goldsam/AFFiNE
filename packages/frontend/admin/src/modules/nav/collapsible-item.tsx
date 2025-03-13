@@ -34,7 +34,7 @@ export const CollapsibleItem = ({
   );
   return (
     <Accordion type="multiple" className="w-full ">
-      <AccordionItem value="item-1" className="border-b-0">
+      <AccordionItem value="item-1" className="border-b-0 ml-7 ">
         <NavLink
           to={`/admin/settings/${title}`}
           className={({ isActive }) => {
@@ -45,12 +45,12 @@ export const CollapsibleItem = ({
         >
           <AccordionTrigger
             onClick={() => handleClick(title)}
-            className={`py-2 px-3 rounded`}
+            className="py-2 px-2 rounded [&[data-state=closed]>svg]:rotate-270 [&[data-state=open]>svg]:rotate-360"
           >
             {title}
           </AccordionTrigger>
         </NavLink>
-        <AccordionContent className=" flex flex-col gap-2 py-1">
+        <AccordionContent className="flex flex-col gap-2 py-1">
           {items.map(item => (
             <NavLink
               key={item}
@@ -68,6 +68,37 @@ export const CollapsibleItem = ({
                 {item}
               </AccordionContent>
             </NavLink>
+          ))}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+};
+
+export const OtherModules = ({
+  moduleList,
+  changeModule,
+}: {
+  moduleList: {
+    moduleName: string;
+    keys: string[];
+  }[];
+  changeModule?: (module: string) => void;
+}) => {
+  return (
+    <Accordion type="multiple" className="w-full ">
+      <AccordionItem value="item-1" className="border-b-0">
+        <AccordionTrigger className="ml-7 py-2 px-2 rounded [&[data-state=closed]>svg]:rotate-270 [&[data-state=open]>svg]:rotate-360">
+          Other
+        </AccordionTrigger>
+        <AccordionContent className="flex flex-col gap-2 py-1">
+          {moduleList.map(module => (
+            <CollapsibleItem
+              key={module.moduleName}
+              items={module.keys}
+              title={module.moduleName}
+              changeModule={changeModule}
+            />
           ))}
         </AccordionContent>
       </AccordionItem>

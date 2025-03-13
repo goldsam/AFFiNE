@@ -40,6 +40,12 @@ export const adminServerConfigQuery = {
     credentialsRequirement {
       ...CredentialsRequirements
     }
+    availableUpgrade {
+      changelog
+      version
+      publishedAt
+      url
+    }
     availableUserFeatures
   }
 }
@@ -439,6 +445,17 @@ export const deleteWorkspaceMutation = {
 }`,
 };
 
+export const disableUserMutation = {
+  id: 'disableUserMutation' as const,
+  op: 'disableUser',
+  query: `mutation disableUser($id: String!) {
+  banUser(id: $id) {
+    email
+    disabled
+  }
+}`,
+};
+
 export const getDocRolePermissionsQuery = {
   id: 'getDocRolePermissionsQuery' as const,
   op: 'getDocRolePermissions',
@@ -461,6 +478,17 @@ export const getDocRolePermissionsQuery = {
         Doc_Users_Read
       }
     }
+  }
+}`,
+};
+
+export const enableUserMutation = {
+  id: 'enableUserMutation' as const,
+  op: 'enableUser',
+  query: `mutation enableUser($id: String!) {
+  enableUser(id: $id) {
+    email
+    disabled
   }
 }`,
 };
@@ -893,6 +921,25 @@ export const listHistoryQuery = {
 }`,
 };
 
+export const importUsersMutation = {
+  id: 'importUsersMutation' as const,
+  op: 'ImportUsers',
+  query: `mutation ImportUsers($input: ImportUsersInput!) {
+  importUsers(input: $input) {
+    __typename
+    ... on UserType {
+      id
+      name
+      email
+    }
+    ... on UserImportFailedType {
+      email
+      error
+    }
+  }
+}`,
+};
+
 export const getInvoicesCountQuery = {
   id: 'getInvoicesCountQuery' as const,
   op: 'getInvoicesCount',
@@ -970,6 +1017,7 @@ export const listUsersQuery = {
     id
     name
     email
+    disabled
     features
     hasPassword
     emailVerified

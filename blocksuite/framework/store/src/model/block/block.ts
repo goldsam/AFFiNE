@@ -43,11 +43,11 @@ export class Block {
   ) {
     const onChange = !options.onChange
       ? undefined
-      : (key: string) => {
+      : (key: string, isLocal: boolean) => {
           if (!this._syncController || !this.model) {
             return;
           }
-          options.onChange?.(this, key);
+          options.onChange?.(this, key, isLocal);
         };
     const flavour = yBlock.get('sys:flavour') as string;
     const blockSchema = this.schema.get(flavour);

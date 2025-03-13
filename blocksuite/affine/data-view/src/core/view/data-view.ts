@@ -44,9 +44,7 @@ type DataViewComponent = UniComponent<
   {
     props: DataViewProps;
   },
-  {
-    expose: DataViewInstance;
-  }
+  DataViewInstance
 >;
 
 export interface DataViewRendererConfig {

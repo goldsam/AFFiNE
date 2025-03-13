@@ -525,38 +525,6 @@ test('can paste a doc link to create link reference', async ({ page }) => {
   await expect(page.locator(`affine-link:has-text("${url}")`)).toBeVisible();
 });
 
-test('can use slash menu to insert a newly created doc card', async ({
-  page,
-}) => {
-  await openHomePage(page);
-  // title '1' is a workaround to make sure Keyboard enter works correctly
-  await clickNewPageButton(page, '1');
-
-  // flaky: still focus on the title input
-  // goto main content
-  await page.keyboard.press('Enter');
-
-  // open slash menu
-  await page.keyboard.type('/linkedoc', {
-    delay: 50,
-  });
-  await page.keyboard.press('Enter');
-  await expect(page.getByTestId('cmdk-quick-search')).toBeVisible();
-
-  const testTitle = 'test title';
-  await page.locator('[cmdk-input]').fill(testTitle);
-
-  const addNewPage = page.locator(
-    `[cmdk-item] >> text=New "${testTitle}" Page`
-  );
-  await addNewPage.click();
-
-  await expect(page.locator('affine-embed-linked-doc-block')).toBeVisible();
-  await expect(
-    page.locator('.affine-embed-linked-doc-content-title')
-  ).toContainText(testTitle);
-});
-
 test('can use slash menu to insert an external link', async ({ page }) => {
   await openHomePage(page);
   await clickNewPageButton(page);

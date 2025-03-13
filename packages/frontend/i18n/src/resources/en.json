@@ -1348,6 +1348,8 @@
   "com.affine.settings.workspace.experimental-features.enable-block-meta.description": "Once enabled, all blocks will have created time, updated time, created by and updated by.",
   "com.affine.settings.workspace.experimental-features.enable-callout.name": "Callout",
   "com.affine.settings.workspace.experimental-features.enable-callout.description": "Let your words stand out.",
+  "com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.name": "Embed Iframe Block",
+  "com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.description": "Enables Embed Iframe Block.",
   "com.affine.settings.workspace.experimental-features.enable-emoji-folder-icon.name": "Emoji Folder Icon",
   "com.affine.settings.workspace.experimental-features.enable-emoji-folder-icon.description": "Once enabled, you can use an emoji as the folder icon. When the first character of the folder name is an emoji, it will be extracted and used as its icon.",
   "com.affine.settings.workspace.experimental-features.enable-emoji-doc-icon.name": "Emoji Doc Icon",
@@ -1608,6 +1610,7 @@
   "com.affine.workspace.cloud": "Cloud workspaces",
   "com.affine.workspace.cloud.account.logout": "Sign out",
   "com.affine.workspace.cloud.account.settings": "Account settings",
+  "com.affine.workspace.cloud.account.admin": "Admin panel",
   "com.affine.workspace.cloud.auth": "Sign up/ Sign in",
   "com.affine.workspace.cloud.description": "Sync with AFFiNE Cloud",
   "com.affine.workspace.cloud.join": "Join workspace",
@@ -1772,6 +1775,7 @@
   "error.BAD_REQUEST": "Bad request.",
   "error.GRAPHQL_BAD_REQUEST": "GraphQL bad request, code: {{code}}, {{message}}",
   "error.QUERY_TOO_LONG": "Query is too long, max length is {{max}}.",
+  "error.VALIDATION_ERROR": "Validation error, errors: {{errors}}",
   "error.USER_NOT_FOUND": "User not found.",
   "error.USER_AVATAR_NOT_FOUND": "User avatar not found.",
   "error.EMAIL_ALREADY_USED": "This email has already been registered.",
@@ -1781,6 +1785,7 @@
   "error.OAUTH_STATE_EXPIRED": "OAuth state expired, please try again.",
   "error.INVALID_OAUTH_CALLBACK_STATE": "Invalid callback state parameter.",
   "error.INVALID_OAUTH_CALLBACK_CODE": "Invalid callback code parameter, provider response status: {{status}} and body: {{body}}.",
+  "error.INVALID_AUTH_STATE": "Invalid auth state. You might start the auth progress from another device.",
   "error.MISSING_OAUTH_QUERY_PARAMETER": "Missing query parameter `{{name}}`.",
   "error.OAUTH_ACCOUNT_ALREADY_CONNECTED": "The third-party account has already been connected to another user.",
   "error.INVALID_EMAIL": "An invalid email provided: {{email}}",
@@ -1873,7 +1878,6 @@
   "error.WORKSPACE_MEMBERS_EXCEED_LIMIT_TO_DOWNGRADE": "You cannot downgrade the workspace from team workspace because there are more than {{limit}} members that are currently active.",
   "error.UNSUPPORTED_CLIENT_VERSION": "Unsupported client with version [{{clientVersion}}], required version is [{{requiredVersion}}].",
   "error.NOTIFICATION_NOT_FOUND": "Notification not found.",
-  "error.MENTION_USER_SPACE_ACCESS_DENIED": "Mention user do not have permission to access space {{spaceId}}.",
-  "error.MENTION_USER_ONESELF_DENIED": "You cannot mention yourself.",
-  "error.NOTIFICATION_ACCESS_DENIED": "You do not have permission to access notification {{notificationId}}."
+  "error.MENTION_USER_DOC_ACCESS_DENIED": "Mentioned user can not access doc {{docId}}.",
+  "error.MENTION_USER_ONESELF_DENIED": "You can not mention yourself."
 }

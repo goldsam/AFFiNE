@@ -6,6 +6,7 @@ import { CheckIcon } from 'lucide-react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 
+import { Header } from '../header';
 import { useNav } from '../nav/context';
 import { ConfirmChanges } from './confirm-changes';
 import { RuntimeSettingRow } from './runtime-setting-row';
@@ -71,20 +72,21 @@ export function SettingsPage() {
   }, [disableSave, handleSave, onClose]);
   return (
     <div className=" h-screen flex-1 flex-col flex">
-      <div className="flex items-center justify-between px-6 py-3 max-md:ml-9">
-        <div className="text-base font-medium">Settings</div>
-        <Button
-          type="submit"
-          size="icon"
-          className="w-7 h-7"
-          variant="ghost"
-          onClick={onOpen}
-          disabled={disableSave}
-        >
-          <CheckIcon size={20} />
-        </Button>
-      </div>
-      <Separator />
+      <Header
+        title="Settings"
+        endFix={
+          <Button
+            type="submit"
+            size="icon"
+            className="w-7 h-7"
+            variant="ghost"
+            onClick={onOpen}
+            disabled={disableSave}
+          >
+            <CheckIcon size={20} />
+          </Button>
+        }
+      />
       <AdminPanel
         configValues={configValues}
         setConfigValues={setConfigValues}
@@ -124,7 +126,7 @@ export const AdminPanel = ({
 
   return (
     <ScrollArea>
-      <div className="flex flex-col h-full gap-3 py-5 px-6 w-full">
+      <div className="flex flex-col h-full gap-3 py-5 px-6 w-full max-w-[800px] mx-auto">
         {configGroup
           .filter(group => group.moduleName === currentModule)
           .map(group => {

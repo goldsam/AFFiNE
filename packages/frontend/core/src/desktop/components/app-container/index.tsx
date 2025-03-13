@@ -64,16 +64,18 @@ const DesktopLayout = ({
   const isInWorkspace = !!workspaceService;
   return (
     <div className={styles.desktopAppViewContainer}>
-      <div className={styles.desktopTabsHeader}>
-        <AppTabsHeader
-          left={
-            <>
-              {isInWorkspace && <SidebarSwitch show />}
-              {isInWorkspace && <NavigationButtons />}
-            </>
-          }
-        />
-      </div>
+      {!fallback ? (
+        <div className={styles.desktopTabsHeader}>
+          <AppTabsHeader
+            left={
+              <>
+                {isInWorkspace && <SidebarSwitch show />}
+                {isInWorkspace && <NavigationButtons />}
+              </>
+            }
+          />
+        </div>
+      ) : null}
       <div className={styles.desktopAppViewMain}>
         {fallback ? (
           <AppSidebarFallback />

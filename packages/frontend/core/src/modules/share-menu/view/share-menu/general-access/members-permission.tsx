@@ -58,7 +58,7 @@ export const MembersPermission = ({
     async (docRole: DocRole) => {
       try {
         track.$.sharePanel.$.modifyDocDefaultRole({
-          control: docRole,
+          role: docRole,
         });
         await docGrantedUsersService.updateDocDefaultRole(docRole);
         shareInfoService.shareInfo.revalidate();

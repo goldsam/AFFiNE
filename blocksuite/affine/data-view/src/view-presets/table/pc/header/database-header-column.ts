@@ -169,8 +169,7 @@ export class DatabaseHeaderColumn extends SignalWatcher(
 
     const sortUtils = createSortUtils(
       sortTrait,
-      this.closest('affine-data-view-renderer')?.view?.expose.eventTrace ??
-        (() => {})
+      this.closest('affine-data-view-renderer')?.view?.eventTrace ?? (() => {})
     );
     const sortList = sortUtils.sortList$.value;
     const existingIndex = sortList.findIndex(

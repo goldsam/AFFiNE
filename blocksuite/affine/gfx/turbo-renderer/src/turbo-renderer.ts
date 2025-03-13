@@ -1,13 +1,12 @@
+import { ConfigExtensionFactory } from '@blocksuite/block-std';
 import {
-  LifeCycleWatcher,
-  LifeCycleWatcherIdentifier,
-  StdIdentifier,
-} from '@blocksuite/block-std';
-import {
-  GfxControllerIdentifier,
+  type GfxController,
+  GfxExtension,
+  GfxExtensionIdentifier,
   type GfxViewportElement,
 } from '@blocksuite/block-std/gfx';
-import type { Container, ServiceIdentifier } from '@blocksuite/global/di';
+import type { Container } from '@blocksuite/global/di';
+import { createIdentifier } from '@blocksuite/global/di';
 import { DisposableGroup } from '@blocksuite/global/disposable';
 import debounce from 'lodash-es/debounce';
 
@@ -17,15 +16,35 @@ import {
   initTweakpane,
   paintPlaceholder,
   syncCanvasSize,
-} from './renderer-utils.js';
-import type { RenderingState, ViewportLayout } from './types.js';
+} from './renderer-utils';
+import type {
+  BlockPainterConfig,
+  MessagePaint,
+  MessageRegisterPainter,
+  RendererOptions,
+  RenderingState,
+  TurboRendererConfig,
+  ViewportLayout,
+  WorkerToHostMessage,
+} from './types';
 
 const debug = false; // Toggle for debug logs
-const zoomThreshold = 1; // With high enough zoom, fallback to DOM rendering
-const debounceTime = 1000; // During this period, fallback to DOM
-const workerUrl = new URL('./painter.worker.ts', import.meta.url);
+const workerUrl = new URL('./painter/painter.worker.ts', import.meta.url);
 
-export class ViewportTurboRendererExtension extends LifeCycleWatcher {
+const defaultOptions: RendererOptions = {
+  zoomThreshold: 1, // With high enough zoom, fallback to DOM rendering
+  debounceTime: 1000, // During this period, fallback to DOM
+};
+
+export const BlockPainterConfigIdentifier =
+  createIdentifier<BlockPainterConfig>('block-painter-config');
+
+export const TurboRendererConfigFactory =
+  ConfigExtensionFactory<TurboRendererConfig>('viewport-turbo-renderer');
+
+export class ViewportTurboRendererExtension extends GfxExtension {
+  static override key = 'viewportTurboRenderer';
+
   public state: RenderingState = 'inactive';
   public readonly canvas: HTMLCanvasElement = document.createElement('canvas');
   private readonly worker: Worker = new Worker(workerUrl, { type: 'module' });
@@ -35,8 +54,32 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
   private bitmap: ImageBitmap | null = null;
   private viewportElement: GfxViewportElement | null = null;
 
+  static override extendGfx(gfx: GfxController) {
+    Object.defineProperty(gfx, 'turboRenderer', {
+      get() {
+        return gfx.std.get(ViewportTurboRendererIdentifier);
+      },
+    });
+  }
+
   static override setup(di: Container) {
-    di.addImpl(ViewportTurboRendererIdentifier, this, [StdIdentifier]);
+    super.setup(di);
+  }
+
+  get options(): RendererOptions {
+    const id = TurboRendererConfigFactory.identifier;
+    const { options } = this.std.getOptional(id) || {};
+    return {
+      ...defaultOptions,
+      ...options,
+    };
+  }
+
+  get painterConfigs() {
+    const painterConfigMap = this.std.provider.getAll(
+      BlockPainterConfigIdentifier
+    );
+    return Array.from(painterConfigMap.values());
   }
 
   override mounted() {
@@ -80,6 +123,13 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
     this.disposables.add(
       this.std.store.slots.blockUpdated.subscribe(() => this.invalidate())
     );
+
+    const painterConfigs = this.painterConfigs;
+    const message: MessageRegisterPainter = {
+      type: 'registerPainter',
+      data: { painterConfigs },
+    };
+    this.worker.postMessage(message);
   }
 
   override unmounted() {
@@ -90,10 +140,6 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
     this.canvas.remove();
     this.disposables.dispose();
     this.setState('inactive');
-  }
-
-  get gfx() {
-    return this.std.get(GfxControllerIdentifier);
   }
 
   get viewport() {
@@ -116,7 +162,7 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
 
     this.clearCanvas();
     // -> pending
-    if (this.viewport.zoom > zoomThreshold) {
+    if (this.viewport.zoom > this.options.zoomThreshold) {
       this.debugLog('Zoom above threshold, falling back to DOM rendering');
       this.setState('pending');
       this.clearOptimizedBlocks();
@@ -146,7 +192,7 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
 
   debouncedRefresh = debounce(() => {
     this.refresh().catch(console.error);
-  }, debounceTime);
+  }, this.options.debounceTime);
 
   invalidate() {
     this.layoutVersion++;
@@ -179,7 +225,7 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
       const currentVersion = this.layoutVersion;
 
       this.debugLog(`Requesting bitmap painting (version=${currentVersion})`);
-      this.worker.postMessage({
+      const message: MessagePaint = {
         type: 'paintLayout',
         data: {
           layout,
@@ -189,9 +235,10 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
           zoom: this.viewport.zoom,
           version: currentVersion,
         },
-      });
+      };
+      this.worker.postMessage(message);
 
-      this.worker.onmessage = (e: MessageEvent) => {
+      this.worker.onmessage = (e: MessageEvent<WorkerToHostMessage>) => {
         if (e.data.type === 'bitmapPainted') {
           if (e.data.version === this.layoutVersion) {
             this.debugLog(
@@ -209,6 +256,12 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
             this.setState('pending');
             resolve();
           }
+        } else if (e.data.type === 'paintError') {
+          this.debugLog(
+            `Paint error: ${e.data.error} for blockType: ${e.data.blockType}`
+          );
+          this.setState('pending');
+          resolve();
         }
       };
     });
@@ -267,7 +320,8 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
   }
 
   private canOptimize(): boolean {
-    const isBelowZoomThreshold = this.viewport.zoom <= zoomThreshold;
+    const isBelowZoomThreshold =
+      this.viewport.zoom <= this.options.zoomThreshold;
     return (
       (this.state === 'ready' || this.state === 'zooming') &&
       isBelowZoomThreshold
@@ -297,10 +351,15 @@ export class ViewportTurboRendererExtension extends LifeCycleWatcher {
   }
 
   private paintPlaceholder() {
-    paintPlaceholder(this.canvas, this.layoutCache, this.viewport);
+    paintPlaceholder(
+      this.std.host,
+      this.canvas,
+      this.layoutCache,
+      this.viewport
+    );
   }
 }
 
-export const ViewportTurboRendererIdentifier = LifeCycleWatcherIdentifier(
-  'ViewportTurboRenderer'
-) as ServiceIdentifier<ViewportTurboRendererExtension>;
+export const ViewportTurboRendererIdentifier = GfxExtensionIdentifier(
+  'viewportTurboRenderer'
+);

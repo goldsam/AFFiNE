@@ -148,7 +148,7 @@ const Options = ({
 
   const updateUserRole = useCallback(
     async (userId: string, role: DocRole) => {
-      track.$.sharePanel.$.modifyUserDocRole({ control: role });
+      track.$.sharePanel.$.modifyUserDocRole({ control: 'Update', role });
       try {
         const res = await docGrantedUsersService.updateUserRole(userId, role);
         if (res) {

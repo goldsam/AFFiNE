@@ -5404,6 +5404,14 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.settings.workspace.experimental-features.enable-callout.description"](): string;
     /**
+      * `Embed Iframe Block`
+      */
+    ["com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.name"](): string;
+    /**
+      * `Enables Embed Iframe Block.`
+      */
+    ["com.affine.settings.workspace.experimental-features.enable-embed-iframe-block.description"](): string;
+    /**
       * `Emoji Folder Icon`
       */
     ["com.affine.settings.workspace.experimental-features.enable-emoji-folder-icon.name"](): string;
@@ -6458,6 +6466,10 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.workspace.cloud.account.settings"](): string;
     /**
+      * `Admin panel`
+      */
+    ["com.affine.workspace.cloud.account.admin"](): string;
+    /**
       * `Sign up/ Sign in`
       */
     ["com.affine.workspace.cloud.auth"](): string;
@@ -6541,6 +6553,18 @@ export function useAFFiNEI18N(): {
       * `Yesterday`
       */
     ["com.affine.yesterday"](): string;
+    /**
+      * `Inactive`
+      */
+    ["com.affine.inactive"](): string;
+    /**
+      * `Inactive member`
+      */
+    ["com.affine.inactive-member"](): string;
+    /**
+      * `Inactive workspace`
+      */
+    ["com.affine.inactive-workspace"](): string;
     /**
       * `core`
       */
@@ -6984,12 +7008,9 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.notification.unsupported"](): string;
     /**
-      * `{{username}} mentioned you in {{docTitle}}`
+      * `No new notifications`
       */
-    ["com.affine.notification.mention"](options: Readonly<{
-        username: string;
-        docTitle: string;
-    }>): string;
+    ["com.affine.notification.empty"](): string;
     /**
       * `Tips`
       */
@@ -6998,6 +7019,10 @@ export function useAFFiNEI18N(): {
       * `Template`
       */
     Template(): string;
+    /**
+      * `Delete Template`
+      */
+    ["com.affine.template-list.delete"](): string;
     /**
       * `No template`
       */
@@ -7112,6 +7137,12 @@ export function useAFFiNEI18N(): {
         readonly max: string;
     }): string;
     /**
+      * `Validation error, errors: {{errors}}`
+      */
+    ["error.VALIDATION_ERROR"](options: {
+        readonly errors: string;
+    }): string;
+    /**
       * `User not found.`
       */
     ["error.USER_NOT_FOUND"](): string;
@@ -7154,6 +7185,10 @@ export function useAFFiNEI18N(): {
         status: string;
         body: string;
     }>): string;
+    /**
+      * `Invalid auth state. You might start the auth progress from another device.`
+      */
+    ["error.INVALID_AUTH_STATE"](): string;
     /**
       * `Missing query parameter `{{name}}`.`
       */
@@ -7614,21 +7649,15 @@ export function useAFFiNEI18N(): {
       */
     ["error.NOTIFICATION_NOT_FOUND"](): string;
     /**
-      * `Mention user do not have permission to access space {{spaceId}}.`
+      * `Mentioned user can not access doc {{docId}}.`
       */
-    ["error.MENTION_USER_SPACE_ACCESS_DENIED"](options: {
-        readonly spaceId: string;
+    ["error.MENTION_USER_DOC_ACCESS_DENIED"](options: {
+        readonly docId: string;
     }): string;
     /**
-      * `You cannot mention yourself.`
+      * `You can not mention yourself.`
       */
     ["error.MENTION_USER_ONESELF_DENIED"](): string;
-    /**
-      * `You do not have permission to access notification {{notificationId}}.`
-      */
-    ["error.NOTIFICATION_ACCESS_DENIED"](options: {
-        readonly notificationId: string;
-    }): string;
 } { const { t } = useTranslation(); return useMemo(() => createProxy((key) => t.bind(null, key)), [t]); }
 function createComponent(i18nKey: string) {
     return (props) => createElement(Trans, { i18nKey, shouldUnescape: true, ...props });
@@ -8052,6 +8081,16 @@ export const TypedTrans: {
         readonly workspaceName: string;
     }, {
         ["1"]: JSX.Element;
+    }>>;
+    /**
+      * `<1>{{username}}</1> mentioned you in <2>{{docTitle}}</2>`
+      */
+    ["com.affine.notification.mention"]: ComponentType<TypedTransProps<Readonly<{
+        username: string;
+        docTitle: string;
+    }>, {
+        ["1"]: JSX.Element;
+        ["2"]: JSX.Element;
     }>>;
     /**
       * `Unable to join <1/> <2>{{workspaceName}}</2> due to insufficient seats available.`

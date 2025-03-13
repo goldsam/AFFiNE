@@ -1,19 +1,14 @@
 import type { EditorHost, GfxBlockComponent } from '@blocksuite/block-std';
 import {
-  clientToModelCoord,
   GfxBlockElementModel,
   GfxControllerIdentifier,
   type Viewport,
 } from '@blocksuite/block-std/gfx';
 import { Pane } from 'tweakpane';
 
-import { getSentenceRects, segmentSentences } from './text-utils.js';
-import type { ViewportTurboRendererExtension } from './turbo-renderer.js';
-import type {
-  ParagraphLayout,
-  RenderingState,
-  ViewportLayout,
-} from './types.js';
+import { BlockLayoutHandlersIdentifier } from './layout/block-layout-provider';
+import type { ViewportTurboRendererExtension } from './turbo-renderer';
+import type { BlockLayout, RenderingState, ViewportLayout } from './types';
 
 export function syncCanvasSize(canvas: HTMLCanvasElement, host: HTMLElement) {
   const hostRect = host.getBoundingClientRect();
@@ -28,58 +23,27 @@ export function syncCanvasSize(canvas: HTMLCanvasElement, host: HTMLElement) {
   canvas.style.pointerEvents = 'none';
 }
 
-function getParagraphs(host: EditorHost) {
+function getBlockLayouts(host: EditorHost): BlockLayout[] {
   const gfx = host.std.get(GfxControllerIdentifier);
   const models = gfx.gfxElements.filter(e => e instanceof GfxBlockElementModel);
   const components = models
     .map(model => gfx.view.get(model.id))
     .filter(Boolean) as GfxBlockComponent[];
 
-  const paragraphs: ParagraphLayout[] = [];
-  const selector = '.affine-paragraph-rich-text-wrapper [data-v-text="true"]';
-
+  const layouts: BlockLayout[] = [];
   components.forEach(component => {
-    const paragraphNodes = component.querySelectorAll(selector);
-    const viewportRecord = component.gfx.viewport.deserializeRecord(
-      component.dataset.viewportState
+    const layoutHandlers = host.std.provider.getAll(
+      BlockLayoutHandlersIdentifier
     );
-    if (!viewportRecord) return;
-    const { zoom, viewScale } = viewportRecord;
-
-    paragraphNodes.forEach(paragraphNode => {
-      const paragraph: ParagraphLayout = {
-        sentences: [],
-      };
-      const sentences = segmentSentences(paragraphNode.textContent || '');
-      paragraph.sentences = sentences.map(sentence => {
-        const sentenceRects = getSentenceRects(paragraphNode, sentence);
-        const rects = sentenceRects.map(({ text, rect }) => {
-          const [modelX, modelY] = clientToModelCoord(viewportRecord, [
-            rect.x,
-            rect.y,
-          ]);
-          return {
-            text,
-            ...rect,
-            rect: {
-              x: modelX,
-              y: modelY,
-              w: rect.w / zoom / viewScale,
-              h: rect.h / zoom / viewScale,
-            },
-          };
-        });
-        return {
-          text: sentence,
-          rects,
-        };
-      });
-
-      paragraphs.push(paragraph);
-    });
+    const handlersArray = Array.from(layoutHandlers.values());
+    for (const handler of handlersArray) {
+      const layout = handler.queryLayout(component);
+      if (layout) {
+        layouts.push(layout);
+      }
+    }
   });
-
-  return paragraphs;
+  return layouts;
 }
 
 export function getViewportLayout(
@@ -93,23 +57,28 @@ export function getViewportLayout(
   let layoutMaxX = -Infinity;
   let layoutMaxY = -Infinity;
 
-  const paragraphs = getParagraphs(host);
-  paragraphs.forEach(paragraph => {
-    paragraph.sentences.forEach(sentence => {
-      sentence.rects.forEach(r => {
-        layoutMinX = Math.min(layoutMinX, r.rect.x);
-        layoutMinY = Math.min(layoutMinY, r.rect.y);
-        layoutMaxX = Math.max(layoutMaxX, r.rect.x + r.rect.w);
-        layoutMaxY = Math.max(layoutMaxY, r.rect.y + r.rect.h);
-      });
-    });
+  const blockLayouts = getBlockLayouts(host);
+
+  const providers = host.std.provider.getAll(BlockLayoutHandlersIdentifier);
+  const providersArray = Array.from(providers.values());
+
+  blockLayouts.forEach(blockLayout => {
+    const provider = providersArray.find(p => p.blockType === blockLayout.type);
+    if (!provider) return;
+
+    const { rect } = provider.calculateBound(blockLayout);
+
+    layoutMinX = Math.min(layoutMinX, rect.x);
+    layoutMinY = Math.min(layoutMinY, rect.y);
+    layoutMaxX = Math.max(layoutMaxX, rect.x + rect.w);
+    layoutMaxY = Math.max(layoutMaxY, rect.y + rect.h);
   });
 
   const layoutModelCoord = [layoutMinX, layoutMinY];
   const w = (layoutMaxX - layoutMinX) / zoom / viewport.viewScale;
   const h = (layoutMaxY - layoutMinY) / zoom / viewport.viewScale;
   const layout: ViewportLayout = {
-    paragraphs,
+    blocks: blockLayouts,
     rect: {
       x: layoutModelCoord[0],
       y: layoutModelCoord[1],
@@ -145,6 +114,7 @@ export function debugLog(message: string, state: RenderingState) {
 }
 
 export function paintPlaceholder(
+  host: EditorHost,
   canvas: HTMLCanvasElement,
   layout: ViewportLayout | null,
   viewport: Viewport
@@ -163,30 +133,35 @@ export function paintPlaceholder(
     'rgba(160, 160, 160, 0.7)',
   ];
 
-  layout.paragraphs.forEach((paragraph, paragraphIndex) => {
-    ctx.fillStyle = colors[paragraphIndex % colors.length];
+  const layoutHandlers = host.std.provider.getAll(
+    BlockLayoutHandlersIdentifier
+  );
+  const handlersArray = Array.from(layoutHandlers.values());
+
+  layout.blocks.forEach((blockLayout, blockIndex) => {
+    ctx.fillStyle = colors[blockIndex % colors.length];
     const renderedPositions = new Set<string>();
 
-    paragraph.sentences.forEach(sentence => {
-      sentence.rects.forEach(textRect => {
-        const x =
-          ((textRect.rect.x - layout.rect.x) * viewport.zoom + offsetX) * dpr;
-        const y =
-          ((textRect.rect.y - layout.rect.y) * viewport.zoom + offsetY) * dpr;
-        dpr;
-        const width = textRect.rect.w * viewport.zoom * dpr;
-        const height = textRect.rect.h * viewport.zoom * dpr;
+    const handler = handlersArray.find(h => h.blockType === blockLayout.type);
+    if (!handler) return;
+    const { subRects } = handler.calculateBound(blockLayout);
 
-        const posKey = `${x},${y}`;
-        if (renderedPositions.has(posKey)) return;
-        ctx.fillRect(x, y, width, height);
-        if (width > 10 && height > 5) {
-          ctx.strokeStyle = 'rgba(150, 150, 150, 0.3)';
-          ctx.strokeRect(x, y, width, height);
-        }
+    subRects.forEach(rect => {
+      const x = ((rect.x - layout.rect.x) * viewport.zoom + offsetX) * dpr;
+      const y = ((rect.y - layout.rect.y) * viewport.zoom + offsetY) * dpr;
 
-        renderedPositions.add(posKey);
-      });
+      const width = rect.w * viewport.zoom * dpr;
+      const height = rect.h * viewport.zoom * dpr;
+
+      const posKey = `${x},${y}`;
+      if (renderedPositions.has(posKey)) return;
+      ctx.fillRect(x, y, width, height);
+      if (width > 10 && height > 5) {
+        ctx.strokeStyle = 'rgba(150, 150, 150, 0.3)';
+        ctx.strokeRect(x, y, width, height);
+      }
+
+      renderedPositions.add(posKey);
     });
   });
 }

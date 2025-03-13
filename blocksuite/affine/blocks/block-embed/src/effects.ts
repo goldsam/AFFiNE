@@ -5,6 +5,11 @@ import { EmbedEdgelessGithubBlockComponent } from './embed-github-block/embed-ed
 import { EmbedHtmlBlockComponent } from './embed-html-block';
 import { EmbedHtmlFullscreenToolbar } from './embed-html-block/components/fullscreen-toolbar';
 import { EmbedEdgelessHtmlBlockComponent } from './embed-html-block/embed-edgeless-html-block';
+import { EmbedIframeCreateModal } from './embed-iframe-block/components/embed-iframe-create-modal';
+import { EmbedIframeErrorCard } from './embed-iframe-block/components/embed-iframe-error-card';
+import { EmbedIframeLinkEditPopup } from './embed-iframe-block/components/embed-iframe-link-edit-popup';
+import { EmbedIframeLoadingCard } from './embed-iframe-block/components/embed-iframe-loading-card';
+import { EmbedIframeBlockComponent } from './embed-iframe-block/embed-iframe-block';
 import { EmbedLinkedDocBlockComponent } from './embed-linked-doc-block';
 import { EmbedEdgelessLinkedDocBlockComponent } from './embed-linked-doc-block/embed-edgeless-linked-doc-block';
 import { EmbedLoomBlockComponent } from './embed-loom-block';
@@ -72,6 +77,18 @@ export function effects() {
     'affine-embed-synced-doc-block',
     EmbedSyncedDocBlockComponent
   );
+
+  customElements.define('affine-embed-iframe-block', EmbedIframeBlockComponent);
+  customElements.define(
+    'affine-embed-iframe-create-modal',
+    EmbedIframeCreateModal
+  );
+  customElements.define('embed-iframe-loading-card', EmbedIframeLoadingCard);
+  customElements.define('embed-iframe-error-card', EmbedIframeErrorCard);
+  customElements.define(
+    'embed-iframe-link-edit-popup',
+    EmbedIframeLinkEditPopup
+  );
 }
 
 declare global {
@@ -92,5 +109,10 @@ declare global {
     'affine-embed-edgeless-synced-doc-block': EmbedEdgelessSyncedDocBlockComponent;
     'affine-embed-linked-doc-block': EmbedLinkedDocBlockComponent;
     'affine-embed-edgeless-linked-doc-block': EmbedEdgelessLinkedDocBlockComponent;
+    'affine-embed-iframe-block': EmbedIframeBlockComponent;
+    'affine-embed-iframe-create-modal': EmbedIframeCreateModal;
+    'embed-iframe-loading-card': EmbedIframeLoadingCard;
+    'embed-iframe-error-card': EmbedIframeErrorCard;
+    'embed-iframe-link-edit-popup': EmbedIframeLinkEditPopup;
   }
 }

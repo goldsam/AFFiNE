@@ -432,7 +432,7 @@ jobs:
       REDIS_SERVER_HOST: localhost
     services:
       postgres:
-        image: postgres
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: affine
         options: >-
@@ -521,7 +521,7 @@ jobs:
       REDIS_SERVER_HOST: localhost
     services:
       postgres:
-        image: postgres
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: affine
         options: >-
@@ -617,7 +617,7 @@ jobs:
       - build-server-native
     services:
       postgres:
-        image: postgres
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: affine
         options: >-
@@ -714,7 +714,7 @@ jobs:
               xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- yarn affine @affine-test/affine-desktop-cloud e2e
     services:
       postgres:
-        image: postgres
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: affine
         options: >-

@@ -3,7 +3,12 @@ import type { CookieOptions, Request, Response } from 'express';
 import { assign, pick } from 'lodash-es';
 
 import { Config, MailService, SignUpForbidden } from '../../base';
-import { Models, type User, type UserSession } from '../../models';
+import {
+  Models,
+  type User,
+  type UserFeatureName,
+  type UserSession,
+} from '../../models';
 import { FeatureService } from '../features';
 import type { CurrentUser } from './session';
 
@@ -48,28 +53,42 @@ export class AuthService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     if (this.config.node.dev) {
-      try {
-        const [email, name, password] = ['dev@affine.pro', 'Dev User', 'dev'];
-        let devUser = await this.models.user.getUserByEmail(email);
-        if (!devUser) {
-          devUser = await this.models.user.create({
-            email,
-            name,
-            password,
-          });
+      const devUsers: {
+        email: string;
+        name: string;
+        password: string;
+        features: UserFeatureName[];
+      }[] = [
+        {
+          email: 'dev@affine.pro',
+          name: 'Dev User',
+          password: 'dev',
+          features: ['free_plan_v1', 'unlimited_copilot', 'administrator'],
+        },
+        {
+          email: 'pro@affine.pro',
+          name: 'Pro User',
+          password: 'pro',
+          features: ['pro_plan_v1', 'unlimited_copilot', 'administrator'],
+        },
+      ];
+
+      for (const { email, name, password, features } of devUsers) {
+        try {
+          let devUser = await this.models.user.getUserByEmail(email);
+          if (!devUser) {
+            devUser = await this.models.user.create({
+              email,
+              name,
+              password,
+            });
+          }
+          for (const feature of features) {
+            await this.models.userFeature.add(devUser.id, feature, name);
+          }
+        } catch {
+          // ignore
         }
-        await this.models.userFeature.add(
-          devUser.id,
-          'administrator',
-          'dev user'
-        );
-        await this.models.userFeature.add(
-          devUser.id,
-          'unlimited_copilot',
-          'dev user'
-        );
-      } catch {
-        // ignore
       }
     }
   }

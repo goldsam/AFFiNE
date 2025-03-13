@@ -1,13 +1,15 @@
-import type { Doc as YDoc, YEvent } from 'yjs';
-import { UndoManager } from 'yjs';
+import * as Y from 'yjs';
 
 import type { ProxyOptions } from './types';
 
-export abstract class BaseReactiveYData<T, Y> {
+export abstract class BaseReactiveYData<
+  T,
+  YSource extends Y.AbstractType<any>,
+> {
   protected _getOrigin = (
-    doc: YDoc
+    doc: Y.Doc
   ): {
-    doc: YDoc;
+    doc: Y.Doc;
     proxy: true;
 
     target: BaseReactiveYData<any, any>;
@@ -19,16 +21,24 @@ export abstract class BaseReactiveYData<T, Y> {
     };
   };
 
-  protected _onObserve = (event: YEvent<any>, handler: () => void) => {
+  protected _onObserve = (event: Y.YEvent<any>, handler: () => void) => {
     if (
       event.transaction.origin?.proxy !== true &&
       (!event.transaction.local ||
-        event.transaction.origin instanceof UndoManager)
+        event.transaction.origin instanceof Y.UndoManager)
     ) {
       handler();
     }
 
-    this._options?.onChange?.(this._proxy);
+    const isLocal =
+      !event.transaction.origin ||
+      !this._ySource.doc ||
+      event.transaction.origin instanceof Y.UndoManager ||
+      event.transaction.origin.proxy
+        ? true
+        : event.transaction.origin === this._ySource.doc.clientID;
+
+    this._options?.onChange?.(this._proxy, isLocal);
   };
 
   protected abstract readonly _options?: ProxyOptions<T>;
@@ -41,7 +51,7 @@ export abstract class BaseReactiveYData<T, Y> {
 
   protected readonly _stashed = new Set<string | number>();
 
-  protected _transact = (doc: YDoc, fn: () => void) => {
+  protected _transact = (doc: Y.Doc, fn: () => void) => {
     doc.transact(fn, this._getOrigin(doc));
   };
 
@@ -54,7 +64,7 @@ export abstract class BaseReactiveYData<T, Y> {
     this._skipNext = false;
   };
 
-  protected abstract readonly _ySource: Y;
+  protected abstract readonly _ySource: YSource;
 
   get proxy() {
     return this._proxy;

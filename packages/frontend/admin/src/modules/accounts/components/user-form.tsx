@@ -4,11 +4,12 @@ import { Label } from '@affine/admin/components/ui/label';
 import { Separator } from '@affine/admin/components/ui/separator';
 import { Switch } from '@affine/admin/components/ui/switch';
 import type { FeatureType } from '@affine/graphql';
-import { CheckIcon, ChevronRightIcon, XIcon } from 'lucide-react';
+import { ChevronRightIcon } from 'lucide-react';
 import type { ChangeEvent } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useServerConfig } from '../../common';
+import { RightPanelHeader } from '../../header';
 import type { UserInput, UserType } from '../schema';
 import { useCreateUser, useUpdateUser } from './use-user-management';
 
@@ -92,29 +93,12 @@ function UserForm({
 
   return (
     <div className="flex flex-col h-full gap-1">
-      <div className=" flex justify-between items-center py-[10px] px-6">
-        <Button
-          type="button"
-          size="icon"
-          className="w-7 h-7"
-          variant="ghost"
-          onClick={handleClose}
-        >
-          <XIcon size={20} />
-        </Button>
-        <span className="text-base font-medium">{title}</span>
-        <Button
-          type="submit"
-          size="icon"
-          className="w-7 h-7"
-          variant="ghost"
-          onClick={handleConfirm}
-          disabled={!canSave}
-        >
-          <CheckIcon size={20} />
-        </Button>
-      </div>
-      <Separator />
+      <RightPanelHeader
+        title={title}
+        handleClose={handleClose}
+        handleConfirm={handleConfirm}
+        canSave={canSave}
+      />
       <div className="p-4 flex-grow overflow-y-auto space-y-[10px]">
         <div className="flex flex-col rounded-md border py-4 gap-4">
           <InputItem

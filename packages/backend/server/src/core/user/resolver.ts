@@ -191,6 +191,9 @@ class UserImportFailedType {
 const UserImportResultType = createUnionType({
   name: 'UserImportResultType',
   types: () => [UserType, UserImportFailedType],
+  resolveType: val => {
+    return 'error' in val ? UserImportFailedType : UserType;
+  },
 });
 
 @Admin()

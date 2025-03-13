@@ -34,6 +34,31 @@ export type StoreOptions = {
   extensions?: ExtensionType[];
 };
 
+export type BlockUpdatedPayload =
+  | {
+      type: 'add';
+      id: string;
+      isLocal: boolean;
+      init: boolean;
+      flavour: string;
+      model: BlockModel;
+    }
+  | {
+      type: 'delete';
+      id: string;
+      isLocal: boolean;
+      flavour: string;
+      parent: string;
+      model: BlockModel;
+    }
+  | {
+      type: 'update';
+      id: string;
+      isLocal: boolean;
+      flavour: string;
+      props: { key: string };
+    };
+
 const internalExtensions = [StoreSelectionExtension];
 
 export class Store {
@@ -76,28 +101,7 @@ export class Store {
      */
     rootAdded: Subject<string>;
     rootDeleted: Subject<string>;
-    blockUpdated: Subject<
-      | {
-          type: 'add';
-          id: string;
-          init: boolean;
-          flavour: string;
-          model: BlockModel;
-        }
-      | {
-          type: 'delete';
-          id: string;
-          flavour: string;
-          parent: string;
-          model: BlockModel;
-        }
-      | {
-          type: 'update';
-          id: string;
-          flavour: string;
-          props: { key: string };
-        }
-    >;
+    blockUpdated: Subject<BlockUpdatedPayload>;
   };
 
   updateBlock: {
@@ -357,7 +361,7 @@ export class Store {
       if (id in this._blocks.peek()) {
         return;
       }
-      this._onBlockAdded(id, true);
+      this._onBlockAdded(id, false, true);
     });
 
     this._subscribeToSlots();
@@ -365,31 +369,18 @@ export class Store {
 
   private readonly _subscribeToSlots = () => {
     this.disposableGroup.add(
-      this._doc.slots.yBlockUpdated.subscribe(
-        ({ type, id }: { type: string; id: string }) => {
-          switch (type) {
-            case 'add': {
-              this._onBlockAdded(id);
-              return;
-            }
-            case 'delete': {
-              this._onBlockRemoved(id);
-              return;
-            }
-            case 'update': {
-              const block = this.getBlock(id);
-              if (!block) return;
-              this.slots.blockUpdated.next({
-                type: 'update',
-                id,
-                flavour: block.flavour,
-                props: { key: 'content' },
-              });
-              return;
-            }
+      this._doc.slots.yBlockUpdated.subscribe(({ type, id, isLocal }) => {
+        switch (type) {
+          case 'add': {
+            this._onBlockAdded(id, isLocal, false);
+            return;
+          }
+          case 'delete': {
+            this._onBlockRemoved(id, isLocal);
+            return;
           }
         }
-      )
+      })
     );
     this.disposableGroup.add(this.slots.ready);
     this.disposableGroup.add(this.slots.blockUpdated);
@@ -414,7 +405,7 @@ export class Store {
     return fn(parent, index);
   }
 
-  private _onBlockAdded(id: string, init = false) {
+  private _onBlockAdded(id: string, isLocal: boolean, init: boolean) {
     try {
       if (id in this._blocks.peek()) {
         return;
@@ -426,7 +417,7 @@ export class Store {
       }
 
       const options: BlockOptions = {
-        onChange: (block, key) => {
+        onChange: (block, key, isLocal) => {
           if (key) {
             block.model.propsUpdated.next({ key });
           }
@@ -436,6 +427,7 @@ export class Store {
             id,
             flavour: block.flavour,
             props: { key },
+            isLocal,
           });
         },
       };
@@ -459,6 +451,7 @@ export class Store {
         init,
         flavour: block.model.flavour,
         model: block.model,
+        isLocal,
       });
     } catch (e) {
       console.error('An error occurred while adding block:');
@@ -466,7 +459,7 @@ export class Store {
     }
   }
 
-  private _onBlockRemoved(id: string) {
+  private _onBlockRemoved(id: string, isLocal: boolean) {
     try {
       const block = this.getBlock(id);
       if (!block) return;
@@ -481,6 +474,7 @@ export class Store {
         flavour: block.flavour,
         parent: this.getParent(block.model)?.id ?? '',
         model: block.model,
+        isLocal,
       });
 
       const { [id]: _, ...blocks } = this._blocks.peek();

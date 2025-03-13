@@ -22,7 +22,7 @@ const keyWithoutPrefix = (key: string) => key.replace(/(prop|sys):/, '');
 const keyWithPrefix = (key: string) =>
   SYS_KEYS.has(key) ? `sys:${key}` : `prop:${key}`;
 
-type OnChange = (key: string) => void;
+type OnChange = (key: string, isLocal: boolean) => void;
 type Transform = (key: string, value: unknown, origin: unknown) => unknown;
 
 type CreateProxyOptions = {
@@ -119,7 +119,7 @@ function createProxy(
               }
               byPassSignalUpdate(() => {
                 proxy[p] = next;
-                onChange?.(firstKey);
+                onChange?.(firstKey, true);
               });
             });
             const subscription = onDispose.subscribe(() => {
@@ -139,7 +139,7 @@ function createProxy(
                   : prev;
             // @ts-expect-error allow magic props
             root[signalKey].value = next;
-            onChange?.(firstKey);
+            onChange?.(firstKey, true);
           });
         };
 
@@ -162,7 +162,7 @@ function createProxy(
                   list.push(() => {
                     if (value instanceof Text || Boxed.is(value)) {
                       value.bind(() => {
-                        onChange?.(firstKey);
+                        onChange?.(firstKey, true);
                       });
                     }
                     yMap.set(keyWithPrefix(fullPath), native2Y(value));
@@ -197,7 +197,7 @@ function createProxy(
 
         if (value instanceof Text || Boxed.is(value)) {
           value.bind(() => {
-            onChange?.(firstKey);
+            onChange?.(firstKey, true);
           });
         }
         const yValue = native2Y(value);
@@ -251,7 +251,7 @@ function createProxy(
                   : prev;
             // @ts-expect-error allow magic props
             root[signalKey].value = next;
-            onChange?.(firstKey);
+            onChange?.(firstKey, true);
           });
         };
 
@@ -324,6 +324,7 @@ export class ReactiveFlatYMap extends BaseReactiveYData<
               return acc[key] as UnRecord;
             }, proxy as UnRecord);
           });
+          this._onChange?.(firstKey, false);
           return;
         }
         if (type.action === 'delete') {
@@ -390,8 +391,8 @@ export class ReactiveFlatYMap extends BaseReactiveYData<
   };
 
   private readonly _getPropOnChange = (key: string) => {
-    return () => {
-      this._onChange?.(key);
+    return (_: unknown, isLocal: boolean) => {
+      this._onChange?.(key, isLocal);
     };
   };
 
@@ -485,7 +486,7 @@ export class ReactiveFlatYMap extends BaseReactiveYData<
         }
         this._updateWithSkip(() => {
           proxy[key] = next;
-          this._onChange?.(key);
+          this._onChange?.(key, true);
         });
       });
       const subscription = _onDispose.subscribe(() => {

@@ -2,6 +2,7 @@
 
 @import 'tailwindcss';
 @import 'tailwindcss/utilities';
+@import '@toeverything/theme/style.css';
 
 @plugin 'tailwindcss-animate';
 

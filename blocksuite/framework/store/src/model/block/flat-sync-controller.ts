@@ -25,7 +25,7 @@ export class FlatSyncController {
     readonly schema: Schema,
     readonly yBlock: YBlock,
     readonly doc?: Store,
-    readonly onChange?: (key: string) => void
+    readonly onChange?: (key: string, isLocal: boolean) => void
   ) {
     const { id, flavour, version, yChildren, props } = this._parseYBlock();
 

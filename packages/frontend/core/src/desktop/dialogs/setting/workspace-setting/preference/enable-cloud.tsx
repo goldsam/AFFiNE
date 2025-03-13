@@ -49,6 +49,7 @@ export const EnableCloudPanel = ({
       style={{
         padding: '10px',
         background: 'var(--affine-background-secondary-color)',
+        marginTop: '24px',
       }}
     >
       <Button

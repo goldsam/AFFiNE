@@ -5,6 +5,7 @@ import { DividerBlockPlainTextAdapterExtension } from '@blocksuite/affine-block-
 import {
   EmbedFigmaBlockPlainTextAdapterExtension,
   EmbedGithubBlockPlainTextAdapterExtension,
+  EmbedIframeBlockPlainTextAdapterExtension,
   EmbedLinkedDocBlockPlainTextAdapterExtension,
   EmbedLoomBlockPlainTextAdapterExtension,
   EmbedSyncedDocBlockPlainTextAdapterExtension,
@@ -27,6 +28,7 @@ export const defaultBlockPlainTextAdapterMatchers: ExtensionType[] = [
   EmbedYoutubeBlockPlainTextAdapterExtension,
   EmbedLinkedDocBlockPlainTextAdapterExtension,
   EmbedSyncedDocBlockPlainTextAdapterExtension,
+  EmbedIframeBlockPlainTextAdapterExtension,
   LatexBlockPlainTextAdapterExtension,
   DatabaseBlockPlainTextAdapterExtension,
 ];

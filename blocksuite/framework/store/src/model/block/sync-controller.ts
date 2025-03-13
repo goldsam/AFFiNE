@@ -42,6 +42,13 @@ export class SyncController {
         if (!type) {
           return;
         }
+        const isLocal =
+          !this.yBlock.doc ||
+          !event.transaction.origin ||
+          event.transaction.origin instanceof Y.UndoManager ||
+          event.transaction.origin.proxy
+            ? true
+            : event.transaction.origin === this.yBlock.doc.clientID;
         if (type.action === 'update' || type.action === 'add') {
           const value = this.yBlock.get(key);
           const keyName = key.replace('prop:', '');
@@ -57,7 +64,7 @@ export class SyncController {
               }
             });
           });
-          this.onChange?.(keyName);
+          this.onChange?.(keyName, isLocal);
           return;
         }
         if (type.action === 'delete') {
@@ -70,7 +77,7 @@ export class SyncController {
               this.model[`${keyName}$`].value = undefined;
             }
           });
-          this.onChange?.(keyName);
+          this.onChange?.(keyName, isLocal);
           return;
         }
       });
@@ -105,7 +112,7 @@ export class SyncController {
     readonly schema: Schema,
     readonly yBlock: YBlock,
     readonly doc?: Store,
-    readonly onChange?: (key: string) => void
+    readonly onChange?: (key: string, isLocal: boolean) => void
   ) {
     const { id, flavour, version, yChildren, props } = this._parseYBlock();
 
@@ -178,7 +185,7 @@ export class SyncController {
           if (this._stashed.has(p)) {
             setValue(target, p, value);
             const result = Reflect.set(target, p, value, receiver);
-            this.onChange?.(p);
+            this.onChange?.(p, true);
             return result;
           }
 
@@ -222,8 +229,8 @@ export class SyncController {
 
   private _getPropsProxy(name: string, value: unknown) {
     return createYProxy(value, {
-      onChange: () => {
-        this.onChange?.(name);
+      onChange: (_, isLocal) => {
+        this.onChange?.(name, isLocal);
         const signalKey = `${name}$`;
         if (signalKey in this.model) {
           this._mutex(() => {
@@ -344,12 +351,12 @@ export class SyncController {
               },
               set: (target, p, value, receiver) => {
                 const result = Reflect.set(target, p, value, receiver);
-                this.onChange?.(prop);
+                this.onChange?.(prop, true);
                 return result;
               },
               deleteProperty: (target, p) => {
                 const result = Reflect.deleteProperty(target, p);
-                this.onChange?.(prop);
+                this.onChange?.(prop, true);
                 return result;
               },
             });
@@ -365,12 +372,12 @@ export class SyncController {
                   return Reflect.set(target, p, value, receiver);
                 }
                 const result = Reflect.set(target, p, value, receiver);
-                this.onChange?.(prop);
+                this.onChange?.(prop, true);
                 return result;
               },
               deleteProperty: (target, p) => {
                 const result = Reflect.deleteProperty(target, p);
-                this.onChange?.(p as string);
+                this.onChange?.(p as string, true);
                 return result;
               },
             });

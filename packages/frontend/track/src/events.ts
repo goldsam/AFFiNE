@@ -443,14 +443,6 @@ type AttachmentEventArgs = {
   type: string; // file type
 };
 
-type DocRoleControlType =
-  | 'Owner'
-  | 'Editor'
-  | 'Manager'
-  | 'Reader'
-  | 'External'
-  | 'Remove';
-
 type TabActionControlType =
   | 'click'
   | 'dnd'
@@ -546,12 +538,8 @@ export type EventArgs = {
   openAttachmentInNewTab: AttachmentEventArgs;
   openAttachmentInPeekView: AttachmentEventArgs;
   openAttachmentInSplitView: AttachmentEventArgs;
-  modifyUserDocRole: {
-    control: DocRoleControlType;
-  };
-  modifyDocDefaultRole: {
-    control: DocRoleControlType;
-  };
+  modifyUserDocRole: { role: string };
+  modifyDocDefaultRole: { role: string };
   inviteUserDocRole: {
     control: 'member list';
   };

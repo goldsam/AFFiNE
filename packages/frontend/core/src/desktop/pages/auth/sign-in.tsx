@@ -46,6 +46,9 @@ export const SignIn = ({
     (status: AuthSessionStatus) => {
       if (status === 'authenticated') {
         if (redirectUrl) {
+          if (redirectUrl.toUpperCase() === 'CLOSE_POPUP') {
+            window.close();
+          }
           navigate(redirectUrl, {
             replace: true,
           });

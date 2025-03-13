@@ -15,5 +15,5 @@ export type TransformOptions = {
 };
 
 export type ProxyOptions<T> = {
-  onChange?: (data: T) => void;
+  onChange?: (data: T, isLocal: boolean) => void;
 };

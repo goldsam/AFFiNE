@@ -88,4 +88,15 @@ export interface FileChip extends BaseChip {
   fileType: string;
 }
 
+export interface TagChip extends BaseChip {
+  tagId: string;
+  tagName: string;
+  tagColor: string;
+}
+
+export interface CollectionChip extends BaseChip {
+  collectionId: string;
+  collectionName: string;
+}
+
 export type ChatChip = DocChip | FileChip;

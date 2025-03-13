@@ -1,9 +1,9 @@
 import { Button } from '@affine/component';
+import { AuthHeader } from '@affine/component/auth-components';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
-import { useNavigateHelper } from '@affine/core/components/hooks/use-navigate-helper';
 import { useWorkspaceName } from '@affine/core/components/hooks/use-workspace-info';
 import { WorkspaceSelector } from '@affine/core/components/workspace-selector';
-import { AuthService } from '@affine/core/modules/cloud';
+import { AuthService, ServerService } from '@affine/core/modules/cloud';
 import {
   type ClipperInput,
   ImportClipperService,
@@ -16,7 +16,7 @@ import { useI18n } from '@affine/i18n';
 import { AllDocsIcon } from '@blocksuite/icons/rc';
 import { LiveData, useLiveData, useService } from '@toeverything/infra';
 import { cssVar } from '@toeverything/theme';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as styles from './style.css';
 
@@ -36,7 +36,6 @@ export const Component = () => {
   const t = useI18n();
   const session = useService(AuthService).session;
   const notLogin = useLiveData(session.status$) === 'unauthenticated';
-  const isSessionRevalidating = useLiveData(session.isRevalidating$);
 
   const [importing, setImporting] = useState(false);
   const [importingError, setImportingError] = useState<any>(null);
@@ -44,16 +43,22 @@ export const Component = () => {
   const [clipperInputSnapshot, setClipperInputSnapshot] =
     useState<ClipperInput | null>(null);
   const isMissingInput = !clipperInputSnapshot;
+  const workspaceStrategy = clipperInputSnapshot?.workspace ?? 'select-by-user';
+  const serverService = useService(ServerService);
   const workspacesService = useService(WorkspacesService);
+  const serverConfig = useLiveData(serverService.server.config$);
   const workspaces = useLiveData(workspacesService.list.workspaces$);
   const [rawSelectedWorkspace, setSelectedWorkspace] =
     useState<WorkspaceMetadata | null>(null);
+  const [lastOpenedWorkspaceId] = useState(() =>
+    localStorage.getItem('last_workspace_id')
+  );
   const selectedWorkspace =
     rawSelectedWorkspace ??
+    workspaces.find(w => w.id === lastOpenedWorkspaceId) ??
     workspaces.find(w => w.flavour !== 'local') ??
     workspaces.at(0);
   const selectedWorkspaceName = useWorkspaceName(selectedWorkspace);
-  const { jumpToSignIn } = useNavigateHelper();
 
   const noWorkspace = workspaces.length === 0;
 
@@ -64,12 +69,6 @@ export const Component = () => {
   useEffect(() => {
     session.revalidate();
   }, [session]);
-
-  useEffect(() => {
-    if (!isSessionRevalidating && notLogin) {
-      jumpToSignIn('/clipper/import');
-    }
-  }, [isSessionRevalidating, jumpToSignIn, notLogin]);
 
   useEffect(() => {
     if (!clipperInputSnapshot) {
@@ -99,6 +98,9 @@ export const Component = () => {
           selectedWorkspace,
           clipperInputSnapshot
         );
+        window.postMessage({
+          type: 'affine-clipper:import:success',
+        });
         window.close();
       } catch (err) {
         setImportingError(err);
@@ -119,6 +121,9 @@ export const Component = () => {
         'Workspace',
         clipperInputSnapshot
       );
+      window.postMessage({
+        type: 'affine-clipper:import:success',
+      });
       window.close();
     } catch (err) {
       setImportingError(err);
@@ -127,7 +132,69 @@ export const Component = () => {
     }
   }, [clipperInputSnapshot, importClipperService]);
 
+  const handleClickSignIn = useCallback(() => {
+    window.open(
+      `/sign-in?redirect_uri=${encodeURIComponent('CLOSE_POPUP')}`,
+      '_blank',
+      'popup'
+    );
+  }, []);
+
+  const autoImportTriggered = useRef(false);
+
+  useEffect(() => {
+    if (isMissingInput) {
+      return;
+    }
+    // use ref to avoid multiple auto import
+    // and make sure the following code only runs once
+    if (autoImportTriggered.current) {
+      return;
+    }
+    autoImportTriggered.current = true;
+
+    // if not login, we don't auto import
+    if (notLogin) {
+      return;
+    }
+
+    // if the workspace strategy is last-open-workspace, we automatically click the import button
+    if (
+      workspaceStrategy === 'last-open-workspace' &&
+      selectedWorkspace?.id === lastOpenedWorkspaceId
+    ) {
+      handleImportToSelectedWorkspace();
+    }
+  }, [
+    workspaceStrategy,
+    selectedWorkspace,
+    handleImportToSelectedWorkspace,
+    lastOpenedWorkspaceId,
+    isMissingInput,
+    notLogin,
+  ]);
+
   const disabled = isMissingInput || importing || notLogin;
+
+  if (notLogin) {
+    // not login
+    return (
+      <div className={styles.container}>
+        <AuthHeader
+          className={styles.authHeader}
+          title={t['com.affine.auth.sign.in']()}
+          subTitle={serverConfig.serverName}
+        />
+        <Button
+          className={styles.mainButton}
+          variant="primary"
+          onClick={handleClickSignIn}
+        >
+          {t['com.affine.auth.sign.in']()}
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

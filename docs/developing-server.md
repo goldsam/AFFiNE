@@ -51,11 +51,23 @@ yarn affine server data-migration run
 yarn affine server dev
 ```
 
-when server started, it will created a default user for testing:
+when server started, it will created a default user and a pro user for testing:
+
+### default user
+
+Workspace members up to 3
 
 - email: dev@affine.pro
 - name: Dev User
 - password: dev
+
+### pro user
+
+Workspace members up to 10
+
+- email: pro@affine.pro
+- name: Pro User
+- password: pro
 
 ## Start frontend
 
