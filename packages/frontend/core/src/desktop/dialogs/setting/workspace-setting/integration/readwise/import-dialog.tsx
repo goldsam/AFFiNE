@@ -65,7 +65,7 @@ export const ImportDialog = ({ onClose }: { onClose: () => void }) => {
       const signal = abortController.signal;
 
       readwise
-        .highlightsToAffineDocs(selectedHighlights, books, {
+        .highlightsToAffineDocs(selectedHighlights.reverse(), books, {
           signal,
           onProgress: setImportProgress,
           onComplete: () => {

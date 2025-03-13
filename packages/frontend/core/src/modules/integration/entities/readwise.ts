@@ -43,19 +43,13 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
     const token = this.readwiseStore.getSetting('token');
     if (!token) return [];
 
-    const userId = this.readwiseStore.getUserId();
     const integrationId = await encryptPBKDF2(token);
 
     return this.integrationRefStore
-      .getIntegrationDocs({
-        type: 'readwise',
-        userId,
-        integrationId,
-      })
+      .getRefs({ type: 'readwise', integrationId })
       .map(ref => ({
         ...ref,
         refMeta: ref.refMeta as ReadwiseRefMeta,
-        docId: ref.id,
       }));
   }
 
@@ -191,7 +185,7 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
             const localRef = localRefsMap.get(highlight.id);
             const refMeta = localRef?.refMeta;
             const localUpdatedAt = refMeta?.updatedAt;
-            const localDocId = localRef?.docId;
+            const localDocId = localRef?.id;
             // write if not matched
             if (localUpdatedAt !== highlight.updated_at && !signal?.aborted) {
               await this.highlightToAffineDoc(highlight, book, localDocId, {
@@ -224,20 +218,21 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
       updateStrategy?: ReadwiseConfig['updateStrategy'];
     }
   ) {
-    const { updateStrategy, integrationId, userId } = options;
+    const { updateStrategy, integrationId } = options;
     const { text, ...highlightWithoutText } = highlight;
 
-    const record = await this.writer.writeDoc({
+    const writtenDocId = await this.writer.writeDoc({
       content: text,
       title: book.title,
       docId,
+      comment: highlight.note,
       updateStrategy,
     });
 
     // write failed
-    if (!record) return;
+    if (!writtenDocId) return;
 
-    const { doc, release } = this.docsService.open(record.id);
+    const { doc, release } = this.docsService.open(writtenDocId);
     const integrationPropertyService = doc.scope.get(
       IntegrationPropertyService
     );
@@ -250,10 +245,9 @@ export class ReadwiseIntegration extends Entity<{ writer: IntegrationWriter }> {
     release();
 
     // update integration ref
-    this.integrationRefStore.updateRef(doc.id, {
+    this.integrationRefStore.createRef(doc.id, {
       type: 'readwise',
       integrationId,
-      userId,
       refMeta: {
         highlightId: highlight.id,
         updatedAt: highlight.updated_at,
