@@ -275,7 +275,6 @@ class FileCellManager {
   };
 
   uploadFile = (file: File): void => {
-    console.log('uploadFile', file);
     if (!this.fileUploadManager) {
       return;
     }
