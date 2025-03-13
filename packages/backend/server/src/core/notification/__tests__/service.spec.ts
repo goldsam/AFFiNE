@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { mock } from 'node:test';
 
 import ava, { TestFn } from 'ava';
+import Sinon from 'sinon';
 
 import {
   createTestingModule,
+  sleep,
   type TestingModule,
 } from '../../../__tests__/utils';
-import { NotificationNotFound } from '../../../base';
+import { MailService, NotificationNotFound } from '../../../base';
 import {
   DocMode,
   MentionNotificationBody,
@@ -23,6 +25,7 @@ interface Context {
   notificationService: NotificationService;
   models: Models;
   docReader: DocReader;
+  mailer: MailService;
 }
 
 const test = ava as TestFn<Context>;
@@ -33,6 +36,7 @@ test.before(async t => {
   t.context.notificationService = module.get(NotificationService);
   t.context.models = module.get(Models);
   t.context.docReader = module.get(DocReader);
+  t.context.mailer = module.get(MailService);
 });
 
 let owner: User;
@@ -336,4 +340,50 @@ test('should raw doc title in mention notification if no doc found', async t => 
   const body2 = mention2.body as MentionNotificationBody;
   t.is(body2.doc.title, 'doc-title-1');
   t.is(body2.doc.mode, DocMode.page);
+});
+
+test('should send mention email by user setting', async t => {
+  const { notificationService, mailer } = t.context;
+  const docId = randomUUID();
+  const sendSpy = Sinon.spy(mailer, 'sendMentionMail');
+  const notification = await notificationService.createMention({
+    userId: member.id,
+    body: {
+      workspaceId: workspace.id,
+      createdByUserId: owner.id,
+      doc: {
+        id: docId,
+        title: 'doc-title-1',
+        blockId: 'block-id-1',
+        mode: DocMode.page,
+      },
+    },
+  });
+  t.truthy(notification);
+  // wait for email send in background
+  await sleep(50);
+  // should send mention email
+  t.is(sendSpy.callCount, 1);
+
+  // update user setting to not receive mention email
+  await t.context.models.userSetting.set(member.id, {
+    receiveMentionEmail: false,
+  });
+  await notificationService.createMention({
+    userId: member.id,
+    body: {
+      workspaceId: workspace.id,
+      createdByUserId: owner.id,
+      doc: {
+        id: docId,
+        title: 'doc-title-2',
+        blockId: 'block-id-2',
+        mode: DocMode.page,
+      },
+    },
+  });
+  await sleep(50);
+  // should not send mention email
+  t.is(sendSpy.callCount, 1);
+  sendSpy.restore();
 });

@@ -13,6 +13,7 @@ import {
   renderMemberInvitationMail,
   renderMemberLeaveMail,
   renderMemberRemovedMail,
+  renderMentionMail,
   renderOwnershipReceivedMail,
   renderOwnershipTransferredMail,
   renderSetPasswordMail,
@@ -190,4 +191,7 @@ export class MailService {
   );
   sendTeamExpiredMail = this.makeWorkspace(renderTeamWorkspaceExpiredMail);
   sendTeamLicenseMail = this.make(renderTeamLicenseMail);
+
+  // =================== Doc Mails ===================
+  sendMentionMail = this.make(renderMentionMail);
 }

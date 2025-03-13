@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-import { NotificationNotFound, PaginationInput } from '../../base';
+import {
+  MailService,
+  NotificationNotFound,
+  PaginationInput,
+  URLHelper,
+} from '../../base';
 import {
   InvitationNotificationCreate,
   MentionNotification,
@@ -12,6 +17,7 @@ import {
 } from '../../models';
 import { DocReader } from '../doc';
 import { WorkspaceBlobStorage } from '../storage';
+import { generateDocPath } from '../utils/doc';
 
 @Injectable()
 export class NotificationService {
@@ -20,7 +26,9 @@ export class NotificationService {
   constructor(
     private readonly models: Models,
     private readonly docReader: DocReader,
-    private readonly workspaceBlobStorage: WorkspaceBlobStorage
+    private readonly workspaceBlobStorage: WorkspaceBlobStorage,
+    private readonly mailer: MailService,
+    private readonly url: URLHelper
   ) {}
 
   async cleanExpiredNotifications() {
@@ -28,7 +36,52 @@ export class NotificationService {
   }
 
   async createMention(input: MentionNotificationCreate) {
-    return await this.models.notification.createMention(input);
+    const notification = await this.models.notification.createMention(input);
+    // send email in background
+    this.sendMentionEmail(input).catch(err => {
+      this.logger.error(
+        `Failed to send mention email to user ${input.userId}`,
+        err
+      );
+    });
+    return notification;
+  }
+
+  private async sendMentionEmail(input: MentionNotificationCreate) {
+    const userSetting = await this.models.userSetting.get(input.userId);
+    if (userSetting.receiveMentionEmail) {
+      const receiver = await this.models.user.getWorkspaceUser(input.userId);
+      if (!receiver) {
+        return;
+      }
+      const user = await this.models.user.getWorkspaceUser(
+        input.body.createdByUserId
+      );
+      if (!user) {
+        return;
+      }
+      const doc = await this.models.doc.getMeta(
+        input.body.workspaceId,
+        input.body.doc.id
+      );
+      const title = doc?.title ?? input.body.doc.title;
+      const url = this.url.link(
+        generateDocPath({
+          workspaceId: input.body.workspaceId,
+          docId: input.body.doc.id,
+          mode: input.body.doc.mode,
+          blockId: input.body.doc.blockId,
+          elementId: input.body.doc.elementId,
+        })
+      );
+      await this.mailer.sendMentionMail(receiver.email, {
+        user,
+        doc: {
+          title,
+          url,
+        },
+      });
+    }
   }
 
   async createInvitation(input: InvitationNotificationCreate) {

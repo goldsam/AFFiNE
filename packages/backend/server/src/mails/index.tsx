@@ -1,5 +1,6 @@
 import { render as rawRender } from '@react-email/components';
 
+import { Mention } from './docs';
 import {
   TeamBecomeAdmin,
   TeamBecomeCollaborator,
@@ -180,4 +181,10 @@ export const renderTeamWorkspaceExpiredMail = make(
 export const renderTeamLicenseMail = make(
   TeamLicense,
   'Your AFFiNE Self-Hosted Team Workspace license is ready'
+);
+
+// ================ Doc ================
+export const renderMentionMail = make(
+  Mention,
+  props => `${props.user.email} mentioned you in ${props.doc.title}`
 );
