@@ -1,7 +1,6 @@
-import { notify, Popover, uniReactRoot } from '@affine/component';
+import { Popover, uniReactRoot } from '@affine/component';
 import { Button } from '@affine/component/ui/button';
 import { Menu, MenuItem } from '@affine/component/ui/menu';
-import { Upload } from '@affine/core/components/pure/file-upload';
 import {
   type Cell,
   type CellRenderProps,
@@ -9,6 +8,7 @@ import {
   type DataViewCellLifeCycle,
   HostContextKey,
 } from '@blocksuite/affine/blocks/database';
+import { openFileOrFiles } from '@blocksuite/affine/shared/utils';
 import type { BlobEngine } from '@blocksuite/affine/sync';
 import {
   DeleteIcon,
@@ -49,11 +49,13 @@ interface FileUploadProgress {
   name: string;
   progress: number;
 }
+
 interface FileLoadData {
   blob: Blob;
   url: string;
   fileType?: FileTypeResult;
 }
+
 class FileUploadManager {
   private readonly uploadProgressMap: Map<string, Signal<FileUploadProgress>> =
     new Map();
@@ -131,7 +133,7 @@ class FileUploadManager {
     return this.blobSync?.get(blobId);
   }
 
-  getFileUrl(blobId: string): ReadonlySignal<FileLoadData | undefined> {
+  getFileInfo(blobId: string): ReadonlySignal<FileLoadData | undefined> {
     let fileLoadData = this.fileLoadMap.get(blobId);
     if (fileLoadData) {
       return fileLoadData;
@@ -286,21 +288,16 @@ class FileCellManager {
 
     const fileId = this.fileUploadManager.uploadFile(file, blobId => {
       if (blobId) {
-        if (this.doneFiles.value[blobId]) {
-          notify.error({
-            title: 'File already exists',
-            message: 'The file has already been uploaded',
-          });
-        } else {
-          this.cell.valueSet({
-            ...this.cell.value$.value,
-            [blobId]: {
-              name: file.name,
-              id: blobId,
-              order,
-            },
-          });
-        }
+        this.cell.valueSet({
+          ...this.cell.value$.value,
+          [blobId]: {
+            name: file.name,
+            id: blobId,
+            order,
+            mime: this.fileUploadManager?.getFileInfo(blobId).value?.fileType
+              ?.mime,
+          },
+        });
       }
       this.removeFile(tempFile);
     });
@@ -366,15 +363,23 @@ const FileCellComponent: ForwardRefRenderFunction<
     if (fileList.length === 0) {
       return (
         <div className={styles.uploadPopoverContainer}>
-          <Upload
-            fileChange={file => {
-              manager.uploadFile(file);
+          <Button
+            onClick={() => {
+              openFileOrFiles({ multiple: true })
+                .then(files => {
+                  files?.forEach(file => {
+                    manager.uploadFile(file);
+                  });
+                })
+                .catch(e => {
+                  console.error(e);
+                });
             }}
+            variant="primary"
+            className={styles.uploadButton}
           >
-            <Button variant="primary" className={styles.uploadButton}>
-              Choose a file
-            </Button>
-          </Upload>
+            Choose a file
+          </Button>
 
           <div className={styles.fileInfoContainer}>
             <div className={styles.fileSizeInfo}>
@@ -404,16 +409,23 @@ const FileCellComponent: ForwardRefRenderFunction<
           ))}
         </div>
         <div className={styles.uploadContainer}>
-          <Upload
-            fileChange={file => {
-              manager.uploadFile(file);
+          <div
+            onClick={() => {
+              openFileOrFiles({ multiple: true })
+                .then(files => {
+                  files?.forEach(file => {
+                    manager.uploadFile(file);
+                  });
+                })
+                .catch(e => {
+                  console.error(e);
+                });
             }}
+            className={styles.uploadButtonStyle}
           >
-            <div className={styles.uploadButtonStyle}>
-              <PlusIcon width={20} height={20} />
-              <span>Add a file or image</span>
-            </div>
-          </Upload>
+            <PlusIcon width={20} height={20} />
+            <span>Add a file or image</span>
+          </div>
         </div>
       </div>
     );
@@ -450,14 +462,17 @@ const FileCellComponent: ForwardRefRenderFunction<
 const useFilePreview = (
   file: FileItemRenderType,
   fileUploadManager?: FileUploadManager
-) => {
+): {
+  preview: ReactNode;
+  fileType: 'uploading' | 'loading' | 'image' | 'file';
+} => {
   const uploadProgress = useSignalValue(
     file.type === 'uploading'
       ? fileUploadManager?.getUploadProgress(file.id)
       : undefined
   );
   const loadFileData = useSignalValue(
-    file.type === 'done' ? fileUploadManager?.getFileUrl(file.id) : undefined
+    file.type === 'done' ? fileUploadManager?.getFileInfo(file.id) : undefined
   );
   if (uploadProgress != null) {
     return {
@@ -469,13 +484,16 @@ const useFilePreview = (
       fileType: 'uploading',
     };
   }
-  if (loadFileData == null) {
-    return {
-      preview: null,
-      fileType: 'loading',
-    };
-  }
-  if (loadFileData.fileType?.mime.startsWith('image/')) {
+  const mime =
+    loadFileData?.fileType?.mime ??
+    (file.type === 'done' ? file.mime : undefined);
+  if (mime?.startsWith('image/')) {
+    if (loadFileData == null) {
+      return {
+        preview: null,
+        fileType: 'loading',
+      };
+    }
     return {
       preview: (
         <img
@@ -538,19 +556,19 @@ export const FileListItem = (props: {
           onClick={() => {
             console.log('Preview image:', file.id);
           }}
-          prefixIcon={<FileIcon width={16} height={16} />}
+          prefixIcon={<FileIcon width={20} height={20} />}
         >
           Preview
         </MenuItem>
       )}
-      {fileType === 'file' && (
+      {(fileType === 'file' || fileType === 'image') && (
         <MenuItem
           onClick={e => {
             void handleDownloadFile(file.id, e).catch(error => {
               console.error('Download failed:', error);
             });
           }}
-          prefixIcon={<DownloadIcon width={16} height={16} />}
+          prefixIcon={<DownloadIcon width={20} height={20} />}
         >
           Download
         </MenuItem>
@@ -559,7 +577,7 @@ export const FileListItem = (props: {
         onClick={e => {
           handleRemoveFile(file, e);
         }}
-        prefixIcon={<DeleteIcon width={16} height={16} />}
+        prefixIcon={<DeleteIcon width={20} height={20} />}
       >
         Delete
       </MenuItem>

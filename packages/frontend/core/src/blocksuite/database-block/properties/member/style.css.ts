@@ -18,15 +18,6 @@ export const searchInput = style({
   width: '100%',
 });
 
-export const memberInfoContainer = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  fontSize: '14px',
-  gap: '8px',
-  overflow: 'hidden',
-});
-
 export const memberListContainer = style({
   display: 'flex',
   flexDirection: 'column',
@@ -37,12 +28,17 @@ export const memberListContainer = style({
 export const memberItem = style({
   display: 'flex',
   justifyContent: 'space-between',
-  padding: '4px 8px',
+  padding: '8px 12px',
   gap: '8px',
   overflow: 'hidden',
   cursor: 'pointer',
+  borderRadius: '4px',
+  transition: 'background-color 0.2s ease',
   ':hover': {
     backgroundColor: cssVarV2.layer.background.hoverOverlay,
+  },
+  ':active': {
+    backgroundColor: cssVarV2.layer.background.secondary,
   },
 });
 
@@ -58,21 +54,7 @@ export const memberName = style({
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
   fontSize: '14px',
-});
-
-export const menuButton = style({
-  display: 'flex',
-  height: '20px',
-  width: '20px',
-  flexShrink: 0,
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderRadius: '2px',
-  cursor: 'pointer',
-  color: cssVarV2.icon.primary,
-  ':hover': {
-    backgroundColor: cssVarV2.layer.background.hoverOverlay,
-  },
+  lineHeight: '22px',
 });
 
 export const cellContainer = style({
@@ -84,42 +66,8 @@ export const cellContainer = style({
   overflow: 'hidden',
 });
 
-export const memberItemCell = style({
-  display: 'flex',
-  alignItems: 'center',
-  overflow: 'hidden',
-  height: '24px',
-  backgroundColor: cssVarV2.database.attachment.fileSolidBackground,
-  padding: '1px 4px',
-  borderRadius: '2px',
-  gap: '4px',
-});
-
 export const avatar = style({
-  width: '18px',
-  height: '18px',
-  borderRadius: '50%',
-  overflow: 'hidden',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: cssVarV2.layer.background.tertiary,
-  fontSize: '10px',
-  color: cssVarV2.text.primary,
-});
-
-export const avatarImage = style({
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-});
-
-export const memberNameCell = style({
-  fontSize: '14px',
-  lineHeight: '22px',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
+  flexShrink: 0,
 });
 
 export const loadingContainer = style({
@@ -140,6 +88,6 @@ export const noResultContainer = style({
 export const memberPreviewContainer = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: '4px',
   overflow: 'hidden',
 });

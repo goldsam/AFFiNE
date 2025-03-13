@@ -6,6 +6,7 @@ export const fileColumnType = propertyType('file');
 export const FileItemSchema = zod.object({
   id: zod.string(),
   name: zod.string(),
+  mime: zod.string().optional(),
   order: zod.string(),
 });
 

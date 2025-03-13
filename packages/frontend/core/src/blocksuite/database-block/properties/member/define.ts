@@ -3,13 +3,10 @@ import zod from 'zod';
 
 export const memberColumnType = propertyType('member');
 
-export const MemberItemSchema = zod.object({
-  id: zod.string(),
-  order: zod.string(),
-});
+export const MemberItemSchema = zod.string();
 
 export type MemberItemType = zod.TypeOf<typeof MemberItemSchema>;
-const MemberCellRawValueTypeSchema = zod.record(zod.string(), MemberItemSchema);
+const MemberCellRawValueTypeSchema = zod.array(MemberItemSchema);
 export const MemberCellJsonValueTypeSchema = zod.array(zod.string());
 export type MemberCellRawValueType = zod.TypeOf<
   typeof MemberCellRawValueTypeSchema
@@ -25,15 +22,12 @@ export const memberPropertyModelConfig = memberColumnType.modelConfig({
   },
   rawValue: {
     schema: MemberCellRawValueTypeSchema,
-    default: () => ({}) as MemberCellRawValueType,
+    default: () => [] as MemberCellRawValueType,
     fromString: () => ({
-      value: {},
+      value: [],
     }),
-    toString: ({ value }) =>
-      Object.values(value ?? {})
-        ?.map(v => v.id)
-        .join(',') ?? '',
-    toJson: ({ value }) => Object.values(value ?? {}).map(v => v.id),
+    toString: ({ value }) => value.join(',') ?? '',
+    toJson: ({ value }) => value,
   },
   jsonValue: {
     schema: MemberCellJsonValueTypeSchema,

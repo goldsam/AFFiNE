@@ -1,5 +1,4 @@
-import { Avatar, notify, Popover, uniReactRoot } from '@affine/component';
-import { Input } from '@affine/component/ui/input';
+import { Avatar, Popover, uniReactRoot } from '@affine/component';
 import {
   type Cell,
   type CellRenderProps,
@@ -8,25 +7,29 @@ import {
   HostContextKey,
 } from '@blocksuite/affine/blocks/database';
 import {
-  type ExistedUserInfo,
   UserListProvider,
   type UserListService,
   UserProvider,
   type UserService,
 } from '@blocksuite/affine/shared/services';
 import { computed, type ReadonlySignal } from '@preact/signals-core';
-import { generateFractionalIndexingKeyBetween } from '@toeverything/infra';
-import type { ForwardRefRenderFunction, MouseEvent, ReactNode } from 'react';
-import { forwardRef, useImperativeHandle, useMemo } from 'react';
+import {
+  forwardRef,
+  type ForwardRefRenderFunction,
+  type ReactNode,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+} from 'react';
 
 import { useSignalValue } from '../../../../modules/doc-info/utils';
-import type { Member } from '../../../../modules/permissions/entities/members';
 import type {
   MemberCellJsonValueType,
   MemberCellRawValueType,
   MemberItemType,
 } from './define';
 import { memberPropertyModelConfig } from './define';
+import { MultiMemberSelect } from './multi-member-select';
 import * as styles from './style.css';
 
 class MemberManager {
@@ -40,7 +43,7 @@ class MemberManager {
   public readonly userService?: UserService | null;
   public readonly userListService?: UserListService | null;
 
-  doneMembers = computed(() => this.cell.value$.value ?? {});
+  memberList = computed(() => this.cell.value$.value ?? []);
 
   get readonly() {
     return this.cell.property.readonly$;
@@ -57,82 +60,10 @@ class MemberManager {
     this.userListService = host?.std.getOptional(UserListProvider);
   }
 
-  removeMember = (member: MemberItemType, e?: MouseEvent): void => {
-    e?.stopPropagation();
-
-    const value = { ...this.cell.value$.value };
-    delete value[member.id];
-    this.cell.valueSet(value);
+  setMemberList = (memberList: MemberItemType[]): void => {
+    this.cell.valueSet(memberList);
   };
-
-  addMember = (member: Member): void => {
-    if (this.doneMembers.value[member.id]) {
-      notify.error({
-        title: 'Member already exists',
-        message: 'The member has already been added',
-      });
-      return;
-    }
-
-    const lastMember = this.memberList.value[this.memberList.value.length - 1];
-    const order = generateFractionalIndexingKeyBetween(
-      lastMember?.order || null,
-      null
-    );
-
-    this.cell.valueSet({
-      ...this.cell.value$.value,
-      [member.id]: {
-        id: member.id,
-        order,
-      },
-    });
-  };
-
-  memberList = computed(() => {
-    return Object.values(this.doneMembers.value).sort((a, b) =>
-      a.order > b.order ? 1 : -1
-    );
-  });
 }
-
-const MemberSearch = ({
-  userListService,
-}: {
-  userListService: UserListService;
-}) => {
-  const memberList = useSignalValue(userListService.users$);
-  const isLoading = useSignalValue(userListService.isLoading$);
-  const text = useSignalValue(userListService.searchText$);
-  return (
-    <div className={styles.memberPopoverContainer}>
-      <div className={styles.searchContainer}>
-        <Input
-          className={styles.searchInput}
-          placeholder="Search members..."
-          value={text}
-          onChange={text => {
-            userListService.search(text);
-          }}
-        />
-      </div>
-      <div className={styles.memberListContainer}>
-        {isLoading ? (
-          <div className={styles.loadingContainer}>Loading...</div>
-        ) : text && memberList.length === 0 ? (
-          <div className={styles.noResultContainer}>No results found</div>
-        ) : (
-          memberList.map(member => {
-            if (member.removed) {
-              return null;
-            }
-            return <MemberListItem key={member.id} member={member} />;
-          })
-        )}
-      </div>
-    </div>
-  );
-};
 
 const MemberCellComponent: ForwardRefRenderFunction<
   DataViewCellLifeCycle,
@@ -166,9 +97,21 @@ const MemberCellComponent: ForwardRefRenderFunction<
         </div>
       );
     }
-    return <MemberSearch userListService={manager.userListService} />;
+    return (
+      <MultiMemberSelect
+        multiple
+        value={manager.memberList}
+        onChange={newIds => {
+          manager.setMemberList(newIds);
+        }}
+        userService={manager.userService}
+        userListService={manager.userListService}
+        onComplete={() => {
+          //   manager.selectCurrentCell(false);
+        }}
+      />
+    );
   };
-
   return (
     <div style={{ overflow: 'hidden' }}>
       <Popover
@@ -184,10 +127,10 @@ const MemberCellComponent: ForwardRefRenderFunction<
         <div></div>
       </Popover>
       <div className={styles.cellContainer}>
-        {memberList.map(member => (
+        {memberList.map(memberId => (
           <MemberPreview
-            key={member.id}
-            member={member}
+            key={memberId}
+            memberId={memberId}
             memberManager={manager}
           />
         ))}
@@ -197,52 +140,33 @@ const MemberCellComponent: ForwardRefRenderFunction<
 };
 
 const useMemberInfo = (id: string, memberManager: MemberManager) => {
-  const userInfo = useSignalValue(memberManager.userService?.userInfo$(id));
-  if (userInfo && !userInfo.removed) {
-    return userInfo;
-  }
-  return null;
-};
-
-export const MemberListItem = (props: { member: ExistedUserInfo }) => {
-  const { member } = props;
-
-  return (
-    <div className={styles.memberItem}>
-      <div className={styles.memberItemContent}>
-        <div
-          className={styles.avatar}
-          style={{ width: `16px`, height: `16px` }}
-        >
-          <Avatar url={member.avatar} size={16} />
-        </div>
-        <div className={styles.memberName}>{member.name}</div>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    memberManager.userService?.revalidateUserInfo(id);
+  }, [id, memberManager.userService]);
+  return useSignalValue(memberManager.userService?.userInfo$(id));
 };
 
 const MemberPreview = ({
-  member,
+  memberId,
   memberManager,
 }: {
-  member: MemberItemType;
+  memberId: string;
   memberManager: MemberManager;
 }) => {
-  const userInfo = useMemberInfo(member.id, memberManager);
+  const userInfo = useMemberInfo(memberId, memberManager);
   if (!userInfo) {
     return null;
   }
   return (
     <div className={styles.memberPreviewContainer}>
-      {userInfo.avatar && (
-        <img
-          src={userInfo.avatar ?? undefined}
-          alt={userInfo.name ?? 'Unnamed'}
-          className={styles.avatarImage}
-        />
-      )}
-      <div className={styles.memberName}>{userInfo.name ?? 'Unnamed'}</div>
+      <Avatar
+        className={styles.avatar}
+        url={!userInfo.removed ? userInfo.avatar : undefined}
+        size={24}
+      />
+      <div className={styles.memberName}>
+        {userInfo.removed ? 'Deleted user' : userInfo.name || 'Unnamed'}
+      </div>
     </div>
   );
 };
