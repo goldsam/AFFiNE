@@ -6,6 +6,8 @@ import type { AffineUserInfo } from './types';
 
 export interface UserListService {
   users$: Signal<AffineUserInfo[]>;
+  isLoading$: Signal<boolean>;
+  searchText$: Signal<string>;
   hasMore$: Signal<boolean>;
   loadMore(): void;
   search(keyword: string): void;
