@@ -71,7 +71,8 @@
     "./tooltip-content-with-shortcut": "./src/tooltip-content-with-shortcut/index.ts",
     "./size-dropdown-menu": "./src/size-dropdown-menu/index.ts",
     "./edgeless-line-width-panel": "./src/edgeless-line-width-panel/index.ts",
-    "./edgeless-line-styles-panel": "./src/edgeless-line-styles-panel/index.ts"
+    "./edgeless-line-styles-panel": "./src/edgeless-line-styles-panel/index.ts",
+    "./edgeless-shape-color-picker": "./src/edgeless-shape-color-picker/index.ts"
   },
   "files": [
     "src",

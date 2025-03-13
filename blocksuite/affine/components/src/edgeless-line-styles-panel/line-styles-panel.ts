@@ -50,7 +50,7 @@ export class EdgelessLineStylesPanel extends LitElement {
 
     return html`
       <affine-edgeless-line-width-panel
-        ?disabled=${lineStyle === StrokeStyle.None}
+        ?disabled="${lineStyle === StrokeStyle.None}"
         .selectedSize=${lineSize}
         @select=${(e: CustomEvent<LineWidth>) => {
           e.stopPropagation();

@@ -123,7 +123,6 @@ export const builtinConnectorToolbarConfig = {
   actions: [
     {
       id: 'a.stroke-color',
-      tooltip: 'Stroke style',
       content(ctx) {
         const models = ctx.getSurfaceModelsByType(ConnectorElementModel);
         if (!models.length) return null;
@@ -356,9 +355,9 @@ export const builtinConnectorToolbarConfig = {
 
         // No need to adjust element bounds
         if (props['textAlign']) {
-          ctx.std.get(EdgelessCRUDIdentifier).updateElement(model.id, {
-            labelStyle,
-          });
+          ctx.std
+            .get(EdgelessCRUDIdentifier)
+            .updateElement(model.id, { labelStyle });
           return;
         }
 

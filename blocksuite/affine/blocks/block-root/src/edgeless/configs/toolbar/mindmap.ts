@@ -9,7 +9,10 @@ import {
   MindmapElementModel,
   MindmapStyle,
 } from '@blocksuite/affine-model';
-import type { ToolbarModuleConfig } from '@blocksuite/affine-shared/services';
+import type {
+  ToolbarContext,
+  ToolbarModuleConfig,
+} from '@blocksuite/affine-shared/services';
 import { getMostCommonValue } from '@blocksuite/affine-shared/utils';
 import { RadiantIcon, RightLayoutIcon, StyleIcon } from '@blocksuite/icons/lit';
 
@@ -55,6 +58,49 @@ const MINDMAP_LAYOUT_LIST = [
   },
 ] as const satisfies MenuItem<LayoutType>[];
 
+export const createMindmapStyleActionMenu = (
+  ctx: ToolbarContext,
+  models: MindmapElementModel[]
+) => {
+  const style = getMostCommonValue(models, 'style') ?? MindmapStyle.ONE;
+  const onPick = (style: MindmapStyle) => {
+    for (const model of models) {
+      model.style = style;
+    }
+    ctx.settings.recordLastProps('mindmap', { style });
+  };
+
+  return renderMenu({
+    label: 'Style',
+    icon: StyleIcon(),
+    items: MINDMAP_STYLE_LIST,
+    currentValue: style,
+    onPick,
+  });
+};
+
+export const createMindmapLayoutActionMenu = (
+  ctx: ToolbarContext,
+  models: MindmapElementModel[]
+) => {
+  const layoutType =
+    getMostCommonValue(models, 'layoutType') ?? LayoutType.BALANCE;
+  const onPick = (layoutType: LayoutType) => {
+    for (const model of models) {
+      model.layoutType = layoutType;
+      model.layout();
+    }
+    ctx.settings.recordLastProps('mindmap', { layoutType });
+  };
+
+  return renderMenu({
+    label: 'Layout',
+    items: MINDMAP_LAYOUT_LIST,
+    currentValue: layoutType,
+    onPick,
+  });
+};
+
 export const builtinMindmapToolbarConfig = {
   actions: [
     {
@@ -63,21 +109,7 @@ export const builtinMindmapToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(MindmapElementModel);
         if (!models.length) return null;
 
-        const style = getMostCommonValue(models, 'style') ?? MindmapStyle.ONE;
-        const onPick = (style: MindmapStyle) => {
-          for (const model of models) {
-            model.style = style;
-          }
-          ctx.settings.recordLastProps('mindmap', { style });
-        };
-
-        return renderMenu({
-          label: 'Style',
-          icon: StyleIcon(),
-          items: MINDMAP_STYLE_LIST,
-          currentValue: style,
-          onPick,
-        });
+        return createMindmapStyleActionMenu(ctx, models);
       },
     },
     {
@@ -86,22 +118,7 @@ export const builtinMindmapToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(MindmapElementModel);
         if (!models.length) return null;
 
-        const layoutType =
-          getMostCommonValue(models, 'layoutType') ?? LayoutType.BALANCE;
-        const onPick = (layoutType: LayoutType) => {
-          for (const model of models) {
-            model.layoutType = layoutType;
-            model.layout();
-          }
-          ctx.settings.recordLastProps('mindmap', { layoutType });
-        };
-
-        return renderMenu({
-          label: 'Layout',
-          items: MINDMAP_LAYOUT_LIST,
-          currentValue: layoutType,
-          onPick,
-        });
+        return createMindmapLayoutActionMenu(ctx, models);
       },
     },
   ],

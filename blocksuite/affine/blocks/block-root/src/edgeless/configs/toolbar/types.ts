@@ -4,6 +4,7 @@ export type MenuItem<T> = {
   key?: string;
   value: T;
   icon?: TemplateResult;
+  disabled?: boolean;
 };
 
 export type Menu<T> = {

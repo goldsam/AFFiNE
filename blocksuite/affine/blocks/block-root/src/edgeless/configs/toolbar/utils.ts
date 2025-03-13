@@ -46,9 +46,10 @@ export function renderMenuItems<T>(
   return repeat(
     items,
     item => item.value,
-    ({ key, value, icon }) => html`
+    ({ key, value, icon, disabled }) => html`
       <editor-icon-button
         aria-label="${ifDefined(key)}"
+        .disabled=${ifDefined(disabled)}
         .tooltip="${ifDefined(key)}"
         .active="${currentValue === value}"
         .activeMode="${'background'}"
