@@ -7118,6 +7118,144 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.fail-to-join-workspace.description-2"](): string;
     /**
+      * `Readwise`
+      */
+    ["com.affine.integration.name.readwise"](): string;
+    /**
+      * `Integrations`
+      */
+    ["com.affine.integration.integrations"](): string;
+    /**
+      * `Elevate your AFFiNE experience with diverse add-ons and seamless integrations.`
+      */
+    ["com.affine.integration.setting.description"](): string;
+    /**
+      * `Learn how to develop a integration for AFFiNE`
+      */
+    ["com.affine.integration.setting.learn"](): string;
+    /**
+      * `Readwise`
+      */
+    ["com.affine.integration.readwise.name"](): string;
+    /**
+      * `Manually import your content to AFFiNE from Readwise`
+      */
+    ["com.affine.integration.readwise.desc"](): string;
+    /**
+      * `Connect`
+      */
+    ["com.affine.integration.readwise.connect"](): string;
+    /**
+      * `Connect to Readwise`
+      */
+    ["com.affine.integration.readwise.connect.title"](): string;
+    /**
+      * `Paste your access token here`
+      */
+    ["com.affine.integration.readwise.connect.placeholder"](): string;
+    /**
+      * `Please enter a valid access token.`
+      */
+    ["com.affine.integration.readwise.connect.input-error"](): string;
+    /**
+      * `Access Token failed validation`
+      */
+    ["com.affine.integration.readwise.connect.error-notify-title"](): string;
+    /**
+      * `The token could not access Readwise. Please verify access and try again.`
+      */
+    ["com.affine.integration.readwise.connect.error-notify-desc"](): string;
+    /**
+      * `Import`
+      */
+    ["com.affine.integration.readwise.import"](): string;
+    /**
+      * `Disconnect`
+      */
+    ["com.affine.integration.readwise.disconnect"](): string;
+    /**
+      * `Disconnect Readwise?`
+      */
+    ["com.affine.integration.readwise.disconnect.title"](): string;
+    /**
+      * `Once disconnected, content will no longer be imported. Do you want to keep your existing highlights in AFFiNE?`
+      */
+    ["com.affine.integration.readwise.disconnect.desc"](): string;
+    /**
+      * `Keep`
+      */
+    ["com.affine.integration.readwise.disconnect.keep"](): string;
+    /**
+      * `Delete`
+      */
+    ["com.affine.integration.readwise.disconnect.delete"](): string;
+    /**
+      * `Highlights to be imported this time`
+      */
+    ["com.affine.integration.readwise.import.title"](): string;
+    /**
+      * `Importing everything from the start`
+      */
+    ["com.affine.integration.readwise.import.desc-from-start"](): string;
+    /**
+      * `Content`
+      */
+    ["com.affine.integration.readwise.import.cell-h-content"](): string;
+    /**
+      * `Todo`
+      */
+    ["com.affine.integration.readwise.import.cell-h-todo"](): string;
+    /**
+      * `Last update on Readwise`
+      */
+    ["com.affine.integration.readwise.import.cell-h-time"](): string;
+    /**
+      * `New`
+      */
+    ["com.affine.integration.readwise.import.todo-new"](): string;
+    /**
+      * `Skip`
+      */
+    ["com.affine.integration.readwise.import.todo-skip"](): string;
+    /**
+      * `Updated`
+      */
+    ["com.affine.integration.readwise.import.todo-update"](): string;
+    /**
+      * `No highlights needs to be imported`
+      */
+    ["com.affine.integration.readwise.import.empty"](): string;
+    /**
+      * `Importing...`
+      */
+    ["com.affine.integration.readwise.import.importing"](): string;
+    /**
+      * `Please keep this app active until it's finished`
+      */
+    ["com.affine.integration.readwise.import.importing-desc"](): string;
+    /**
+      * `Stop Importing`
+      */
+    ["com.affine.integration.readwise.import.importing-stop"](): string;
+    /**
+      * `Importing aborted`
+      */
+    ["com.affine.integration.readwise.import.abort-notify-title"](): string;
+    /**
+      * `Import aborted, with {{finished}} highlights processed`
+      */
+    ["com.affine.integration.readwise.import.abort-notify-desc"](options: {
+        readonly finished: string;
+    }): string;
+    /**
+      * `Author`
+      */
+    ["com.affine.integration.readwise-prop.author"](): string;
+    /**
+      * `Source`
+      */
+    ["com.affine.integration.readwise-prop.source"](): string;
+    /**
       * `An internal error occurred.`
       */
     ["error.INTERNAL_SERVER_ERROR"](): string;
@@ -8118,5 +8256,19 @@ export const TypedTrans: {
     }, {
         ["1"]: JSX.Element;
         ["2"]: JSX.Element;
+    }>>;
+    /**
+      * `Import your Readwise highlights to AFFiNE. Please visit Readwise, click <a>"Get Access Token"</a>, and paste the token below.`
+      */
+    ["com.affine.integration.readwise.connect.desc"]: ComponentType<TypedTransProps<Readonly<{}>, {
+        a: JSX.Element;
+    }>>;
+    /**
+      * `Updates to be imported since last successful import on {{lastImportedAt}} <a>Import everything instead</a>`
+      */
+    ["com.affine.integration.readwise.import.desc-from-last"]: ComponentType<TypedTransProps<{
+        readonly lastImportedAt: string;
+    }, {
+        a: JSX.Element;
     }>>;
 } = /*#__PURE__*/ createProxy(createComponent);
