@@ -6,12 +6,14 @@ import {
   TestingModule as BaseTestingModule,
   TestingModuleBuilder,
 } from '@nestjs/testing';
+import { PrismaClient } from '@prisma/client';
 
 import { AppModule, FunctionalityModules } from '../../app.module';
 import { AFFiNELogger, Runtime } from '../../base';
 import { GqlModule } from '../../base/graphql';
 import { AuthGuard, AuthModule } from '../../core/auth';
 import { ModelsModule } from '../../models';
+import { createFactory } from '../mocks';
 import { initTestingDB, TEST_LOG_LEVEL } from './utils';
 
 interface TestingModuleMeatdata extends ModuleMetadata {
@@ -20,6 +22,7 @@ interface TestingModuleMeatdata extends ModuleMetadata {
 
 export interface TestingModule extends BaseTestingModule {
   initTestingDB(): Promise<void>;
+  create: ReturnType<typeof createFactory>;
   [Symbol.asyncDispose](): Promise<void>;
 }
 
@@ -90,6 +93,10 @@ export async function createTestingModule(
     // by pass password min length validation
     await runtime.set('auth/password.min', 1);
   };
+
+  testingModule.create = createFactory(
+    module.get(PrismaClient, { strict: false })
+  );
 
   testingModule[Symbol.asyncDispose] = async () => {
     await module.close();

@@ -100,7 +100,7 @@ test.beforeEach(async t => {
   const { app, prompt } = t.context;
   await app.initTestingDB();
   await prompt.onModuleInit();
-  t.context.u1 = await app.signup('u1@affine.pro');
+  t.context.u1 = await app.signupV1('u1@affine.pro');
 
   unregisterCopilotProvider(OpenAIProvider.type);
   unregisterCopilotProvider(FalProvider.type);
@@ -213,7 +213,7 @@ test('should update session correctly', async t => {
   }
 
   {
-    await app.signup('test@affine.pro');
+    await app.signupV1('test@affine.pro');
     const u2 = await app.createUser('u2@affine.pro');
     const { id: workspaceId } = await createWorkspace(app);
     const inviteId = await inviteUser(app, workspaceId, u2.email);
@@ -299,7 +299,7 @@ test('should fork session correctly', async t => {
   }
 
   {
-    const u2 = await app.signup('u2@affine.pro');
+    const u2 = await app.signupV1('u2@affine.pro');
     await assertForkSession(id, sessionId, randomUUID(), '', async x => {
       await t.throwsAsync(
         x,

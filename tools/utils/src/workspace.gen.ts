@@ -269,6 +269,7 @@ export const PackageList = [
     name: '@blocksuite/affine-block-paragraph',
     workspaceDependencies: [
       'blocksuite/affine/components',
+      'blocksuite/affine/gfx/turbo-renderer',
       'blocksuite/affine/model',
       'blocksuite/affine/rich-text',
       'blocksuite/affine/shared',
@@ -454,6 +455,7 @@ export const PackageList = [
     workspaceDependencies: [
       'blocksuite/framework/block-std',
       'blocksuite/framework/global',
+      'blocksuite/framework/store',
     ],
   },
   {

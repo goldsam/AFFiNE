@@ -19,10 +19,6 @@ test.before(async t => {
   t.context.app = app;
 });
 
-test.beforeEach(async t => {
-  await t.context.app.initTestingDB();
-});
-
 test.after.always(async t => {
   await t.context.app.close();
 });
@@ -30,7 +26,7 @@ test.after.always(async t => {
 test('should be able to upload user avatar', async t => {
   const { app } = t.context;
 
-  await app.signup('u1@affine.pro');
+  await app.signup();
   const avatar = Buffer.from('test');
   const res = await updateAvatar(app, avatar);
 
@@ -46,7 +42,7 @@ test('should be able to upload user avatar', async t => {
 test('should be able to update user avatar, and invalidate old avatar url', async t => {
   const { app } = t.context;
 
-  await app.signup('u1@affine.pro');
+  await app.signup();
   const avatar = Buffer.from('test');
   let res = await updateAvatar(app, avatar);
 

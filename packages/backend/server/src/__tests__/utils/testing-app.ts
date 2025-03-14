@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { INestApplication, ModuleMetadata } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { TestingModuleBuilder } from '@nestjs/testing';
-import { User } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import cookieParser from 'cookie-parser';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import supertest from 'supertest';
@@ -11,6 +11,7 @@ import supertest from 'supertest';
 import { AFFiNELogger, ApplyType, GlobalExceptionFilter } from '../../base';
 import { AuthService } from '../../core/auth';
 import { UserModel } from '../../models';
+import { createFactory, MockedUser, MockUser, MockUserInput } from '../mocks';
 import { createTestingModule } from './testing-module';
 import { initTestingDB, TEST_LOG_LEVEL } from './utils';
 
@@ -79,6 +80,8 @@ export class TestingApp extends ApplyType<INestApplication>() {
   private sessionCookie: string | null = null;
   private currentUserCookie: string | null = null;
   private readonly userCookies: Set<string> = new Set();
+
+  readonly create!: ReturnType<typeof createFactory>;
 
   [Symbol.asyncDispose](): Promise<void> {
     return this.close();
@@ -188,6 +191,9 @@ export class TestingApp extends ApplyType<INestApplication>() {
     return `test-${randomUUID()}@affine.pro`;
   }
 
+  /**
+   * @deprecated use `create(MockUser)`
+   */
   async createUser(
     email?: string,
     override?: Partial<User>
@@ -209,13 +215,22 @@ export class TestingApp extends ApplyType<INestApplication>() {
     return user as Omit<User, 'password'> & { password: string };
   }
 
-  async signup(email?: string, override?: Partial<User>) {
+  /**
+   * @deprecated use `signup`
+   */
+  async signupV1(email?: string, override?: Partial<User>) {
     const user = await this.createUser(email ?? this.randomEmail(), override);
     await this.login(user);
     return user;
   }
 
-  async login(user: TestUser) {
+  async signup(overrides?: Partial<MockUserInput>) {
+    const user = await this.create(MockUser, overrides);
+    await this.login(user);
+    return user;
+  }
+
+  async login(user: MockedUser) {
     await this.POST('/api/auth/sign-in')
       .send({
         email: user.email,
@@ -262,6 +277,9 @@ export class TestingApp extends ApplyType<INestApplication>() {
 
 function makeTestingApp(app: INestApplication): TestingApp {
   const testingApp = new TestingApp();
+
+  // @ts-expect-error allow
+  testingApp.create = createFactory(app.get(PrismaClient, { strict: false }));
 
   return new Proxy(testingApp, {
     get(target, prop) {

@@ -29,8 +29,8 @@ test.after.always(async () => {
 });
 
 test('should mention user in a doc', async t => {
-  const member = await app.signup();
-  const owner = await app.signup();
+  const member = await app.signupV1();
+  const owner = await app.signupV1();
 
   await app.switchUser(owner);
   const workspace = await createWorkspace(app);
@@ -104,8 +104,8 @@ test('should mention user in a doc', async t => {
 });
 
 test('should throw error when mention user has no Doc.Read role', async t => {
-  const member = await app.signup();
-  const owner = await app.signup();
+  const member = await app.signupV1();
+  const owner = await app.signupV1();
 
   await app.switchUser(owner);
   const workspace = await createWorkspace(app);
@@ -129,7 +129,7 @@ test('should throw error when mention user has no Doc.Read role', async t => {
 });
 
 test('should throw error when mention a not exists user', async t => {
-  const owner = await app.signup();
+  const owner = await app.signupV1();
   const workspace = await createWorkspace(app);
   await app.switchUser(owner);
   const docId = randomUUID();
@@ -150,7 +150,7 @@ test('should throw error when mention a not exists user', async t => {
 });
 
 test('should not mention user oneself', async t => {
-  const owner = await app.signup();
+  const owner = await app.signupV1();
   const workspace = await createWorkspace(app);
   await app.switchUser(owner);
   await t.throwsAsync(
@@ -170,8 +170,8 @@ test('should not mention user oneself', async t => {
 });
 
 test('should mark notification as read', async t => {
-  const member = await app.signup();
-  const owner = await app.signup();
+  const member = await app.signupV1();
+  const owner = await app.signupV1();
 
   await app.switchUser(owner);
   const workspace = await createWorkspace(app);
@@ -212,8 +212,8 @@ test('should mark notification as read', async t => {
 });
 
 test('should throw error when read the other user notification', async t => {
-  const member = await app.signup();
-  const owner = await app.signup();
+  const member = await app.signupV1();
+  const owner = await app.signupV1();
 
   await app.switchUser(owner);
   const workspace = await createWorkspace(app);
@@ -253,7 +253,7 @@ test('should throw error when read the other user notification', async t => {
 });
 
 test.skip('should throw error when mention call with invalid params', async t => {
-  const owner = await app.signup();
+  const owner = await app.signupV1();
   await app.switchUser(owner);
   await t.throwsAsync(
     mentionUser(app, {
@@ -272,8 +272,8 @@ test.skip('should throw error when mention call with invalid params', async t =>
 });
 
 test('should list and count notifications', async t => {
-  const member = await app.signup();
-  const owner = await app.signup();
+  const member = await app.signupV1();
+  const owner = await app.signupV1();
 
   {
     await app.switchUser(member);

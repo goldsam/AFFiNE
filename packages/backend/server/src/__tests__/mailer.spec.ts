@@ -31,8 +31,8 @@ test('should send invite email', async t => {
   const { mail, app } = t.context;
 
   if (mail.hasConfigured()) {
-    const u2 = await app.signup('u2@affine.pro');
-    const u1 = await app.signup('u1@affine.pro');
+    const u2 = await app.signupV1('u2@affine.pro');
+    const u1 = await app.signupV1('u1@affine.pro');
     const stub = Sinon.stub(mail, 'send');
 
     const workspace = await createWorkspace(app);

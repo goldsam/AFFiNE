@@ -82,7 +82,7 @@ const init = async (
   memberLimit = 10,
   prefix = randomUUID()
 ) => {
-  const owner = await app.signup(`${prefix}owner@affine.pro`);
+  const owner = await app.signupV1(`${prefix}owner@affine.pro`);
   const models = app.get(Models);
   {
     await models.userFeature.add(owner.id, 'pro_plan_v1', 'test');
@@ -101,7 +101,7 @@ const init = async (
     permission: WorkspaceRole = WorkspaceRole.Collaborator,
     shouldSendEmail: boolean = false
   ) => {
-    const member = await app.signup(email);
+    const member = await app.signupV1(email);
 
     {
       // normal workspace
@@ -140,7 +140,7 @@ const init = async (
   ) => {
     const members = [];
     for (const email of emails) {
-      const member = await app.signup(email);
+      const member = await app.signupV1(email);
       members.push(member);
     }
 
@@ -161,7 +161,7 @@ const init = async (
     return [
       inviteId,
       async (email: string, shouldSendEmail: boolean = false) => {
-        const member = await app.signup(email);
+        const member = await app.signupV1(email);
         await acceptInviteById(app, ws.id, inviteId, shouldSendEmail);
         return member;
       },
@@ -221,8 +221,8 @@ test('should be able to invite multiple users', async t => {
 
   {
     // manager
-    const m1 = await app.signup('m1@affine.pro');
-    const m2 = await app.signup('m2@affine.pro');
+    const m1 = await app.signupV1('m1@affine.pro');
+    const m2 = await app.signupV1('m2@affine.pro');
     app.switchUser(owner);
     t.is(
       (await inviteUsers(app, ws.id, [m1.email])).length,
@@ -483,7 +483,7 @@ test('should be able to approve team member', async t => {
     const { link } = await createInviteLink(app, tws.id, 'OneDay');
     const inviteId = link.split('/').pop()!;
 
-    const member = await app.signup('newmember@affine.pro');
+    const member = await app.signupV1('newmember@affine.pro');
     t.true(
       await acceptInviteById(app, tws.id, inviteId, false),
       'should be able to accept invite'

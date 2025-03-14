@@ -8,6 +8,7 @@
   "include": ["./src"],
   "references": [
     { "path": "../../components" },
+    { "path": "../../gfx/turbo-renderer" },
     { "path": "../../model" },
     { "path": "../../rich-text" },
     { "path": "../../shared" },

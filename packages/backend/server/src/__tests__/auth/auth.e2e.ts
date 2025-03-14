@@ -41,7 +41,7 @@ test('change email', async t => {
     const u1Email = 'u1@affine.pro';
     const u2Email = 'u2@affine.pro';
 
-    await app.signup(u1Email);
+    await app.signupV1(u1Email);
     const primitiveMailCount = await getCurrentMailMessageCount();
     await sendChangeEmail(app, u1Email, 'affine.pro');
 
@@ -101,7 +101,7 @@ test('set and change password', async t => {
   if (mail.hasConfigured()) {
     const u1Email = 'u1@affine.pro';
 
-    const u1 = await app.signup(u1Email);
+    const u1 = await app.signupV1(u1Email);
 
     const primitiveMailCount = await getCurrentMailMessageCount();
 
@@ -153,7 +153,7 @@ test('should revoke token after change user identify', async t => {
       const u1Email = 'u1@affine.pro';
       const u2Email = 'u2@affine.pro';
 
-      const u1 = await app.signup(u1Email);
+      const u1 = await app.signupV1(u1Email);
 
       {
         const user = await currentUser(app);
@@ -190,7 +190,7 @@ test('should revoke token after change user identify', async t => {
       const u3Email = 'u3333@affine.pro';
 
       await app.logout();
-      const u3 = await app.signup(u3Email);
+      const u3 = await app.signupV1(u3Email);
 
       {
         const user = await currentUser(app);

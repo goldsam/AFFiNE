@@ -40,8 +40,9 @@ yarn affine @affine/server-native build
 ```sh
 # uncomment all env variables here
 cp packages/backend/server/.env.example packages/backend/server/.env
-yarn affine server prisma db push
-yarn affine server data-migration run
+
+# everytime there are new migrations, init command should runned again
+yarn affine server init
 ```
 
 ## Start server
@@ -89,4 +90,10 @@ Now you should be able to start developing affine with server enabled.
 ```sh
 # available at http://localhost:5555
 yarn affine server prisma studio
+```
+
+### Seed the db
+
+```
+yarn affine server seed -h
 ```

@@ -164,7 +164,7 @@ test('should be able to sign out', async t => {
 test('should be able to correct user id cookie', async t => {
   const { app } = t.context;
 
-  const u1 = await app.signup('u1@affine.pro');
+  const u1 = await app.signupV1('u1@affine.pro');
 
   const req = app.GET('/api/auth/session');
   let cookies = req.get('cookie') as unknown as string[];
@@ -229,8 +229,8 @@ test('should be able to sign in another account in one session', async t => {
 test('should be able to sign out multiple accounts in one session', async t => {
   const { app } = t.context;
 
-  const u1 = await app.signup('u1@affine.pro');
-  const u2 = await app.signup('u2@affine.pro');
+  const u1 = await app.signupV1('u1@affine.pro');
+  const u2 = await app.signupV1('u2@affine.pro');
 
   // sign out u2
   await app.GET(`/api/auth/sign-out?user_id=${u2.id}`).expect(200);

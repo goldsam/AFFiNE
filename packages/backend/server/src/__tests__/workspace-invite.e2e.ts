@@ -47,8 +47,8 @@ test.after.always(async t => {
 
 test('should invite a user', async t => {
   const { app } = t.context;
-  const u2 = await app.signup('u2@affine.pro');
-  await app.signup('u1@affine.pro');
+  const u2 = await app.signupV1('u2@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
 
@@ -58,8 +58,8 @@ test('should invite a user', async t => {
 
 test('should leave a workspace', async t => {
   const { app } = t.context;
-  const u2 = await app.signup('u2@affine.pro');
-  await app.signup('u1@affine.pro');
+  const u2 = await app.signupV1('u2@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
   const invite = await inviteUser(app, workspace.id, u2.email);
@@ -74,8 +74,8 @@ test('should leave a workspace', async t => {
 
 test('should revoke a user', async t => {
   const { app } = t.context;
-  const u2 = await app.signup('u2@affine.pro');
-  await app.signup('u1@affine.pro');
+  const u2 = await app.signupV1('u2@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
   await inviteUser(app, workspace.id, u2.email);
@@ -89,7 +89,7 @@ test('should revoke a user', async t => {
 
 test('should create user if not exist', async t => {
   const { app, models } = t.context;
-  await app.signup('u1@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
 
@@ -102,8 +102,8 @@ test('should create user if not exist', async t => {
 
 test('should invite a user by link', async t => {
   const { app } = t.context;
-  const u2 = await app.signup('u2@affine.pro');
-  const u1 = await app.signup('u1@affine.pro');
+  const u2 = await app.signupV1('u2@affine.pro');
+  const u1 = await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
 
@@ -127,8 +127,8 @@ test('should invite a user by link', async t => {
 test('should send email', async t => {
   const { mail, app } = t.context;
   if (mail.hasConfigured()) {
-    const u2 = await app.signup('u2@affine.pro');
-    await app.signup('u1@affine.pro');
+    const u2 = await app.signupV1('u2@affine.pro');
+    await app.signupV1('u1@affine.pro');
 
     const workspace = await createWorkspace(app);
     const primitiveMailCount = await getCurrentMailMessageCount();
@@ -193,7 +193,7 @@ test('should send email', async t => {
 
 test('should support pagination for member', async t => {
   const { app } = t.context;
-  await app.signup('u1@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
   await inviteUser(app, workspace.id, 'u2@affine.pro');
@@ -207,7 +207,7 @@ test('should support pagination for member', async t => {
 
 test('should limit member count correctly', async t => {
   const { app } = t.context;
-  await app.signup('u1@affine.pro');
+  await app.signupV1('u1@affine.pro');
 
   const workspace = await createWorkspace(app);
   await Promise.allSettled(
