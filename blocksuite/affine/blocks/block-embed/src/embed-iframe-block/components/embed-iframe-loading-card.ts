@@ -8,23 +8,9 @@ import { classMap } from 'lit/directives/class-map.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { getEmbedCardIcons } from '../../common/utils';
+import type { EmbedIframeStatusCardOptions } from '../types';
 
-/**
- * The options for the embed iframe loading card
- * layout: the layout of the card, horizontal or vertical
- * width: the width of the card, if not set, the card width will be 100%
- * height: the height of the card, if not set, the card height will be 100%
- * @example
- * {
- *   layout: 'horizontal',
- *   height: 114,
- * }
- */
-export type EmbedIframeLoadingCardOptions = {
-  layout: 'horizontal' | 'vertical';
-  width?: number;
-  height?: number;
-};
+const LOADING_CARD_DEFAULT_HEIGHT = 114;
 
 export class EmbedIframeLoadingCard extends LitElement {
   static override styles = css`
@@ -199,8 +185,8 @@ export class EmbedIframeLoadingCard extends LitElement {
   accessor std!: BlockStdScope;
 
   @property({ attribute: false })
-  accessor options: EmbedIframeLoadingCardOptions = {
+  accessor options: EmbedIframeStatusCardOptions = {
     layout: 'horizontal',
-    height: 114,
+    height: LOADING_CARD_DEFAULT_HEIGHT,
   };
 }

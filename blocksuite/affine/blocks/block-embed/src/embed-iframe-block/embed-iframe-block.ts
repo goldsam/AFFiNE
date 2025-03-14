@@ -16,10 +16,10 @@ import { html, nothing } from 'lit';
 import { type ClassInfo, classMap } from 'lit/directives/class-map.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
-import type { EmbedIframeLoadingCardOptions } from './components/embed-iframe-loading-card.js';
 import type { IframeOptions } from './extension/embed-iframe-config.js';
 import { EmbedIframeService } from './extension/embed-iframe-service.js';
 import { embedIframeBlockStyles } from './style.js';
+import type { EmbedIframeStatusCardOptions } from './types.js';
 
 export type EmbedIframeStatus = 'idle' | 'loading' | 'success' | 'error';
 const DEFAULT_IFRAME_HEIGHT = 152;
@@ -75,7 +75,7 @@ export class EmbedIframeBlockComponent extends CaptionedBlockComponent<EmbedIfra
     return flag ?? false;
   }
 
-  get _loadingCardOptions(): EmbedIframeLoadingCardOptions {
+  get _statusCardOptions(): EmbedIframeStatusCardOptions {
     return this.inSurface
       ? { layout: 'vertical' }
       : { layout: 'horizontal', height: 114 };
@@ -213,7 +213,7 @@ export class EmbedIframeBlockComponent extends CaptionedBlockComponent<EmbedIfra
     if (this.isLoading$.value) {
       return html`<embed-iframe-loading-card
         .std=${this.std}
-        .options=${this._loadingCardOptions}
+        .options=${this._statusCardOptions}
       ></embed-iframe-loading-card>`;
     }
 
@@ -223,6 +223,7 @@ export class EmbedIframeBlockComponent extends CaptionedBlockComponent<EmbedIfra
         .model=${this.model}
         .onRetry=${this._handleRetry}
         .std=${this.std}
+        .options=${this._statusCardOptions}
       ></embed-iframe-error-card>`;
     }
 

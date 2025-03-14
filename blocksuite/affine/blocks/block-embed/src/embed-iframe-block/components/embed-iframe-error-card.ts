@@ -1,7 +1,6 @@
 import { createLitPortal } from '@blocksuite/affine-components/portal';
 import type { EmbedIframeBlockModel } from '@blocksuite/affine-model';
 import { unsafeCSSVarV2 } from '@blocksuite/affine-shared/theme';
-import { stopPropagation } from '@blocksuite/affine-shared/utils';
 import type { BlockStdScope } from '@blocksuite/block-std';
 import { WithDisposable } from '@blocksuite/global/lit';
 import { EditIcon, InformationIcon, ResetIcon } from '@blocksuite/icons/lit';
@@ -9,24 +8,27 @@ import { flip, offset } from '@floating-ui/dom';
 import { baseTheme } from '@toeverything/theme';
 import { css, html, LitElement, unsafeCSS } from 'lit';
 import { property, query } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
+
+import type { EmbedIframeStatusCardOptions } from '../types';
 
 const LINK_EDIT_POPUP_OFFSET = 12;
+const ERROR_CARD_DEFAULT_HEIGHT = 114;
 
 export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
   static override styles = css`
     :host {
       width: 100%;
+      height: 100%;
     }
 
     .affine-embed-iframe-error-card {
       container: affine-embed-iframe-error-card / inline-size;
       display: flex;
       box-sizing: border-box;
-      width: 100%;
       user-select: none;
-      height: 114px;
       padding: 12px;
-      align-items: flex-start;
       gap: 12px;
       overflow: hidden;
       border-radius: 8px;
@@ -38,7 +40,6 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
       .error-content {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
         gap: 4px;
         flex: 1 0 0;
 
@@ -68,8 +69,6 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
 
         .error-message {
           display: flex;
-          height: 40px;
-          align-items: flex-start;
           align-self: stretch;
           color: ${unsafeCSSVarV2('text/secondary')};
           overflow: hidden;
@@ -121,14 +120,39 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
         }
       }
 
-      .error-banner {
-        width: 204px;
-        height: 102px;
-      }
-
       @container affine-embed-iframe-error-card (width < 480px) {
         .error-banner {
           display: none;
+        }
+      }
+    }
+
+    .affine-embed-iframe-error-card.horizontal {
+      flex-direction: row;
+      align-items: flex-start;
+
+      .error-content {
+        align-items: flex-start;
+
+        .error-message {
+          height: 40px;
+          align-items: flex-start;
+        }
+      }
+    }
+
+    .affine-embed-iframe-error-card.vertical {
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: center;
+
+      .error-content {
+        justify-content: center;
+        align-items: center;
+
+        .error-message {
+          justify-content: center;
+          align-items: center;
         }
       }
     }
@@ -168,14 +192,28 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
     });
   };
 
-  override connectedCallback() {
-    super.connectedCallback();
-    this.disposables.addFromEvent(this, 'click', stopPropagation);
-  }
+  private readonly _handleRetry = (e: MouseEvent) => {
+    e.stopPropagation();
+    this.onRetry();
+  };
 
   override render() {
+    const { layout, width, height } = this.options;
+    const cardClasses = classMap({
+      'affine-embed-iframe-error-card': true,
+      horizontal: layout === 'horizontal',
+      vertical: layout === 'vertical',
+    });
+
+    const cardWidth = width ? `${width}px` : '100%';
+    const cardHeight = height ? `${height}px` : '100%';
+    const cardStyle = styleMap({
+      width: cardWidth,
+      height: cardHeight,
+    });
+
     return html`
-      <div class="affine-embed-iframe-error-card">
+      <div class=${cardClasses} style=${cardStyle}>
         <div class="error-content">
           <div class="error-title">
             <div class="error-icon">
@@ -193,7 +231,7 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
               >
               <span class="text">Edit</span>
             </div>
-            <div class="button retry" @click=${this.onRetry}>
+            <div class="button retry" @click=${this._handleRetry}>
               <span class="icon"
                 >${ResetIcon({ width: '16px', height: '16px' })}</span
               >
@@ -227,4 +265,10 @@ export class EmbedIframeErrorCard extends WithDisposable(LitElement) {
 
   @property({ attribute: false })
   accessor std!: BlockStdScope;
+
+  @property({ attribute: false })
+  accessor options: EmbedIframeStatusCardOptions = {
+    layout: 'horizontal',
+    height: ERROR_CARD_DEFAULT_HEIGHT,
+  };
 }
