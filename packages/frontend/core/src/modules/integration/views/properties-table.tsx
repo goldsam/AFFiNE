@@ -22,7 +22,14 @@ export const DocIntegrationPropertiesTable = () => {
   const schema = useLiveData(integrationPropertyService.schema$);
 
   const properties = useMemo(
-    () => Object.values(schema || {}) as IntegrationProperty<any>[],
+    () =>
+      (Object.values(schema || {}) as IntegrationProperty<any>[]).sort(
+        (a, b) => {
+          const aOrder = a.order ?? '9999';
+          const bOrder = b.order ?? '9999';
+          return aOrder.localeCompare(bOrder);
+        }
+      ),
     [schema]
   );
 
