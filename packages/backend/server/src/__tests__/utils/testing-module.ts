@@ -13,6 +13,9 @@ import { AFFiNELogger, Runtime } from '../../base';
 import { GqlModule } from '../../base/graphql';
 import { AuthGuard, AuthModule } from '../../core/auth';
 import { ModelsModule } from '../../models';
+// for jsdoc inference
+// oxlint-disable-next-line no-unused-vars
+import type { createModule } from '../create-module';
 import { createFactory } from '../mocks';
 import { initTestingDB, TEST_LOG_LEVEL } from './utils';
 
@@ -48,6 +51,9 @@ class MockResolver {
   }
 }
 
+/**
+ * @deprecated use {@link createModule} instead
+ */
 export async function createTestingModule(
   moduleDef: TestingModuleMeatdata = {},
   autoInitialize = true

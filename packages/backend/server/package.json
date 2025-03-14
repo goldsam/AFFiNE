@@ -15,6 +15,8 @@
     "test:copilot": "ava \"src/__tests__/**/copilot-*.spec.ts\"",
     "test:coverage": "c8 ava --concurrency 1 --serial",
     "test:copilot:coverage": "c8 ava --timeout=5m \"src/__tests__/**/copilot-*.spec.ts\"",
+    "e2e": "cross-env TEST_MODE=e2e ava",
+    "e2e:coverage": "cross-env TEST_MODE=e2e c8 ava",
     "data-migration": "cross-env NODE_ENV=development r ./src/data/index.ts",
     "init": "yarn prisma migrate dev && yarn data-migration run",
     "seed": "r ./src/seed/index.ts",
@@ -111,7 +113,7 @@
     "@affine-tools/utils": "workspace:*",
     "@affine/server-native": "workspace:*",
     "@faker-js/faker": "^9.6.0",
-    "@nestjs/testing": "^10.4.15",
+    "@nestjs/testing": "patch:@nestjs/testing@npm%3A10.4.15#~/.yarn/patches/@nestjs-testing-npm-10.4.15-d591a1705a.patch",
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^4.17.21",
     "@types/graphql-upload": "^17.0.0",
@@ -133,39 +135,6 @@
     "react-email": "3.0.7",
     "sinon": "^19.0.2",
     "supertest": "^7.0.0"
-  },
-  "ava": {
-    "timeout": "1m",
-    "extensions": {
-      "ts": "module"
-    },
-    "workerThreads": false,
-    "nodeArguments": [
-      "--trace-sigint"
-    ],
-    "watchMode": {
-      "ignoreChanges": [
-        "static/**",
-        "**/*.gen.*"
-      ]
-    },
-    "files": [
-      "**/__tests__/**/*.spec.ts",
-      "**/__tests__/**/*.e2e.ts"
-    ],
-    "require": [
-      "./src/prelude.ts"
-    ],
-    "environmentVariables": {
-      "NODE_ENV": "test",
-      "MAILER_HOST": "0.0.0.0",
-      "MAILER_PORT": "1025",
-      "MAILER_USER": "noreply@toeverything.info",
-      "MAILER_PASSWORD": "affine",
-      "MAILER_SENDER": "noreply@toeverything.info",
-      "FEATURES_EARLY_ACCESS_PREVIEW": "false",
-      "DEPLOYMENT_TYPE": "affine"
-    }
   },
   "nodemonConfig": {
     "exec": "node",

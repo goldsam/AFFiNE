@@ -847,7 +847,7 @@ __metadata:
     "@nestjs/platform-express": "npm:^10.4.15"
     "@nestjs/platform-socket.io": "npm:^10.4.15"
     "@nestjs/schedule": "npm:^4.1.2"
-    "@nestjs/testing": "npm:^10.4.15"
+    "@nestjs/testing": "patch:@nestjs/testing@npm%3A10.4.15#~/.yarn/patches/@nestjs-testing-npm-10.4.15-d591a1705a.patch"
     "@nestjs/throttler": "npm:6.4.0"
     "@nestjs/websockets": "npm:^10.4.15"
     "@node-rs/argon2": "npm:^2.0.2"
@@ -8193,7 +8193,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/testing@npm:^10.4.15":
+"@nestjs/testing@npm:10.4.15":
   version: 10.4.15
   resolution: "@nestjs/testing@npm:10.4.15"
   dependencies:
@@ -8209,6 +8209,25 @@ __metadata:
     "@nestjs/platform-express":
       optional: true
   checksum: 10/7018ac1447a7e2d697e4a1528f273e3e30378eb2bfb8b98631ef1bcc61797279d9ca60902f724538bf9078be38cdc0e69f5a7e7591e2d10433563e54c0dc7646
+  languageName: node
+  linkType: hard
+
+"@nestjs/testing@patch:@nestjs/testing@npm%3A10.4.15#~/.yarn/patches/@nestjs-testing-npm-10.4.15-d591a1705a.patch":
+  version: 10.4.15
+  resolution: "@nestjs/testing@patch:@nestjs/testing@npm%3A10.4.15#~/.yarn/patches/@nestjs-testing-npm-10.4.15-d591a1705a.patch::version=10.4.15&hash=9a94fb"
+  dependencies:
+    tslib: "npm:2.8.1"
+  peerDependencies:
+    "@nestjs/common": ^10.0.0
+    "@nestjs/core": ^10.0.0
+    "@nestjs/microservices": ^10.0.0
+    "@nestjs/platform-express": ^10.0.0
+  peerDependenciesMeta:
+    "@nestjs/microservices":
+      optional: true
+    "@nestjs/platform-express":
+      optional: true
+  checksum: 10/0eb2fcfda4515c66b31820f1cf426f0bd4ba38bbf21fbbac35886943787bbb8f59edb0f4301723913de34831e19237c4d2878a5f3a60c26e2d0cc55dd2e870de
   languageName: node
   linkType: hard
 
