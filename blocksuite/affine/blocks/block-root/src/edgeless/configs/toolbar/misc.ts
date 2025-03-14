@@ -1,18 +1,27 @@
+import { EdgelessCRUDIdentifier } from '@blocksuite/affine-block-surface';
 import {
   ConnectorElementModel,
   DEFAULT_CONNECTOR_MODE,
+  GroupElementModel,
+  MindmapElementModel,
 } from '@blocksuite/affine-model';
 import {
   ActionPlacement,
+  type ElementLockEvent,
   type ToolbarAction,
+  type ToolbarContext,
   type ToolbarModuleConfig,
 } from '@blocksuite/affine-shared/services';
+import type { GfxModel } from '@blocksuite/block-std/gfx';
 import {
   ConnectorCIcon,
   LockIcon,
   ReleaseFromGroupIcon,
+  UnlockIcon,
 } from '@blocksuite/icons/lit';
 import { html } from 'lit';
+
+import { EdgelessRootBlockComponent } from '../..';
 
 export const builtinMiscToolbarConfig = {
   actions: [
@@ -74,9 +83,158 @@ export const builtinMiscToolbarConfig = {
     {
       placement: ActionPlacement.End,
       id: 'b.lock',
-      icon: LockIcon(),
       tooltip: 'Lock',
-      run() {},
+      icon: LockIcon(),
+      when: ctx => !ctx.getSurfaceModels().some(model => model.isLocked()),
+      run(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (!models.length) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        // get most top selected elements(*) from tree, like in a tree below
+        //         G0
+        //        /  \
+        //      E1*  G1
+        //          /  \
+        //        E2*  E3*
+        //
+        // (*) selected elements, [E1, E2, E3]
+        // return [E1]
+
+        const elements = Array.from(
+          new Set(
+            models.map(model =>
+              ctx.matchModel(model.group, MindmapElementModel)
+                ? model.group
+                : model
+            )
+          )
+        );
+
+        const levels = elements.map(element => element.groups.length);
+        const topElement = elements[levels.indexOf(Math.min(...levels))];
+        const otherElements = elements.filter(
+          element => element !== topElement
+        );
+
+        ctx.store.captureSync();
+
+        // release other elements from their groups and group with top element
+        otherElements.forEach(element => {
+          // oxlint-disable-next-line unicorn/prefer-dom-node-remove
+          element.group?.removeChild(element);
+          topElement.group?.addChild(element);
+        });
+
+        if (otherElements.length === 0) {
+          topElement.lock();
+
+          ctx.gfx.selection.set({
+            editing: false,
+            elements: [topElement.id],
+          });
+
+          track(ctx, topElement, 'lock');
+          return;
+        }
+
+        const groupId = edgeless.service.createGroup([
+          topElement,
+          ...otherElements,
+        ]);
+
+        if (groupId) {
+          const element = ctx.std
+            .get(EdgelessCRUDIdentifier)
+            .getElementById(groupId);
+
+          if (element) {
+            element.lock();
+            ctx.gfx.selection.set({
+              editing: false,
+              elements: [groupId],
+            });
+
+            track(ctx, element, 'group-lock');
+            return;
+          }
+        }
+
+        for (const element of elements) {
+          element.lock();
+
+          track(ctx, element, 'lock');
+        }
+
+        ctx.gfx.selection.set({
+          editing: false,
+          elements: elements.map(e => e.id),
+        });
+      },
+    },
+    {
+      placement: ActionPlacement.End,
+      id: 'b.unlock',
+      label: 'Click to unlock',
+      icon: UnlockIcon(),
+      when: ctx => ctx.getSurfaceModels().some(model => model.isLocked()),
+      run(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (!models.length) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        const elements = new Set(
+          models.map(model =>
+            ctx.matchModel(model.group, MindmapElementModel)
+              ? model.group
+              : model
+          )
+        );
+
+        ctx.store.captureSync();
+
+        for (const element of elements) {
+          if (element instanceof GroupElementModel) {
+            edgeless.service.ungroup(element);
+          } else {
+            element.lockedBySelf = false;
+          }
+
+          track(ctx, element, 'unlock');
+        }
+      },
     },
   ],
 } as const satisfies ToolbarModuleConfig;
+
+function track(
+  ctx: ToolbarContext,
+  element: GfxModel,
+  control: ElementLockEvent['control']
+) {
+  ctx.track('EdgelessElementLocked', {
+    control,
+    type:
+      'flavour' in element
+        ? (element.flavour.split(':')[1] ?? element.flavour)
+        : element.type,
+  });
+}

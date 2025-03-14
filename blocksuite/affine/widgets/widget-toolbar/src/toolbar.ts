@@ -325,7 +325,7 @@ export class AffineToolbarWidget extends WidgetComponent {
             items.map(({ model }) => model),
           ]);
 
-          if (paired.length === 1) {
+          if (!hasLocked && paired.length === 1) {
             flavour = paired[0][0];
             if (
               flavour === 'affine:surface:shape' &&
