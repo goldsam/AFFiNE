@@ -35,7 +35,7 @@ import { AddTextIcon, ShapeIcon } from '@blocksuite/icons/lit';
 import { html } from 'lit';
 import isEqual from 'lodash-es/isEqual';
 
-import { EdgelessRootBlockComponent, type ShapeToolOption } from '../..';
+import type { ShapeToolOption } from '../..';
 import { ShapeComponentConfig } from '../../components/toolbar/shape/shape-menu-config';
 import { mountShapeTextEditor } from '../../utils/text';
 import { LINE_STYLE_LIST } from './consts';
@@ -44,7 +44,7 @@ import {
   createMindmapStyleActionMenu,
 } from './mindmap';
 import { createTextActions } from './text-common';
-import { renderMenu } from './utils';
+import { getEdgelessWith, renderMenu } from './utils';
 
 export const builtinShapeToolbarConfig = {
   actions: [
@@ -318,15 +318,8 @@ export const builtinShapeToolbarConfig = {
         const model = ctx.getCurrentModelByType(ShapeElementModel);
         if (!model) return;
 
-        const rootModel = ctx.store.root;
-        if (!rootModel) return;
-
-        // TODO(@fundon): it should be simple
-        const edgeless = ctx.view.getBlock(rootModel.id);
-        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
-          console.error('edgeless view is not found.');
-          return;
-        }
+        const edgeless = getEdgelessWith(ctx);
+        if (!edgeless) return;
 
         mountShapeTextEditor(model, edgeless);
       },

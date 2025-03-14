@@ -224,32 +224,31 @@ export function renderToolbar(
       context,
       renderMenuActionItem
     );
-    // if (moreMenuItems.length) {
-    // TODO(@fundon): edgeless case needs to be considered
-    const key = `${context.getCurrentModel()?.id}`;
+    if (moreMenuItems.length) {
+      const key = `${context.getCurrentModel()?.id}`;
 
-    primaryActionGroup.push({
-      id: 'more',
-      content: html`${keyed(
-        `${flavour}:${key}`,
-        html`
-          <editor-menu-button
-            class="more-menu"
-            .contentPadding="${'8px'}"
-            .button=${html`
-              <editor-icon-button aria-label="More" .tooltip="${'More'}">
-                ${MoreVerticalIcon()}
-              </editor-icon-button>
-            `}
-          >
-            <div data-size="large" data-orientation="vertical">
-              ${join(moreMenuItems, renderToolbarSeparator('horizontal'))}
-            </div>
-          </editor-menu-button>
-        `
-      )}`,
-    });
-    // }
+      primaryActionGroup.push({
+        id: 'more',
+        content: html`${keyed(
+          `${flavour}:${key}`,
+          html`
+            <editor-menu-button
+              class="more-menu"
+              .contentPadding="${'8px'}"
+              .button=${html`
+                <editor-icon-button aria-label="More" .tooltip="${'More'}">
+                  ${MoreVerticalIcon()}
+                </editor-icon-button>
+              `}
+            >
+              <div data-size="large" data-orientation="vertical">
+                ${join(moreMenuItems, renderToolbarSeparator('horizontal'))}
+              </div>
+            </editor-menu-button>
+          `
+        )}`,
+      });
+    }
   }
 
   render(

@@ -1,8 +1,10 @@
+import type { ToolbarContext } from '@blocksuite/affine-shared/services';
 import { ArrowDownSmallIcon } from '@blocksuite/icons/lit';
 import { html } from 'lit';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { repeat } from 'lit/directives/repeat.js';
 
+import { EdgelessRootBlockComponent } from '../..';
 import type { Menu, MenuItem } from './types';
 
 export function renderCurrentMenuItemWith<T, F extends keyof MenuItem<T>>(
@@ -59,4 +61,18 @@ export function renderMenuItems<T>(
       </editor-icon-button>
     `
   );
+}
+
+// TODO(@fundon): it should be simple
+export function getEdgelessWith(ctx: ToolbarContext) {
+  const rootModel = ctx.store.root;
+  if (!rootModel) return;
+
+  const edgeless = ctx.view.getBlock(rootModel.id);
+  if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+    console.error('edgeless view is not found.');
+    return;
+  }
+
+  return edgeless;
 }

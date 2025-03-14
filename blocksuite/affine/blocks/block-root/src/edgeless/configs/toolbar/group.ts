@@ -12,8 +12,8 @@ import { matchModels } from '@blocksuite/affine-shared/utils';
 import { Bound } from '@blocksuite/global/gfx';
 import { EditIcon, PageIcon, UngroupIcon } from '@blocksuite/icons/lit';
 
-import { EdgelessRootBlockComponent } from '../..';
 import { mountGroupTitleEditor } from '../../utils/text';
+import { getEdgelessWith } from './utils';
 
 export const builtinGroupToolbarConfig = {
   actions: [
@@ -69,15 +69,8 @@ export const builtinGroupToolbarConfig = {
         const model = ctx.getCurrentModelByType(GroupElementModel);
         if (!model) return;
 
-        const rootModel = ctx.store.root;
-        if (!rootModel) return;
-
-        // TODO(@fundon): it should be simple
-        const edgeless = ctx.view.getBlock(rootModel.id);
-        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
-          console.error('edgeless view is not found.');
-          return;
-        }
+        const edgeless = getEdgelessWith(ctx);
+        if (!edgeless) return;
 
         mountGroupTitleEditor(model, edgeless);
       },
@@ -90,15 +83,8 @@ export const builtinGroupToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(GroupElementModel);
         if (!models.length) return;
 
-        const rootModel = ctx.store.root;
-        if (!rootModel) return;
-
-        // TODO(@fundon): it should be simple
-        const edgeless = ctx.view.getBlock(rootModel.id);
-        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
-          console.error('edgeless view is not found.');
-          return;
-        }
+        const edgeless = getEdgelessWith(ctx);
+        if (!edgeless) return;
 
         for (const model of models) {
           edgeless.service.ungroup(model);

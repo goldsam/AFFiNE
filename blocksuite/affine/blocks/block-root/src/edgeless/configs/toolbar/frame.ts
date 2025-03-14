@@ -30,8 +30,8 @@ import { EditIcon, PageIcon, UngroupIcon } from '@blocksuite/icons/lit';
 import type { ExtensionType } from '@blocksuite/store';
 import { html } from 'lit';
 
-import { EdgelessRootBlockComponent } from '../..';
 import { mountFrameTitleEditor } from '../../utils/text';
+import { getEdgelessWith } from './utils';
 
 const builtinSurfaceToolbarConfig = {
   actions: [
@@ -87,15 +87,8 @@ const builtinSurfaceToolbarConfig = {
         const model = ctx.getCurrentModelByType(FrameBlockModel);
         if (!model) return;
 
-        const rootModel = ctx.store.root;
-        if (!rootModel) return;
-
-        // TODO(@fundon): it should be simple
-        const edgeless = ctx.view.getBlock(rootModel.id);
-        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
-          console.error('edgeless view is not found.');
-          return;
-        }
+        const edgeless = getEdgelessWith(ctx);
+        if (!edgeless) return;
 
         mountFrameTitleEditor(model, edgeless);
       },
@@ -108,15 +101,8 @@ const builtinSurfaceToolbarConfig = {
         const models = ctx.getSurfaceModelsByType(FrameBlockModel);
         if (!models.length) return;
 
-        const rootModel = ctx.store.root;
-        if (!rootModel) return;
-
-        // TODO(@fundon): it should be simple
-        const edgeless = ctx.view.getBlock(rootModel.id);
-        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
-          console.error('edgeless view is not found.');
-          return;
-        }
+        const edgeless = getEdgelessWith(ctx);
+        if (!edgeless) return;
 
         ctx.store.captureSync();
 
