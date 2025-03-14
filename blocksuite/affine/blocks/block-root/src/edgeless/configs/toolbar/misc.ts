@@ -13,8 +13,10 @@ import {
   type ToolbarModuleConfig,
 } from '@blocksuite/affine-shared/services';
 import type { GfxModel } from '@blocksuite/block-std/gfx';
+import { Bound } from '@blocksuite/global/gfx';
 import {
   ConnectorCIcon,
+  FrameIcon,
   GroupingIcon,
   LockIcon,
   ReleaseFromGroupIcon,
@@ -60,6 +62,49 @@ export const builtinMiscToolbarConfig = {
     },
     {
       placement: ActionPlacement.Start,
+      id: 'b.add-frame',
+      label: 'Frame',
+      tooltip: 'Frame',
+      icon: FrameIcon(),
+      when(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return false;
+        if (models.some(model => model.isLocked())) return false;
+        if (
+          models.some(model => ctx.matchModel(model.group, MindmapElementModel))
+        )
+          return false;
+
+        return true;
+      },
+      run(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        const frame = edgeless.service.frame.createFrameOnSelected();
+        if (!frame) return;
+
+        // TODO(@fundon): should be a command
+        edgeless.surface.fitToViewport(Bound.deserialize(frame.xywh));
+
+        ctx.track('CanvasElementAdded', {
+          control: 'context-menu',
+          type: 'frame',
+        });
+      },
+    },
+    {
+      placement: ActionPlacement.Start,
       id: 'c.add-group',
       label: 'Group',
       tooltip: 'Group',
@@ -69,11 +114,14 @@ export const builtinMiscToolbarConfig = {
         if (models.length < 2) return false;
         if (models.some(model => model.isLocked())) return false;
         if (ctx.matchModel(models[0], GroupElementModel)) return false;
-        if (models.some(model => ctx.matchModel(model.group, MindmapElementModel)))
+        if (
+          models.some(model => ctx.matchModel(model.group, MindmapElementModel))
+        )
           return false;
         if (
           models.length ===
-          models.filter(model => ctx.matchModel(model, ConnectorElementModel)).length
+          models.filter(model => ctx.matchModel(model, ConnectorElementModel))
+            .length
         )
           return false;
 
