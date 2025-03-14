@@ -15,6 +15,7 @@ import {
 import type { GfxModel } from '@blocksuite/block-std/gfx';
 import { Bound } from '@blocksuite/global/gfx';
 import {
+  AlignLeftIcon,
   ConnectorCIcon,
   FrameIcon,
   GroupingIcon,
@@ -25,6 +26,7 @@ import {
 import { html } from 'lit';
 
 import { EdgelessRootBlockComponent } from '../..';
+import { renderAlignmentMenu } from './alignment';
 
 export const builtinMiscToolbarConfig = {
   actions: [
@@ -72,6 +74,11 @@ export const builtinMiscToolbarConfig = {
         if (models.some(model => model.isLocked())) return false;
         if (
           models.some(model => ctx.matchModel(model.group, MindmapElementModel))
+        )
+          return false;
+        if (
+          models.length ===
+          models.filter(model => model instanceof ConnectorElementModel).length
         )
           return false;
 
@@ -147,9 +154,31 @@ export const builtinMiscToolbarConfig = {
     },
     {
       placement: ActionPlacement.Start,
-      id: 'a.misc',
-      label: 'Misc',
-      run() {},
+      id: 'd.alignment',
+      when(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return false;
+        if (models.some(model => model.isLocked())) return false;
+        if (models.some(model => model.group instanceof MindmapElementModel))
+          return false;
+        if (
+          models.length ===
+          models.filter(model => model instanceof ConnectorElementModel).length
+        )
+          return false;
+
+        return true;
+      },
+      content(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return null;
+
+        return renderAlignmentMenu(ctx, models, {
+          icon: AlignLeftIcon(),
+          label: 'Align objects',
+          tooltip: 'Align objects',
+        });
+      },
     },
     {
       placement: ActionPlacement.End,
@@ -346,8 +375,8 @@ function track(
   ctx.track('EdgelessElementLocked', {
     control,
     type:
-      'flavour' in element
-        ? (element.flavour.split(':')[1] ?? element.flavour)
-        : element.type,
+      'type' in element
+        ? element.type
+        : (element.flavour.split(':')[1] ?? element.flavour),
   });
 }
