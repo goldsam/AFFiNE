@@ -1,28 +1,45 @@
 import { ThemeProvider } from '@blocksuite/affine-shared/services';
 import { unsafeCSSVarV2 } from '@blocksuite/affine-shared/theme';
-import type { BlockStdScope } from '@blocksuite/block-std';
+import { type BlockStdScope } from '@blocksuite/block-std';
 import { EmbedIcon } from '@blocksuite/icons/lit';
 import { css, html, LitElement } from 'lit';
 import { property } from 'lit/decorators.js';
+import { classMap } from 'lit/directives/class-map.js';
+import { styleMap } from 'lit/directives/style-map.js';
 
 import { getEmbedCardIcons } from '../../common/utils';
+
+/**
+ * The options for the embed iframe loading card
+ * layout: the layout of the card, horizontal or vertical
+ * width: the width of the card, if not set, the card width will be 100%
+ * height: the height of the card, if not set, the card height will be 100%
+ * @example
+ * {
+ *   layout: 'horizontal',
+ *   height: 114,
+ * }
+ */
+export type EmbedIframeLoadingCardOptions = {
+  layout: 'horizontal' | 'vertical';
+  width?: number;
+  height?: number;
+};
 
 export class EmbedIframeLoadingCard extends LitElement {
   static override styles = css`
     :host {
       width: 100%;
+      height: 100%;
     }
 
     .affine-embed-iframe-loading-card {
       container: affine-embed-iframe-loading-card / inline-size;
       display: flex;
       box-sizing: border-box;
-      width: 100%;
       border-radius: 8px;
       user-select: none;
-      height: 114px;
       padding: 12px;
-      align-items: flex-start;
       gap: 12px;
       overflow: hidden;
       border: 1px solid ${unsafeCSSVarV2('layer/insideBorder/border')};
@@ -30,9 +47,7 @@ export class EmbedIframeLoadingCard extends LitElement {
 
       .loading-content {
         display: flex;
-        align-items: flex-start;
         gap: 8px;
-        flex: 1 0 0;
         align-self: stretch;
 
         .loading-spinner {
@@ -47,7 +62,6 @@ export class EmbedIframeLoadingCard extends LitElement {
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
-          flex: 1 0 0;
           overflow: hidden;
           color: ${unsafeCSSVarV2('text/primary')};
           text-overflow: ellipsis;
@@ -62,17 +76,13 @@ export class EmbedIframeLoadingCard extends LitElement {
 
       .loading-banner {
         display: flex;
-        width: 204px;
         box-sizing: border-box;
-        padding: 3.139px 42.14px 0px 42.14px;
         justify-content: center;
         align-items: center;
         flex-shrink: 0;
 
         .icon-box {
           display: flex;
-          width: 106px;
-          height: 106px;
           transform: rotate(8deg);
           justify-content: center;
           align-items: center;
@@ -88,9 +98,67 @@ export class EmbedIframeLoadingCard extends LitElement {
         }
       }
 
-      @container affine-embed-iframe-loading-card (width < 480px) {
+      @container affine-embed-iframe-loading-card (width < 360px) {
         .loading-banner {
           display: none;
+        }
+      }
+    }
+
+    .affine-embed-iframe-loading-card.horizontal {
+      flex-direction: row;
+      align-items: flex-start;
+
+      .loading-content {
+        flex: 1 0 0;
+        align-items: flex-start;
+
+        .loading-text {
+          flex: 1 0 0;
+        }
+      }
+
+      .loading-banner {
+        width: 204px;
+        padding: 3.139px 42.14px 0px 42.14px;
+
+        .icon-box {
+          width: 106px;
+          height: 106px;
+
+          svg {
+            width: 66px;
+            height: 66px;
+          }
+        }
+      }
+    }
+
+    .affine-embed-iframe-loading-card.vertical {
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: center;
+
+      .loading-content {
+        justify-content: center;
+        font-size: 14px;
+        transform: translateX(-2%);
+      }
+
+      .loading-banner {
+        width: 340px;
+        padding: 5.23px 70.234px 0px 70.232px;
+        overflow-y: hidden;
+
+        .icon-box {
+          width: 176px;
+          height: 176px;
+          transform: rotate(8deg) translateY(15%);
+
+          svg {
+            width: 112px;
+            height: 112px;
+          }
         }
       }
     }
@@ -99,16 +167,29 @@ export class EmbedIframeLoadingCard extends LitElement {
   override render() {
     const theme = this.std.get(ThemeProvider).theme;
     const { LoadingIcon } = getEmbedCardIcons(theme);
+
+    const { layout, width, height } = this.options;
+    const cardClasses = classMap({
+      'affine-embed-iframe-loading-card': true,
+      horizontal: layout === 'horizontal',
+      vertical: layout === 'vertical',
+    });
+
+    const cardWidth = width ? `${width}px` : '100%';
+    const cardHeight = height ? `${height}px` : '100%';
+    const cardStyle = styleMap({
+      width: cardWidth,
+      height: cardHeight,
+    });
+
     return html`
-      <div class="affine-embed-iframe-loading-card">
+      <div class=${cardClasses} style=${cardStyle}>
         <div class="loading-content">
           <div class="loading-spinner">${LoadingIcon}</div>
           <div class="loading-text">Loading...</div>
         </div>
         <div class="loading-banner">
-          <div class="icon-box">
-            ${EmbedIcon({ width: '66px', height: '66px' })}
-          </div>
+          <div class="icon-box">${EmbedIcon()}</div>
         </div>
       </div>
     `;
@@ -116,4 +197,10 @@ export class EmbedIframeLoadingCard extends LitElement {
 
   @property({ attribute: false })
   accessor std!: BlockStdScope;
+
+  @property({ attribute: false })
+  accessor options: EmbedIframeLoadingCardOptions = {
+    layout: 'horizontal',
+    height: 114,
+  };
 }

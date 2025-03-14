@@ -16,6 +16,7 @@ import { html, nothing } from 'lit';
 import { type ClassInfo, classMap } from 'lit/directives/class-map.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 
+import type { EmbedIframeLoadingCardOptions } from './components/embed-iframe-loading-card.js';
 import type { IframeOptions } from './extension/embed-iframe-config.js';
 import { EmbedIframeService } from './extension/embed-iframe-service.js';
 import { embedIframeBlockStyles } from './style.js';
@@ -72,6 +73,12 @@ export class EmbedIframeBlockComponent extends CaptionedBlockComponent<EmbedIfra
     const featureFlagService = this.doc.get(FeatureFlagService);
     const flag = featureFlagService.getFlag('enable_embed_iframe_block');
     return flag ?? false;
+  }
+
+  get _loadingCardOptions(): EmbedIframeLoadingCardOptions {
+    return this.inSurface
+      ? { layout: 'vertical' }
+      : { layout: 'horizontal', height: 114 };
   }
 
   open = () => {
@@ -206,6 +213,7 @@ export class EmbedIframeBlockComponent extends CaptionedBlockComponent<EmbedIfra
     if (this.isLoading$.value) {
       return html`<embed-iframe-loading-card
         .std=${this.std}
+        .options=${this._loadingCardOptions}
       ></embed-iframe-loading-card>`;
     }
 
