@@ -449,7 +449,9 @@ const DocPropertiesTableInner = ({
           onOpenChange={setExpanded}
         />
         <Collapsible.Content>
-          <DocIntegrationPropertiesTable />
+          <DocIntegrationPropertiesTable
+            divider={<div className={styles.tableHeaderDivider} />}
+          />
           <DocWorkspacePropertiesTableBody
             defaultOpen={
               !defaultOpenProperty || defaultOpenProperty.type === 'workspace'

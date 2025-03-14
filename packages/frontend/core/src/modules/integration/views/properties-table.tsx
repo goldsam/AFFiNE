@@ -6,13 +6,17 @@ import {
 } from '@affine/component';
 import { useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import { IntegrationPropertyService } from '../services/integration-property';
 import type { IntegrationProperty } from '../type';
 import { ValueRenderer } from './property-values';
 
-export const DocIntegrationPropertiesTable = () => {
+export const DocIntegrationPropertiesTable = ({
+  divider,
+}: {
+  divider?: ReactNode;
+}) => {
   const t = useI18n();
   const integrationPropertyService = useService(IntegrationPropertyService);
 
@@ -36,31 +40,37 @@ export const DocIntegrationPropertiesTable = () => {
   if (!schema || !integrationType) return null;
 
   return (
-    <PropertyCollapsibleSection
-      title={t['com.affine.integration.properties']()}
-    >
-      <PropertyCollapsibleContent>
-        {properties.map(property => {
-          const Icon = property.icon;
-          const key = property.key as string;
-          const label = property.label;
-          const displayName =
-            typeof label === 'string'
-              ? t[label]()
-              : t.t(label?.i18nKey, label?.options);
+    <>
+      <PropertyCollapsibleSection
+        title={t['com.affine.integration.properties']()}
+      >
+        <PropertyCollapsibleContent>
+          {properties.map(property => {
+            const Icon = property.icon;
+            const key = property.key as string;
+            const label = property.label;
+            const displayName =
+              typeof label === 'string'
+                ? t[label]()
+                : t.t(label?.i18nKey, label?.options);
 
-          return (
-            <PropertyRoot key={key}>
-              <PropertyName name={displayName} icon={Icon ? <Icon /> : null} />
-              <ValueRenderer
-                integration={integrationType}
-                type={property.type}
-                propertyKey={key}
-              />
-            </PropertyRoot>
-          );
-        })}
-      </PropertyCollapsibleContent>
-    </PropertyCollapsibleSection>
+            return (
+              <PropertyRoot key={key}>
+                <PropertyName
+                  name={displayName}
+                  icon={Icon ? <Icon /> : null}
+                />
+                <ValueRenderer
+                  integration={integrationType}
+                  type={property.type}
+                  propertyKey={key}
+                />
+              </PropertyRoot>
+            );
+          })}
+        </PropertyCollapsibleContent>
+      </PropertyCollapsibleSection>
+      {divider}
+    </>
   );
 };
