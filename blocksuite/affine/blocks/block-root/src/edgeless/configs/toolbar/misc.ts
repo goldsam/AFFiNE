@@ -15,6 +15,7 @@ import {
 import type { GfxModel } from '@blocksuite/block-std/gfx';
 import {
   ConnectorCIcon,
+  GroupingIcon,
   LockIcon,
   ReleaseFromGroupIcon,
   UnlockIcon,
@@ -30,7 +31,71 @@ export const builtinMiscToolbarConfig = {
       id: 'a.release-from-group',
       tooltip: 'Release from group',
       icon: ReleaseFromGroupIcon(),
-      run() {},
+      when(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length !== 1) return false;
+        if (models[0].isLocked()) return false;
+        return ctx.matchModel(models[0].group, GroupElementModel);
+      },
+      run(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length !== 1) return;
+
+        const firstModel = models[0];
+        if (firstModel.isLocked()) return;
+        if (!ctx.matchModel(firstModel.group, GroupElementModel)) return;
+
+        const group = firstModel.group;
+
+        // oxlint-disable-next-line unicorn/prefer-dom-node-remove
+        group.removeChild(firstModel);
+
+        firstModel.index = ctx.gfx.layer.generateIndex();
+
+        const parent = group.group;
+        if (parent && parent instanceof GroupElementModel) {
+          parent.addChild(firstModel);
+        }
+      },
+    },
+    {
+      placement: ActionPlacement.Start,
+      id: 'c.add-group',
+      label: 'Group',
+      tooltip: 'Group',
+      icon: GroupingIcon(),
+      when(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return false;
+        if (models.some(model => model.isLocked())) return false;
+        if (ctx.matchModel(models[0], GroupElementModel)) return false;
+        if (models.some(model => ctx.matchModel(model.group, MindmapElementModel)))
+          return false;
+        if (
+          models.length ===
+          models.filter(model => ctx.matchModel(model, ConnectorElementModel)).length
+        )
+          return false;
+
+        return true;
+      },
+      run(ctx) {
+        const models = ctx.getSurfaceModels();
+        if (models.length < 2) return;
+
+        const rootModel = ctx.store.root;
+        if (!rootModel) return;
+
+        // TODO(@fundon): it should be simple
+        const edgeless = ctx.view.getBlock(rootModel.id);
+        if (!ctx.matchBlock(edgeless, EdgelessRootBlockComponent)) {
+          console.error('edgeless view is not found.');
+          return;
+        }
+
+        // TODO(@fundon): should be a command
+        edgeless.service.createGroupFromSelected();
+      },
     },
     {
       placement: ActionPlacement.Start,
