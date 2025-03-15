@@ -11,8 +11,8 @@ import type { ExtensionType } from '@blocksuite/affine/store';
 import type { FrameworkProvider } from '@toeverything/infra';
 
 import { buildAIPanelConfig } from '../ai-panel';
-import { toolbarAIEntryConfig } from '../entries';
 import {
+  edgelessToolbarAIEntryConfig,
   setupEdgelessCopilot,
   setupEdgelessElementToolbarAIEntry,
 } from '../entries/edgeless/index';
@@ -38,8 +38,8 @@ export function createAIEdgelessRootBlockSpec(
     edgelessCopilotWidget,
     getAIEdgelessRootWatcher(framework),
     ToolbarModuleExtension({
-      id: BlockFlavourIdentifier('custom:affine:note'),
-      config: toolbarAIEntryConfig(),
+      id: BlockFlavourIdentifier('custom:affine:surface:*'),
+      config: edgelessToolbarAIEntryConfig(),
     }),
     AiSlashMenuConfigExtension(),
   ];
