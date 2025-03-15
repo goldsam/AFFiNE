@@ -317,6 +317,7 @@ function renderActionItem(action: ToolbarAction, context: ToolbarContext) {
       ?active=${typeof action.active === 'function'
         ? action.active(context)
         : action.active}
+      ?disabled=${action.disabled}
       .tooltip=${action.tooltip}
       @click=${() => action.run?.(context)}
     >
@@ -339,6 +340,7 @@ function renderMenuActionItem(action: ToolbarAction, context: ToolbarContext) {
       ?active=${typeof action.active === 'function'
         ? action.active(context)
         : action.active}
+      ?disabled=${action.disabled}
       .tooltip=${ifDefined(action.tooltip)}
       @click=${() => action.run?.(context)}
     >
